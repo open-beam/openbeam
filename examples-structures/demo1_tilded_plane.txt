@@ -1,0 +1,39 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#  
+#  By Jose Luis Blanco Claraco (2011)
+#
+#  Exactly like "demo1.txt" but with the boundary 
+#   conditions in node id=1 rotated 30 degrees 
+#   (i.e. the node can slides over a tilded plane)
+#
+#          http://open-beam.sourceforge.net/
+# -------------------------------------------------------
+
+VAR, P = 1000  // Newtons
+
+# -------------------------------------------------
+#  Geometry: nodes, elements & constraints
+# -------------------------------------------------
+[GEOMETRY]
+
+# Command "NODE": Declares a new node
+# Usage:  NODE,  <ID>,  <X>, <Y> [, <Z> [ , <YAW_DEGREES>]  ]
+NODE, id=0,  0   ,0, 0
+NODE, id=1,  0.5 ,0, 0  # , 30
+NODE, id=2,  0   ,1, 0
+
+PARAMSET,id=MY_BAR, E=2.0e11, A=2e-4
+
+ELEMENT, id=0, type=BEAM2D_AA,  from=0, to=1, paramset=MY_BAR
+ELEMENT, id=1, type=BEAM2D_AA,  from=0, to=2, paramset=MY_BAR
+ELEMENT, id=2, type=BEAM2D_AA,  from=1, to=2, paramset=MY_BAR
+
+CONSTRAINT, node=0, dof=DXDY
+CONSTRAINT, node=1, dof=DY
+
+# -----------------------
+[LOADS]
+LOAD, node=2, dof=DX, +P
+
+

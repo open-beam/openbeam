@@ -1,0 +1,52 @@
+# ===================================================================================
+#  The OpenBeam CMake configuration file
+#
+#             ** File generated automatically, do not modify **
+#
+#  Usage from an external project:
+#    In your CMakeLists.txt, add these lines:
+#
+#    FIND_PACKAGE(OpenBeam REQUIRED )
+#    TARGET_LINK_LIBRARIES(MY_TARGET_NAME ${OpenBeam_LIBS})
+#
+#    This file will define the following variables:
+#      - OpenBeam_LIBS                 : The list of libraries to links against.
+#      - OpenBeam_INCLUDE_DIRS         : The OpenBeam include directories.
+#
+# =================================================================================================
+
+# Extract the directory where *this* file has been installed (determined at cmake run-time)
+#  This variable may or may not be used below, depending on the parsing of OpenBeamConfig.cmake
+get_filename_component(THIS_OpenBeam_CONFIG_PATH "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+# ======================================================
+# Include directories to add to the user project:
+# ======================================================
+
+# Provide the include directories to the caller
+SET(OpenBeam_INCLUDE_DIRS @CMAKE_INCLUDE_DIRS_CONFIGCMAKE@)
+
+INCLUDE_DIRECTORIES(${OpenBeam_INCLUDE_DIRS})
+
+# ======================================================
+# Link directories to add to the user project:
+# ======================================================
+
+# Provide the libs directory anyway, it may be needed in some cases.
+SET(OpenBeam_LIB_DIR @CMAKE_LIB_DIRS_CONFIGCMAKE@)
+
+LINK_DIRECTORIES(${OpenBeam_LIB_DIR})
+
+# ====================================================================
+# Link libraries: 
+# ====================================================================
+SET(OpenBeam_LIBS ${OpenBeam_LIBS} openbeam)
+
+# ======================================================
+#  Version variables:
+# ======================================================
+SET(OpenBeam_VERSION @OpenBeam_VERSION@)
+SET(OpenBeam_VERSION_MAJOR  @OpenBeam_VERSION_MAJOR@)
+SET(OpenBeam_VERSION_MINOR  @OpenBeam_VERSION_MINOR@)
+SET(OpenBeam_VERSION_PATCH  @OpenBeam_VERSION_PATCH@)
+

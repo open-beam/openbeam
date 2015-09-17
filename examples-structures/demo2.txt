@@ -1,0 +1,44 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#  
+#  By Jose Luis Blanco Claraco (2011)
+#
+#  Problem in section 5.2 from course textbook in 
+#   University of Malaga.
+#
+#          http://open-beam.sourceforge.net/
+# -------------------------------------------------------
+
+VAR, G = 9.81
+
+VAR, L = 1         # Dimensions of the problem
+VAR, P = G * 1000  # External load
+
+PARAMSET,id=IPE200, E=2.1e11, A=28.5e-4, Iz=1940e-8
+
+# -------------------------------------------------
+#  Geometry: nodes, elements & constraints
+# -------------------------------------------------
+[GEOMETRY]
+
+NODE, id=0,  0,0,0
+NODE, id=1,  L,0,0
+NODE, id=2,  2*L,0,0
+NODE, id=3,  2*L,L,0
+
+ELEMENT, id=0, type=BEAM2D_RA,  from=0, to=1, paramset=IPE200
+ELEMENT, id=1, type=BEAM2D_AR,  from=1, to=2, paramset=IPE200
+ELEMENT, id=2, type=BEAM2D_RR,  from=2, to=3, paramset=IPE200
+
+CONSTRAINT, node=0, dof=DXDYRZ
+CONSTRAINT, node=3, dof=DXDYRZ
+
+
+# -----------------------
+[LOADS]
+
+LOAD, node=2, dof=DX, -P
+
+ELOAD, element=0, type=DISTRIB_UNIFORM, Q=2000*G, DX=0,DY=-1,DZ=0
+ELOAD, element=1, type=DISTRIB_UNIFORM, Q=2000*G, DX=0,DY=-1,DZ=0
+
