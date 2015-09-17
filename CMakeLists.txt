@@ -139,7 +139,7 @@ add_subdirectory(src)
 add_subdirectory(apps)
 
 IF(BUILD_EXAMPLES)
-	add_subdirectory(examples)
+	add_subdirectory(examples-code)
 ENDIF(BUILD_EXAMPLES)
 
 
