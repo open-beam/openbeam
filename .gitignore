@@ -5,3 +5,4 @@ install*
 CMakeFiles/
 CMakeLists.txt.user
 
+*.user

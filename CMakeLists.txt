@@ -123,7 +123,7 @@ INCLUDE_DIRECTORIES("${${PROJECT_NAME}_SOURCE_DIR}/internationalization/")
 
 # Force usage of UNICODE projects, which is not the default in MSVC:
 IF(MSVC)
-	add_definitions(-DUNICODE -D_UNICODE)
+	add_definitions(-DUNICODE -D_UNICODE -D_CRT_NONSTDC_NO_WARNINGS)
 ENDIF(MSVC)
 
 # Set optimized building:

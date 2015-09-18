@@ -401,7 +401,7 @@ int main_code(int argc, char**argv)
 				cout << dof.node_id;
 				cout << "</sub>";
 				cout << "</td><td>";
-				cout << info.F_f[i]==0 ? "0" : format("%.2f", info.F_f[i] );
+				cout << (info.F_f[i]==0.0) ? std::string("0") : format("%.2f", info.F_f[i] );
 				cout << "</td></tr>\n";
 			}
 
