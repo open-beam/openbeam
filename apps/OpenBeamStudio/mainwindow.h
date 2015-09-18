@@ -10,6 +10,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QFileSystemModel>
 
 #include <openbeam/openbeam.h>
 #include <deque>
@@ -28,10 +29,11 @@ public:
 	~MainWindow();
 
 private slots:
-	void on_actionRe_scan_devices_triggered();
+	void on_tvBrowserDirs_clicked(const QModelIndex &index);
 
 private:
 	Ui::MainWindow *ui;
+	QFileSystemModel *dirmodel;
 
 };
 

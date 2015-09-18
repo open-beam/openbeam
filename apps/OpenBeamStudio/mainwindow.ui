@@ -89,6 +89,9 @@ stop:0.6 rgba(255, 255, 255, 0));
         <property name="bottomMargin">
          <number>0</number>
         </property>
+        <item>
+         <widget class="QTreeView" name="tvBrowserDirs"/>
+        </item>
        </layout>
       </widget>
       <widget class="QFrame" name="frame_2">

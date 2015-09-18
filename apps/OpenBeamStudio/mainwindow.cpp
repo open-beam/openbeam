@@ -14,6 +14,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+
+	QString sPath = ".";
+	dirmodel  = new QFileSystemModel(this);
+
+	dirmodel->setRootPath(sPath);
+	ui->tvBrowserDirs->setModel(dirmodel);
 }
 
 MainWindow::~MainWindow()
@@ -21,9 +27,11 @@ MainWindow::~MainWindow()
 	delete ui;
 }
 
-// Rescan devices:
-void MainWindow::on_actionRe_scan_devices_triggered()
+void MainWindow::on_tvBrowserDirs_clicked(const QModelIndex &index)
 {
+	const bool is_file  = dirmodel->fileInfo(index).isFile();
+	const QString sPath = dirmodel->fileInfo(index).absoluteFilePath();
+
 
 
 
