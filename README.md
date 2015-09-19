@@ -16,7 +16,7 @@ License: GNU GPL v3. Contact the author if a commercial license is required.
 Ubuntu: Install prerequisites with:
 
 ```
-sudo apt-get install build-essential cmake libcairomm-1.0-dev
+sudo apt-get install build-essential cmake libqt5-dev qt5-qmake libqt5svg5-dev
 ```
 
 Windows: Just use CMake as usual. Required: Visual C++ 2008 or newer.
