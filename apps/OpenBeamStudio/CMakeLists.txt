@@ -26,6 +26,7 @@ ELSE()
 	add_executable(OpenBeamStudio WIN32 
 		main.cpp
 		mainwindow.cpp mainwindow.h
+		highlighter.cpp highlighter.h
 		${FORMS_HEADERS}
 		${RESOURCES_RCC}
 		)

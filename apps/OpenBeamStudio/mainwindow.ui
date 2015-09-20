@@ -29,6 +29,9 @@ stop:0.6 rgba(255, 255, 255, 0));
 /*    image: url(:/images/splitter.png);*/
      }</string>
   </property>
+  <property name="locale">
+   <locale language="English" country="UnitedStates"/>
+  </property>
   <property name="toolButtonStyle">
    <enum>Qt::ToolButtonTextUnderIcon</enum>
   </property>
@@ -113,14 +116,9 @@ stop:0.6 rgba(255, 255, 255, 0));
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
-             <widget class="QTextBrowser" name="textBrowser_2"/>
+             <widget class="QTextEdit" name="edCodeEditor"/>
             </item>
            </layout>
-          </widget>
-          <widget class="QWidget" name="tabOutputs">
-           <attribute name="title">
-            <string>Outputs</string>
-           </attribute>
           </widget>
           <widget class="QWidget" name="tabControl">
            <attribute name="title">
@@ -167,6 +165,7 @@ stop:0.6 rgba(255, 255, 255, 0));
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="action_Open_model"/>
    <addaction name="separator"/>
    <addaction name="action_Exit"/>
    <addaction name="separator"/>
@@ -214,6 +213,21 @@ stop:0.6 rgba(255, 255, 255, 0));
    </property>
    <property name="text">
     <string>Stop</string>
+   </property>
+  </action>
+  <action name="action_Open_model">
+   <property name="icon">
+    <iconset resource="openbeamstudio.qrc">
+     <normaloff>:/imgs/play_32x32.png</normaloff>:/imgs/play_32x32.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Open model...</string>
+   </property>
+   <property name="toolTip">
+    <string>Open a model definition from a file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
  </widget>

@@ -11,10 +11,11 @@
 
 #include <QMainWindow>
 #include <QFileSystemModel>
+#include <QSettings>
+
+#include "highlighter.h"
 
 #include <openbeam/openbeam.h>
-#include <deque>
-
 
 namespace Ui {
 class MainWindow;
@@ -30,11 +31,20 @@ public:
 
 private slots:
 	void on_tvBrowserDirs_clicked(const QModelIndex &index);
+	void on_action_Open_model_triggered();
 
 private:
 	Ui::MainWindow *ui;
-	QFileSystemModel *dirmodel;
+	QSettings m_app_setting;
 
+	QFileSystemModel *m_dirmodel;
+	Highlighter * m_highlighter;
+
+	void setupTreeView();
+	void setupEditor();
+
+
+	void loadOpenBeamFile(const QString &sPath);
 };
 
 #endif // MAINWINDOW_H
