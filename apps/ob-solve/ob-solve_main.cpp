@@ -997,7 +997,7 @@ void print_html_matrix(
 
 			const num_t Kij = K(i,j);
             if (!Kij)
-                    cout << format("<td align=\"right\"> 0 </td>",Kij);
+                    cout << format("<td align=\"right\"> 0 </td>");
             else    cout << format("<td align=\"right\"> %.3f </td>",Kij*common_factor_inv);
         }
 
