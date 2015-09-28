@@ -1,4 +1,5 @@
 ![openbeam](https://raw.githubusercontent.com/jlblancoc/openbeam/master/doc/logo.jpg)
+[![Build Status](https://travis-ci.org/jlblancoc/openbeam.png?branch=master)](https://travis-ci.org/jlblancoc/openbeam)
 
 # openbeam
 A C++ library for mechanical structures: a definition language, parser, static solver and SVG renderer.

@@ -1,0 +1,15 @@
+language: cpp
+sudo: false
+
+compiler: 
+  - gcc
+  - clang  
+
+install:
+  - sudo apt-get install build-essential cmake libqt5-dev qt5-qmake libqt5svg5-dev
+
+script:
+  - bash .travis.sh
+
+env:
+  - TASK="build"
