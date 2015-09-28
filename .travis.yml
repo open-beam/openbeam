@@ -10,7 +10,7 @@ addons:
     packages:
     - build-essential
     - cmake
-	
+
 script:
   - bash .travis.sh
 
