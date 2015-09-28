@@ -1,13 +1,16 @@
 language: cpp
-sudo: true
+sudo: false
 
 compiler: 
   - gcc
   - clang  
 
-install:
-  - sudo apt-get install build-essential cmake
-
+addons:
+  apt:
+    packages:
+    - build-essential
+    - cmake
+	
 script:
   - bash .travis.sh
 
