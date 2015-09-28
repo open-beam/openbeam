@@ -6,7 +6,7 @@ compiler:
   - clang  
 
 install:
-  - sudo apt-get install build-essential cmake libqt5-dev qt5-qmake libqt5svg5-dev
+  - sudo apt-get install build-essential cmake
 
 script:
   - bash .travis.sh
