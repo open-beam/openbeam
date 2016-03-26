@@ -92,6 +92,11 @@ int main_code(int argc, char**argv)
 	TCLAP::ValueArg<double>      arg_out_images_width("","out-images-width","Width of SVG images & animations (in pixels)",false,512,"512",cmd);
 	TCLAP::ValueArg<unsigned int> arg_out_animation_num_frames("","out-animation-num-frames","When generation animations, the number of keyframes",false,30,"30",cmd);
 	TCLAP::ValueArg<unsigned int> arg_out_animation_frame_delay("","out-animation-frame-delay","When generation animations, the delay (ms) between keyframes",false,10,"10",cmd);
+	TCLAP::SwitchArg             arg_anim_show_element_labels("","anim-show-element-labels","Show labels in animation (Default: no)",cmd);
+	TCLAP::SwitchArg             arg_anim_show_node_labels("","anim-show-node-labels","Show labels in animation (Default: no)",cmd);
+	TCLAP::ValueArg<std::string> arg_svg_filename_prefix("","svg-prefix","Filename prefix",false,"fem","fem",cmd);
+	TCLAP::ValueArg<double>      arg_svg_deformed_factor("","svg-deformed-factor","Deformation scale factor (0:guess)",false,0,"0",cmd);
+
 
  	// Parse arguments:
 	if (!cmd.parse( argc, argv ))
@@ -215,7 +220,7 @@ int main_code(int argc, char**argv)
 		draw_options.show_elements_original = true;
 		draw_options.show_elements_deformed = false;
 
-		const string sFilOriginal = "./fem_original.svg";
+		const string sFilOriginal = arg_svg_filename_prefix.getValue() + string("_original.svg");
 		problem_to_solve->saveAsImageSVG(sFilOriginal, draw_options, &sInfo, mesh_info );
 
 		draw_options.show_nodes_original = true;
@@ -225,8 +230,9 @@ int main_code(int argc, char**argv)
 		draw_options.elements_original_alpha = 0.2;
 		draw_options.show_elements_deformed = true;
 		draw_options.show_element_labels = false;
+		draw_options.deformed_scale_factor = arg_svg_deformed_factor.getValue();
 
-		const string sFilDeformed = "./fem_deformed.svg";
+		const string sFilDeformed = arg_svg_filename_prefix.getValue() + string("_deformed.svg");
 		problem_to_solve->saveAsImageSVG(sFilDeformed, draw_options, &sInfo, mesh_info );
 
 		cout <<
@@ -834,22 +840,21 @@ int main_code(int argc, char**argv)
 	// Generate animation of the deformed state?
 	if (arg_out_animation.isSet())
 	{
-		const num_t MAX_REL_DEFORMATION = 0.05;
-
 		const string sOutGIF_filename = arg_out_animation.getValue();
 		const double out_images_width = arg_out_images_width.getValue();
 		const unsigned int NUM_FRAMES = arg_out_animation_num_frames.getValue();
 		const unsigned int GIF_DELAY = arg_out_animation_frame_delay.getValue();
 
 		// Auto determine maximum deformation:
-		num_t MAX_DEFORMATION_SCALE;
+		num_t MAX_DEFORMATION_SCALE = arg_svg_deformed_factor.getValue();
+		if (MAX_DEFORMATION_SCALE==0.0)
 		{
 			const num_t MAX_DISPL = problem_to_solve->getMaximumDeformedDisplacement(sInfo);
 			num_t min_x, max_x, min_y ,max_y;
 			problem_to_solve->getBoundingBox(min_x, max_x, min_y ,max_y);
 			const num_t Ax = max_x-min_x;
 			const num_t Ay = max_y-min_y;
-			const num_t MAX_ABS_DEFORMATION = std::max(Ax,Ay)*MAX_REL_DEFORMATION;
+			const num_t MAX_ABS_DEFORMATION = std::max(Ax,Ay)*0.05;
 			MAX_DEFORMATION_SCALE = MAX_ABS_DEFORMATION/MAX_DISPL;
 		}
 
@@ -866,7 +871,8 @@ int main_code(int argc, char**argv)
 		draw_options.show_elements_original = true;
 		draw_options.show_elements_deformed = true;
 		draw_options.elements_original_alpha = 0.12;
-		draw_options.show_element_labels = false;
+		draw_options.show_element_labels = arg_anim_show_element_labels.isSet();
+		draw_options.show_node_labels = arg_anim_show_node_labels.isSet();
 
 		draw_options.show_loads = true;
 

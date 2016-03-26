@@ -73,8 +73,8 @@ bool CFiniteElementProblem::saveAsImage(
 
 	{
 		// a little more margin:
-		const num_t Ax = std::max(ri.max_x-ri.min_x, 1.5);
-		const num_t Ay = std::max(ri.max_y-ri.min_y, 1.5);
+		const num_t Ax = std::max(ri.max_x-ri.min_x, 1.0);
+		const num_t Ay = std::max(ri.max_y-ri.min_y, 1.0);
 
 		const num_t margin = 0.20;
 		ri.min_x -= margin*Ax;
@@ -84,8 +84,8 @@ bool CFiniteElementProblem::saveAsImage(
 	}
 
 	// Image size:
-    ri.width  = ri.max_x-ri.min_x;
-    ri.height = ri.max_y-ri.min_y;
+	ri.width  = ri.max_x-ri.min_x;
+	ri.height = ri.max_y-ri.min_y;
 
 	ri.scaleFactor = options.image_width/ri.width;
 	ri.width*=ri.scaleFactor;
@@ -157,6 +157,9 @@ bool CFiniteElementProblem::renderToCairoContext(
 	// Edges original:  ==============================================
 	if (options.show_elements_original)
 	{
+		TDrawStructureOptions opts2 = options;
+		opts2.show_element_labels = false;
+		opts2.show_node_labels = false;
 		for (size_t i=0;i<nEle;i++)
 		{
 			const CElement* el = this->getElement(i);
@@ -168,7 +171,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 			el_params.draw_original_position = true;
 
 			cr->save();
-			el->drawSVG(&cr,options,el_params,meshing_info);
+			el->drawSVG(&cr,opts2,el_params,meshing_info);
 			cr->restore();
 		}
 	}
@@ -368,7 +371,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 		// Dimensions of constraint plots:
 		const double R = options.node_radius;
 		const double A = 1.5*R; // Arrow size
-		const double FORCE_LINE_WIDTH = R*0.1;
+		const double FORCE_LINE_WIDTH = R*0.5;
 
 		// 0) Establish scale:
 		num_t max_load_force = 0, max_load_torque = 0;
@@ -414,12 +417,12 @@ bool CFiniteElementProblem::renderToCairoContext(
 					seq_points_local.push_back(TPoint3D(-R-LEN,0,0));
 					break;
 				case 1:  // +Y
-					seq_points_local.push_back(TPoint3D(0,R,0));
+					seq_points_local.push_back(TPoint3D(0,-R,0));
+					seq_points_local.push_back(TPoint3D(0,-R-LEN,0));
+					seq_points_local.push_back(TPoint3D(0,-R,0));
 					seq_points_local.push_back(TPoint3D(-A,-R-A,0));
 					seq_points_local.push_back(TPoint3D(0,-R,0));
 					seq_points_local.push_back(TPoint3D(A,-R-A,0));
-					seq_points_local.push_back(TPoint3D(0,-R,0));
-					seq_points_local.push_back(TPoint3D(0,-R-LEN,0));
 					break;
 				case 2:  // +Z
 					OB_TODO("Implement Forces SVG")
@@ -494,6 +497,8 @@ bool CFiniteElementProblem::renderToCairoContext(
 						cr->move_to( xx,yy );
 				else	cr->line_to( xx,yy );
 			}
+			cr->set_line_cap( Cairo::LINE_CAP_ROUND );
+			cr->set_line_join ( Cairo::LINE_JOIN_ROUND );
 			cr->stroke();
 
 		} // end for each load
