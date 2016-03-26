@@ -73,13 +73,13 @@ bool CFiniteElementProblem::saveAsImage(
 
 	{
 		// a little more margin:
-		const num_t Ax = ri.max_x-ri.min_x;
-		const num_t Ay = ri.max_y-ri.min_y;
+		const num_t Ax = std::max(ri.max_x-ri.min_x, 1.5);
+		const num_t Ay = std::max(ri.max_y-ri.min_y, 1.5);
 
-		const num_t margin = 0.15;
+		const num_t margin = 0.20;
 		ri.min_x -= margin*Ax;
-		ri.min_y -= margin*Ay;
 		ri.max_x += margin*Ax;
+		ri.min_y -= margin*Ay;
 		ri.max_y += margin*Ay;
 	}
 

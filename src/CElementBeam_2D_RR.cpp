@@ -115,8 +115,8 @@ void CElementBeam_2D_RR::getLocalDoFs(std::vector<TUsedDoFs> &dofs) const
     dofs.resize(size_t(getNumberEdges()));
 
 	OB_TODO("Create a separate element type for torsional shafts!")
-	static const TUsedDoFs sDofsR = {true, true, false, false, false, true};
-	//static const TUsedDoFs sDofsR = {true, true, false, true, false, true};
+	//static const TUsedDoFs sDofsR = {true, true, false, false, false, true};
+	static const TUsedDoFs sDofsR = {true, true, false, true, false, true};
 
 	dofs[0]=sDofsR;
 	dofs[1]=sDofsR;
