@@ -29,6 +29,7 @@
 
 #ifdef __GNUC__
 #   include <unistd.h>
+#   include <sys/stat.h> // mkdir()
 #endif
 
 
@@ -96,6 +97,8 @@ int main_code(int argc, char**argv)
 	TCLAP::SwitchArg             arg_anim_show_node_labels("","anim-show-node-labels","Show labels in animation (Default: no)",cmd);
 	TCLAP::ValueArg<std::string> arg_svg_filename_prefix("","svg-prefix","Filename prefix",false,"fem","fem",cmd);
 	TCLAP::ValueArg<double>      arg_svg_deformed_factor("","svg-deformed-factor","Deformation scale factor (0:guess)",false,0,"0",cmd);
+	TCLAP::SwitchArg             arg_anim_keep_files("","anim-keep-files","Keep animation keyframe images",cmd);
+	TCLAP::ValueArg<std::string> arg_out_dir("","out-dir","Output directory",false,".",".",cmd);
 
 
  	// Parse arguments:
@@ -118,6 +121,31 @@ int main_code(int argc, char**argv)
 	const std::string out_full_k_csv_filename = arg_full_K_csv.getValue();
 	const bool out_all_elements_k = arg_all_elements_K.getValue();
 
+	std::vector<TGraphData> lst_html_graphs;
+
+	// -------------------------------------------------------------
+	// Load FEM problem:
+	// -------------------------------------------------------------
+    openbeam::setVerbosityLevel( arg_verbose_level.getValue() );
+
+	CStructureProblem  problem;
+
+	// Load from file:
+	vector_string errMsg, warnMsg;
+	problem.loadFromFile(fil_to_load, &errMsg, &warnMsg);
+
+	if (!errMsg.empty())
+	{
+		for (size_t i=0;i<errMsg.size();i++) cerr << errMsg[i] << endl;
+		return -1;
+	}
+
+	if (arg_out_dir.isSet()) {
+		::mkdir( arg_out_dir.getValue().c_str(), 0777);
+		if (0!=::chdir(arg_out_dir.getValue().c_str()))
+			throw std::runtime_error("Error changing to directory in --out-dir");
+	}
+
 	// Redirect output to file?
 	auto_ptr<CConsoleRedirector> console_redirect;
 	if (arg_output.isSet())
@@ -130,41 +158,37 @@ int main_code(int argc, char**argv)
 	// Start HTML preamble:
 	if (out_html && !out_html_no_head)
 	{
-		cout << "<html>\n"
+		cout << "<!DOCTYPE html>\n"
+			"<html>\n"
 			"<head>\n"
-			"<title>Results</title>\n"
-		    "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>\n"
-			"<script type=\"text/javascript\" src=\"http://www.google.com/jsapi\"></script>\n"
-			"<script type=\"text/javascript\">\n"
+			"<title>Results for `" << arg_problemFile.getValue() <<  "`</title>\n"
+			"<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>\n"
+			"<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js\"></script>\n"
+			"<script src=\"http://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.0/TweenMax.min.js\"></script>\n"
+			"<script src=\"http://www.google.com/jsapi\"></script>\n"
+			"<script>\n"
 			"  google.load('visualization', '1', {packages: ['corechart']});\n"
 			"</script>\n"
-			"\n"
+			// For animation -----------
+			"<style>\n"
+			".animatedimage {\n"
+			"	position: relative;\n"
+			"	display: inline-block;\n"
+			"	line-height: 0;\n"
+			"	overflow: hidden;\n"
+			"}\n"
+			".animatedimage > * {\n"
+			"	position: absolute;\n"
+			"	display: inline-block;\n"
+			"	visibility: hidden;\n"
+			"	border: 0;\n"
+			"}\n"
+			"</style>\n"
+			// -----------------
+			"<head/>\n"
 			"<body>\n";
 	}
 
-	std::vector<TGraphData> lst_html_graphs;
-
-	// -------------------------------------------------------------
-	// Load FEM problem:
-	// -------------------------------------------------------------
-    openbeam::setVerbosityLevel( arg_verbose_level.getValue() );
-
-	CStructureProblem  problem;
-
-	// Load from file:
-	vector_string errMsg, warnMsg;
-
-	problem.loadFromFile(fil_to_load, &errMsg, &warnMsg);
-
-	if (!warnMsg.empty())
-	{
-		for (size_t i=0;i<warnMsg.size();i++) cout << warnMsg[i] << endl;
-	}
-	if (!errMsg.empty())
-	{
-		for (size_t i=0;i<errMsg.size();i++) cerr << errMsg[i] << endl;
-		return -1;
-	}
 
 	// -------------------------------------------------------------
 	// Mesh?
@@ -209,6 +233,89 @@ int main_code(int argc, char**argv)
 	const std::vector<TDoF> & dofs = problem_to_solve->getProblemDoFs();
 	OBASSERT(nTot==dofs.size())
 
+	// Generate animation of the deformed state?
+	std::vector<std::string> anim_svg_files;
+	if (arg_out_animation.isSet() || arg_anim_keep_files.isSet())
+	{
+		const string sOutGIF_filename = arg_out_animation.getValue();
+		const double out_images_width = arg_out_images_width.getValue();
+		const unsigned int NUM_FRAMES = arg_out_animation_num_frames.getValue();
+		const unsigned int GIF_DELAY = arg_out_animation_frame_delay.getValue();
+
+		// Auto determine maximum deformation:
+		num_t MAX_DEFORMATION_SCALE = arg_svg_deformed_factor.getValue();
+		if (MAX_DEFORMATION_SCALE==0.0)
+		{
+			const num_t MAX_DISPL = problem_to_solve->getMaximumDeformedDisplacement(sInfo);
+			num_t min_x, max_x, min_y ,max_y;
+			problem_to_solve->getBoundingBox(min_x, max_x, min_y ,max_y);
+			const num_t Ax = max_x-min_x;
+			const num_t Ay = max_y-min_y;
+			const num_t MAX_ABS_DEFORMATION = std::max(Ax,Ay)*0.05;
+			MAX_DEFORMATION_SCALE = MAX_ABS_DEFORMATION/MAX_DISPL;
+		}
+
+
+		// Do animation ------------
+		openbeam::TDrawStructureOptions draw_options;
+		draw_options.image_width = out_images_width;
+
+		draw_options.show_nodes_original = true;
+		draw_options.show_nodes_deformed = true;
+		draw_options.nodes_original_alpha = 0.15;
+		draw_options.constraints_original_alpha = draw_options.nodes_original_alpha;
+
+		draw_options.show_elements_original = true;
+		draw_options.show_elements_deformed = true;
+		draw_options.elements_original_alpha = 0.12;
+		draw_options.show_element_labels = arg_anim_show_element_labels.isSet();
+		draw_options.show_node_labels = arg_anim_show_node_labels.isSet();
+
+		draw_options.show_loads = true;
+
+		num_t scale = 1e-12; // Can't be exactly zero, since that means autoscale!
+		num_t Ascale = MAX_DEFORMATION_SCALE/NUM_FRAMES;
+		OB_MESSAGE(2) << "Generating animation frames...\n";
+
+		std::vector<std::string> files_to_delete;
+		files_to_delete.reserve(2*NUM_FRAMES);
+
+		for (unsigned int i=0;i<2*NUM_FRAMES;i++, scale+=Ascale)
+		{
+			draw_options.deformed_scale_factor = scale;
+
+			if (arg_anim_keep_files.isSet()) {
+				const string sFil = openbeam::format("%s_animated_%06u.svg", arg_svg_filename_prefix.getValue().c_str(), i);
+				problem_to_solve->saveAsImageSVG(sFil, draw_options, &sInfo );
+				anim_svg_files.push_back(sFil);
+			}
+
+			const string sFil = openbeam::format("%s_animated_%06u.png",arg_svg_filename_prefix.getValue().c_str(),i);
+			problem_to_solve->saveAsImagePNG(sFil, draw_options, &sInfo, mesh_info );
+
+			files_to_delete.push_back(sFil);
+			if (i==NUM_FRAMES) Ascale=-Ascale;
+		}
+		OB_MESSAGE(2) << "Animation frames done!\n";
+
+		const string sCmd = openbeam::format("convert -delay %u -loop 0 %s_animated_*.png %s",GIF_DELAY, arg_svg_filename_prefix.getValue().c_str(), sOutGIF_filename.c_str() );
+		OB_MESSAGE(2) << "Animation compile GIF:\n";
+		OB_MESSAGE(2) << "[EXTERNAL CMD] " << sCmd << endl;
+
+		const int ret= ::system(sCmd.c_str());
+		if (ret)
+			cerr << "**ERROR**: Invoking convert command (ret=" << ret << "):\n" << sCmd << endl;
+
+		// Remove temporary images:
+		for (size_t i=0;i<files_to_delete.size();i++)
+			::unlink( files_to_delete[i].c_str() );
+
+		OB_MESSAGE(2) << "Animation done!\n";
+
+	} // end of "arg_out_animation"
+
+	std::string scripts_before_body_end;
+
 	// Images:
 	if (out_html && out_svg)
 	{
@@ -217,6 +324,7 @@ int main_code(int argc, char**argv)
 		draw_options.show_nodes_original = true;
 		draw_options.show_nodes_deformed = false;
 		draw_options.show_node_labels = true;
+		draw_options.show_element_labels = true;
 		draw_options.show_elements_original = true;
 		draw_options.show_elements_deformed = false;
 
@@ -239,25 +347,70 @@ int main_code(int argc, char**argv)
 			"<div width=\"100%\"> <!-- FIGURES -->\n"
 			"<div align=\"center\"><h3>Figures</h3></div>\n";
 
+		if (out_html && !anim_svg_files.empty())
+		{
+			cout <<
+				"<div align=\"center\" >"
+				"<b>Deformation animation:</b> (&times; "<< arg_svg_deformed_factor.getValue() <<")<br>\n"
+				" <div class='animatedimage'>\n";
+			for (size_t i=0;i<anim_svg_files.size();i++)
+				cout << " <img src='" << anim_svg_files[i] <<  "' />";
+			cout << "\n </div>\n"
+				"</div><br/>\n";
+
+			scripts_before_body_end+=
+				"<script>\n"
+				"var images = $('.animatedimage').children(), // images in the sequence\n"
+				"	fps = 10,\n"
+				"	duration = 1 / fps;\n"
+				"var sequence = new TimelineMax({ repeat: -1 })\n"
+				"	.staggerTo(images, 0, { position: 'static', visibility: 'visible' }, duration, 0)\n"
+				"	.staggerTo(images.not(images.last()), 0, { position: 'absolute', visibility: 'hidden', immediateRender: false }, duration, duration)\n"
+				"	.set({}, {}, \"+=\"+duration);\n"
+				"</script>\n";
+
+		}
+
 		cout <<
 			"<div align=\"center\" >"
 			"<b>Original (unloaded) state:</b><br>\n"
 			"<a href=\"" << sFilOriginal << "\" target=\"_blank\">"
 			"<img src=\"" << sFilOriginal << "\" width=\"35%\"><br>\n"
 			<< "("<< _t(STR_click_to_enlarge) << ")</a>"
-			"</div>\n";
+			"</div><br/>\n";
 
 		cout <<
 			"<div align=\"center\" >"
-			"<b>Final (deformed) state:</b><br>\n"
+			"<b>Final (deformed) state:</b> (&times; "<< arg_svg_deformed_factor.getValue() <<")<br>\n"
 			"<a href=\"" << sFilDeformed << "\" target=\"_blank\">"
 			"<img src=\"" << sFilDeformed << "\" width=\"35%\"><br>\n"
 			<< "("<< _t(STR_click_to_enlarge) << ")</a>"
-			"</div>\n";
+			"</div><br/>\n";
 
 		cout <<	"</div> <!-- END OF FIGURES -->\n";
 #endif
 	}
+
+
+	if (!warnMsg.empty())
+	{
+		if (out_html) {
+			cout << "<b>Warnings:</b><ul>";
+			for (size_t i=0;i<warnMsg.size();i++) cout << "<li>"<<warnMsg[i] << "</li>\n";
+		}
+			else {
+				for (size_t i=0;i<warnMsg.size();i++) cout << warnMsg[i] << endl;
+		}
+	}
+
+	if (out_html && !out_html_no_head)
+	{
+		cout <<
+			scripts_before_body_end <<
+			"\n</body>\n"
+			"<html>\n";
+	}
+
 
 	if (out_html)
 		cout << "<div style=\"clear:both;\"> <!-- NON GRAPHICAL RESULTS -->\n";
@@ -829,89 +982,6 @@ int main_code(int argc, char**argv)
 			"  google.setOnLoadCallback(drawAllPlots);\n"
 			"</script>\n";
 	}
-
-
-	if (out_html && !out_html_no_head)
-	{
-		cout << "</body>\n"
-			"<html>\n";
-	}
-
-	// Generate animation of the deformed state?
-	if (arg_out_animation.isSet())
-	{
-		const string sOutGIF_filename = arg_out_animation.getValue();
-		const double out_images_width = arg_out_images_width.getValue();
-		const unsigned int NUM_FRAMES = arg_out_animation_num_frames.getValue();
-		const unsigned int GIF_DELAY = arg_out_animation_frame_delay.getValue();
-
-		// Auto determine maximum deformation:
-		num_t MAX_DEFORMATION_SCALE = arg_svg_deformed_factor.getValue();
-		if (MAX_DEFORMATION_SCALE==0.0)
-		{
-			const num_t MAX_DISPL = problem_to_solve->getMaximumDeformedDisplacement(sInfo);
-			num_t min_x, max_x, min_y ,max_y;
-			problem_to_solve->getBoundingBox(min_x, max_x, min_y ,max_y);
-			const num_t Ax = max_x-min_x;
-			const num_t Ay = max_y-min_y;
-			const num_t MAX_ABS_DEFORMATION = std::max(Ax,Ay)*0.05;
-			MAX_DEFORMATION_SCALE = MAX_ABS_DEFORMATION/MAX_DISPL;
-		}
-
-
-		// Do animation ------------
-		openbeam::TDrawStructureOptions draw_options;
-		draw_options.image_width = out_images_width;
-
-		draw_options.show_nodes_original = true;
-		draw_options.show_nodes_deformed = true;
-		draw_options.nodes_original_alpha = 0.15;
-		draw_options.constraints_original_alpha = draw_options.nodes_original_alpha;
-
-		draw_options.show_elements_original = true;
-		draw_options.show_elements_deformed = true;
-		draw_options.elements_original_alpha = 0.12;
-		draw_options.show_element_labels = arg_anim_show_element_labels.isSet();
-		draw_options.show_node_labels = arg_anim_show_node_labels.isSet();
-
-		draw_options.show_loads = true;
-
-		num_t scale = 1e-12; // Can't be exactly zero, since that means autoscale!
-		num_t Ascale = MAX_DEFORMATION_SCALE/NUM_FRAMES;
-		OB_MESSAGE(1) << "Generating animation frames...\n";
-
-		std::vector<std::string> files_to_delete;
-		files_to_delete.reserve(2*NUM_FRAMES);
-
-		for (unsigned int i=0;i<2*NUM_FRAMES;i++, scale+=Ascale)
-		{
-			draw_options.deformed_scale_factor = scale;
-#if 0
-			const string sFil = openbeam::format("./fem_animated_%06u.svg",i);
-			problem_to_solve->saveAsImageSVG(sFil, draw_options, &sInfo );
-#else
-			const string sFil = openbeam::format("./fem_animated_%06u.png",i);
-			problem_to_solve->saveAsImagePNG(sFil, draw_options, &sInfo, mesh_info );
-#endif
-			files_to_delete.push_back(sFil);
-			if (i==NUM_FRAMES) Ascale=-Ascale;
-		}
-		OB_MESSAGE(1) << "Animation frames done!\n";
-
-		const string sCmd = openbeam::format("convert -delay %u -loop 0 fem_animated_*.png %s",GIF_DELAY, sOutGIF_filename.c_str() );
-		OB_MESSAGE(1) << "Animation compile GIF:\n";
-		OB_MESSAGE(1) << "[EXTERNAL CMD] " << sCmd << endl;
-
-		const int ret= ::system(sCmd.c_str());
-		if (ret)
-			cerr << "**ERROR**: Invoking convert command (ret=" << ret << "):\n" << sCmd << endl;
-		// Remove temporary images:
-		for (size_t i=0;i<files_to_delete.size();i++)
-			::unlink( files_to_delete[i].c_str() );
-
-		OB_MESSAGE(1) << "Animation done!\n";
-
-	} // end of "arg_out_animation"
 
 
 	return 0;
