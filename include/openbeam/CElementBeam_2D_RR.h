@@ -26,7 +26,7 @@
 
 namespace openbeam
 {
-	/** A 2D beam element whose two ends are "rigid" links (x,y,phi).
+	/** A **2D** beam element whose two ends are "rigid" links (x,y,phi).
 	  */
 	class CElementBeam_2D_RR : public CBaseElementBeam
 	{

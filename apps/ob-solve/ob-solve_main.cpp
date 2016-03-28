@@ -100,6 +100,8 @@ int main_code(int argc, char**argv)
 	TCLAP::SwitchArg             arg_anim_keep_files("","anim-keep-files","Keep animation keyframe images",cmd);
 	TCLAP::ValueArg<std::string> arg_out_dir("","out-dir","Output directory",false,".",".",cmd);
 
+	TCLAP::SwitchArg             arg_draw_mesh("","mesh-draw","Visualize mesh",cmd);
+
 
  	// Parse arguments:
 	if (!cmd.parse( argc, argv ))
@@ -286,12 +288,12 @@ int main_code(int argc, char**argv)
 
 			if (arg_anim_keep_files.isSet()) {
 				const string sFil = openbeam::format("%s_animated_%06u.svg", arg_svg_filename_prefix.getValue().c_str(), i);
-				problem_to_solve->saveAsImageSVG(sFil, draw_options, &sInfo );
+				problem_to_solve->saveAsImageSVG(sFil, draw_options, &sInfo, !arg_draw_mesh.isSet() ? mesh_info : NULL );
 				anim_svg_files.push_back(sFil);
 			}
 
 			const string sFil = openbeam::format("%s_animated_%06u.png",arg_svg_filename_prefix.getValue().c_str(),i);
-			problem_to_solve->saveAsImagePNG(sFil, draw_options, &sInfo, mesh_info );
+			problem_to_solve->saveAsImagePNG(sFil, draw_options, &sInfo, !arg_draw_mesh.isSet() ? mesh_info : NULL  );
 
 			files_to_delete.push_back(sFil);
 			if (i==NUM_FRAMES) Ascale=-Ascale;
@@ -329,7 +331,7 @@ int main_code(int argc, char**argv)
 		draw_options.show_elements_deformed = false;
 
 		const string sFilOriginal = arg_svg_filename_prefix.getValue() + string("_original.svg");
-		problem_to_solve->saveAsImageSVG(sFilOriginal, draw_options, &sInfo, mesh_info );
+		problem_to_solve->saveAsImageSVG(sFilOriginal, draw_options, &sInfo, !arg_draw_mesh.isSet() ? mesh_info : NULL  );
 
 		draw_options.show_nodes_original = true;
 		draw_options.nodes_original_alpha = 0.2;
@@ -341,7 +343,7 @@ int main_code(int argc, char**argv)
 		draw_options.deformed_scale_factor = arg_svg_deformed_factor.getValue();
 
 		const string sFilDeformed = arg_svg_filename_prefix.getValue() + string("_deformed.svg");
-		problem_to_solve->saveAsImageSVG(sFilDeformed, draw_options, &sInfo, mesh_info );
+		problem_to_solve->saveAsImageSVG(sFilDeformed, draw_options, &sInfo, !arg_draw_mesh.isSet() ? mesh_info : NULL  );
 
 		cout <<
 			"<div width=\"100%\"> <!-- FIGURES -->\n"
