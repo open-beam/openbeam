@@ -342,11 +342,20 @@ namespace openbeam
 		/** @} */
 		// ----------------------------------------------------------------------------
 	protected:
-        /** @name Main data
-            @{ */
+		/** @name Main data
+			@{ */
 
-        openbeam::aligned_containers<TRotationTrans3D>::deque_t   m_node_poses;
-        std::deque<CElement*>                                     m_elements;
+		openbeam::aligned_containers<TRotationTrans3D>::deque_t   m_node_poses;
+		std::vector<std::string>                                  m_node_labels; //!< empty: default, custom label otherwise
+		std::deque<CElement*>                                     m_elements;
+
+		std::string getNodeLabel(const size_t idx) const
+		{
+			if (m_node_labels[idx].empty()) {
+				return openbeam::format("N%u",static_cast<unsigned int>(idx));
+			}
+			else return m_node_labels[idx];
+		}
 
 		/** List of constrainsts for each "fixed/constrained" DoF.
 		  *  Map key are indices in \a m_problem_DoFs.

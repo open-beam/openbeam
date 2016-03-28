@@ -489,6 +489,46 @@ bool CFiniteElementProblem::internal_loadFromFile(
 							}
 						}
 					} // end CONSTRAINT
+					else if (strCmpI(toks[0],"NODELABEL"))
+					{
+						// Syntax: NODELABEL, ID=<id>, <LABEL>
+						if (toks.size()!=3)
+						{
+							REPORT_ERROR("Expected syntax 'NODELABEL, ID=<id>, <LABEL>' [tokenization]");
+						}
+						else
+						{
+							// ID=<id>:
+							vector_string parts;
+							tokenize(toks[1],"=",parts);
+							if (parts.size()!=2 || !strCmpI(parts[0],"ID"))
+							{
+								REPORT_ERROR("Expected syntax 'NODELABEL, ID=<id>, <LABEL>' [problem around the ID]");
+							}
+							else
+							{
+								const string sIDVal  = parts[1];
+								num_t id_val;
+								if (EVALUATE_EXPRESSION(sIDVal,id_val))
+								{
+									if (id_val!=floor(id_val) || id_val<0)
+									{
+										REPORT_ERROR("Expected syntax 'NODELABEL, ID=<id>, <LABEL>' [id must be a possitive integer]");
+									}
+									else
+									{
+										const size_t ID = static_cast<size_t>(id_val);
+										const string sLabel=trim(toks[2]);
+										if (ID>=m_node_labels.size()) {
+											REPORT_ERROR("'NODELABEL: ID was not defined first!");
+										} else {
+											m_node_labels[ID] = sLabel;
+										}
+									}
+								}
+							}
+						}
+					}
 					else
 					{	// Unknown command for this section!
 						REPORT_ERROR("Unknown command for section [GEOMETRY]");

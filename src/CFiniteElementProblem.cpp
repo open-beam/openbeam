@@ -104,7 +104,8 @@ void CFiniteElementProblem::addLoadAtDOF( const size_t dof_index, const num_t f)
 
 void CFiniteElementProblem::setNumberOfNodes(size_t N)
 {
-    m_node_poses.resize(N);
+	m_node_poses.resize(N);
+	m_node_labels.resize(N);
 }
 
 void CFiniteElementProblem::setNodePose(size_t idx, const TRotationTrans3D &p)

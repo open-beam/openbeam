@@ -191,7 +191,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 			if (options.show_node_labels && !options.show_nodes_deformed)
 			{
 				cr->move_to(p.t.coords[0]+1.8*options.node_radius,p.t.coords[1]+0.8*options.node_radius);
-				cr->show_text( openbeam::format("N%u",static_cast<unsigned int>(i)) );
+				cr->show_text( getNodeLabel(i) );
 			}
 		}
 
@@ -251,7 +251,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 			if (options.show_node_labels)
 			{
 				cr->move_to(pt[0]+1.8*options.node_radius,pt[1]+0.8*options.node_radius);
-				cr->show_text( openbeam::format("N%u",static_cast<unsigned int>(i)) );
+				cr->show_text( getNodeLabel(i) );
 			}
 		}
 
