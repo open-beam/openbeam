@@ -339,6 +339,8 @@ namespace openbeam
 		  */
 		void postProcCalcStress( TStressInfo & out_stress, const TStaticSolveProblemInfo & solver_info );
 
+		std::string getNodeLabel(const size_t idx) const; //!< "N%i" or custom label
+
 		/** @} */
 		// ----------------------------------------------------------------------------
 	protected:
@@ -348,14 +350,6 @@ namespace openbeam
 		openbeam::aligned_containers<TRotationTrans3D>::deque_t   m_node_poses;
 		std::vector<std::string>                                  m_node_labels; //!< empty: default, custom label otherwise
 		std::deque<CElement*>                                     m_elements;
-
-		std::string getNodeLabel(const size_t idx) const
-		{
-			if (m_node_labels[idx].empty()) {
-				return openbeam::format("N%u",static_cast<unsigned int>(idx));
-			}
-			else return m_node_labels[idx];
-		}
 
 		/** List of constrainsts for each "fixed/constrained" DoF.
 		  *  Map key are indices in \a m_problem_DoFs.

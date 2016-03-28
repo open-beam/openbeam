@@ -292,28 +292,30 @@ int main_code(int argc, char**argv)
 				anim_svg_files.push_back(sFil);
 			}
 
-			const string sFil = openbeam::format("%s_animated_%06u.png",arg_svg_filename_prefix.getValue().c_str(),i);
-			problem_to_solve->saveAsImagePNG(sFil, draw_options, &sInfo, !arg_draw_mesh.isSet() ? mesh_info : NULL  );
-
-			files_to_delete.push_back(sFil);
+			if (arg_out_animation.isSet()) {
+				const string sFil = openbeam::format("%s_animated_%06u.png",arg_svg_filename_prefix.getValue().c_str(),i);
+				problem_to_solve->saveAsImagePNG(sFil, draw_options, &sInfo, !arg_draw_mesh.isSet() ? mesh_info : NULL  );
+				files_to_delete.push_back(sFil);
+			}
 			if (i==NUM_FRAMES) Ascale=-Ascale;
 		}
-		OB_MESSAGE(2) << "Animation frames done!\n";
 
-		const string sCmd = openbeam::format("convert -delay %u -loop 0 %s_animated_*.png %s",GIF_DELAY, arg_svg_filename_prefix.getValue().c_str(), sOutGIF_filename.c_str() );
-		OB_MESSAGE(2) << "Animation compile GIF:\n";
-		OB_MESSAGE(2) << "[EXTERNAL CMD] " << sCmd << endl;
+		if (arg_out_animation.isSet()) {
+			OB_MESSAGE(2) << "Animation frames done!\n";
+			const string sCmd = openbeam::format("convert -delay %u -loop 0 %s_animated_*.png %s",GIF_DELAY, arg_svg_filename_prefix.getValue().c_str(), sOutGIF_filename.c_str() );
+			OB_MESSAGE(2) << "Animation compile GIF:\n";
+			OB_MESSAGE(2) << "[EXTERNAL CMD] " << sCmd << endl;
 
-		const int ret= ::system(sCmd.c_str());
-		if (ret)
-			cerr << "**ERROR**: Invoking convert command (ret=" << ret << "):\n" << sCmd << endl;
+			const int ret= ::system(sCmd.c_str());
+			if (ret)
+				cerr << "**ERROR**: Invoking convert command (ret=" << ret << "):\n" << sCmd << endl;
 
-		// Remove temporary images:
-		for (size_t i=0;i<files_to_delete.size();i++)
-			::unlink( files_to_delete[i].c_str() );
+			// Remove temporary images:
+			for (size_t i=0;i<files_to_delete.size();i++)
+				::unlink( files_to_delete[i].c_str() );
 
-		OB_MESSAGE(2) << "Animation done!\n";
-
+			OB_MESSAGE(2) << "Animation done!\n";
+		}
 	} // end of "arg_out_animation"
 
 	std::string scripts_before_body_end;
@@ -630,25 +632,24 @@ int main_code(int argc, char**argv)
 
 			cout << "<tr>"
 				"<td bgcolor=\"#E0E0E0\">"<< _t(STR_node) <<"</td>"
-				"<td bgcolor=\"#E0E0E0\">DX (m)</td>"
-				"<td bgcolor=\"#E0E0E0\">DY (m)</td>"
-				"<td bgcolor=\"#E0E0E0\">DZ (m)</td>"
+				"<td bgcolor=\"#E0E0E0\">DX (mm)</td>"
+				"<td bgcolor=\"#E0E0E0\">DY (mm)</td>"
+				"<td bgcolor=\"#E0E0E0\">DZ (mm)</td>"
 				"<td bgcolor=\"#E0E0E0\">RX (rad)</td>"
 				"<td bgcolor=\"#E0E0E0\">RY (rad)</td>"
 				"<td bgcolor=\"#E0E0E0\">RZ (rad)</td></tr>\n";
 
 			for (size_t i=0;i<nTotalNodes;i++)
 			{
-				cout << "<tr><td>" << i <<  "</td>";
+				cout << "<tr><td>" << problem_to_solve->getNodeLabel(i) <<  "</td>";
 				for (int k=0;k<6;k++)
 					if (U[i][k]==0)
 						cout <<  "<td>0</td>";
 					else
-						cout << format("<td>%.06f</td>", U[i][k]);
+						cout << format("<td>%.03f</td>", U[i][k]*1e3);
 				cout << "</tr>\n";
 			}
 			cout << "</table>\n";
-
 		}
 		else
 		{
@@ -702,9 +703,11 @@ int main_code(int argc, char**argv)
 				}
 				else
 				{
-					cout << format ("<tr><td align=\"center\">%s</td><td align=\"center\">%2u</td>",
+					cout << format ("<tr><td align=\"center\">%s</td><td align=\"center\">%2u (%s)</td>",
 						face==0 ? format(" %5u ",i).c_str() : "       ",
-						face);
+						face,
+						problem_to_solve->getNodeLabel( problem_to_solve->getElement(i)->conected_nodes_ids[face] ).c_str()
+						);
 
 					const num_t nums[6] = {es.N,es.Vy,es.Vz,es.Mx,es.My,es.Mz };
 

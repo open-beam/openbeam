@@ -136,16 +136,15 @@ bool CFiniteElementProblem::renderToCairoContext(
 	const num_t min_x = ri.min_x, max_x = ri.max_x;
 	const num_t min_y = ri.min_y, max_y = ri.max_y;
 
-    const double NODE_LABEL_SIZE  = 8e-2;
+	const double NODE_LABEL_SIZE  = options.labels_size / ri.scaleFactor;
 
 	Cairo::RefPtr<Cairo::Context> &cr = *reinterpret_cast<Cairo::RefPtr<Cairo::Context>*>(_cairo_context);
-
 
 	const Cairo::Matrix mat(ri.scaleFactor,0,0,-ri.scaleFactor, -ri.scaleFactor*ri.min_x, ri.height+ri.scaleFactor*ri.min_y);
 	const Cairo::Matrix mat_font(NODE_LABEL_SIZE,0,0,-NODE_LABEL_SIZE, 0,0);
 
 	cr->transform(mat);
-    cr->set_font_matrix(mat_font);
+	cr->set_font_matrix(mat_font);
 
 	// background color:
     cr->save(); // save the state of the context

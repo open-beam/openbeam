@@ -44,6 +44,7 @@ namespace openbeam
 		double deformed_scale_factor; //!< Scale of deformed states (Default=0 -> means autodetermination from \a deformed_scale_auto_max_image_ratio)
 		double deformed_scale_auto_max_image_ratio; //!< Used to auto determinate \a deformed_scale_factor: the ratio of the image size that will equal the maximum displacement of a deformed state. Default=0.1 (10%)
 		double node_loads_max_relative_size; //!< Maximum size (in ratio wrt the largest structure dimension) of the largest load on a node. Default: 0.1 (10%)
+		double labels_size; //!< Default: 15
 
 		//--- color params ---
 		double elements_original_alpha, elements_deformed_alpha;  //!< [0,1]
@@ -64,6 +65,7 @@ namespace openbeam
 			deformed_scale_factor(0),
 			deformed_scale_auto_max_image_ratio(0.1),
 			node_loads_max_relative_size(0.1),
+			labels_size(15.0),
 			//--- color params ---
 			elements_original_alpha(1), elements_deformed_alpha(1),
 			nodes_original_alpha(1), nodes_deformed_alpha(1),
