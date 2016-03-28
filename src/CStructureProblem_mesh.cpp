@@ -52,6 +52,7 @@ void CStructureProblem::mesh(
 	const size_t nOrigNodes = m_node_poses.size();
 	out_info.num_original_nodes = nOrigNodes;
 	out_fem.m_node_poses = this->m_node_poses;
+	out_fem.m_node_labels = this->m_node_labels;
 	
 	// ------------------------------
 	// (2) NODES: intermediary ones

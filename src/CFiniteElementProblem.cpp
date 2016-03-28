@@ -367,7 +367,7 @@ void CFiniteElementProblem::getBoundingBox(num_t &min_x, num_t &max_x, num_t &mi
 
 std::string CFiniteElementProblem::getNodeLabel(const size_t idx) const
 {
-	if (m_node_labels[idx].empty()) {
+	if (idx>=m_node_labels.size() || m_node_labels[idx].empty()) {
 		return openbeam::format("N%u",static_cast<unsigned int>(idx));
 	}
 	else return m_node_labels[idx];

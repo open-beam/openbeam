@@ -59,6 +59,7 @@ void CElementBeam_2D_AA::getLocalStiffnessMatrices( openbeam::aligned_containers
 
     const num_t L2 = square(node1.t.coords[0]-node0.t.coords[0])+square(node1.t.coords[1]-node0.t.coords[1])+square(node1.t.coords[2]-node0.t.coords[2]);
     const num_t L = std::sqrt( L2 );
+	OB_TODO("Allow custom bar lengths!");
 
 	OBASSERT(L>0)
 	if (E==UNINITIALIZED_VALUE) throw std::runtime_error(format("CElementBeam_2D_AA: Uninitialized parameter E (Element in %u->%u)", static_cast<unsigned int>(this->conected_nodes_ids[0]), static_cast<unsigned int>(this->conected_nodes_ids[1]) ));
