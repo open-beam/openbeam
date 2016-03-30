@@ -99,7 +99,7 @@ void CElementSpringXYZ::loadParamsFromSet( const TParamSet & params, const TEval
 }
 
 /** Draws the element to a SVG Cairo context (a pointer to a Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed options */
-void CElementSpringXYZ::drawSVG(void *_cairo_context,const TDrawStructureOptions &options, const TDrawElementExtraParams &draw_el_params,const TMeshOutputInfo *meshing_info) const
+void CElementSpringXYZ::drawSVG(void *_cairo_context,const TDrawStructureOptions &options,  const TRenderInitData & ri,const TDrawElementExtraParams &draw_el_params,const TMeshOutputInfo *meshing_info) const
 {
 #if OPENBEAM_HAS_CAIRO
 	OB_TODO("Implement SVG")

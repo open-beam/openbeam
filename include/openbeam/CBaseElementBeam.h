@@ -50,7 +50,7 @@ namespace openbeam
 		}
 
 		/** Draws the element to a SVG Cairo context (a pointer to a Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed options */
-		virtual void drawSVG(void *_cairo_context,const TDrawStructureOptions &options, const TDrawElementExtraParams &draw_el_params,const TMeshOutputInfo *meshing_info) const;
+		virtual void drawSVG(void *_cairo_context,const TDrawStructureOptions &options,  const TRenderInitData & ri,const TDrawElementExtraParams &draw_el_params,const TMeshOutputInfo *meshing_info) const;
 
 		/** Mesh this element into a set of (possibly) smaller ones */
 		virtual void do_mesh(const size_t my_idx, CStructureProblem &out_fem, TMeshOutputInfo &out_info, const TMeshParams & params);

@@ -284,6 +284,7 @@ int main_code(int argc, char**argv)
 		for (unsigned int i=0;i<2*NUM_FRAMES;i++, scale+=Ascale)
 		{
 			draw_options.deformed_scale_factor = scale;
+			draw_options.deformed_scale_factor_for_bbox = MAX_DEFORMATION_SCALE;
 
 			if (arg_anim_keep_files.isSet()) {
 				const string sFil = openbeam::format("%s_animated_%06u.svg", arg_svg_filename_prefix.getValue().c_str(), i);

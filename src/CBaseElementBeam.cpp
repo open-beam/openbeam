@@ -82,13 +82,13 @@ void CBaseElementBeam::loadParamsFromSet( const TParamSet & params, const TEvalu
 
 
 /** Draws the element to a SVG Cairo context (a pointer to a Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed options */
-void CBaseElementBeam::drawSVG(void *_cairo_context,const TDrawStructureOptions &options, const TDrawElementExtraParams &draw_el_params,const TMeshOutputInfo *meshing_info) const
+void CBaseElementBeam::drawSVG(void *_cairo_context,const TDrawStructureOptions &options,  const TRenderInitData & ri,const TDrawElementExtraParams &draw_el_params,const TMeshOutputInfo *meshing_info) const
 {
 #if OPENBEAM_HAS_CAIRO
 	Cairo::RefPtr<Cairo::Context> &cr = *reinterpret_cast<Cairo::RefPtr<Cairo::Context>*>(_cairo_context);
 
-    const double EDGE_WIDTH = 2e-2;
-    const double BEAM_PINNED_RADIUS = 3e-2;
+	const double EDGE_WIDTH = 5 / ri.scaleFactor; //2e-2;
+	const double BEAM_PINNED_RADIUS = 4 / ri.scaleFactor ;// 3e-2;
     const double PINNED_PEN_WIDTH = 0.05*BEAM_PINNED_RADIUS;
 	const size_t MAX_NODE_ID_TO_DRAW = meshing_info ? meshing_info->num_original_nodes : static_cast<size_t>(-1);
 

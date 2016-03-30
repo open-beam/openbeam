@@ -102,7 +102,7 @@ namespace openbeam
 		CFiniteElementProblem * getParent() const {return m_parent;}
 
 		/** Draws the element to a SVG Cairo context (a pointer to a Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed options */
-		virtual void drawSVG(void *_cairo_context,const TDrawStructureOptions &options, const TDrawElementExtraParams &draw_el_params,const TMeshOutputInfo *meshing_info) const = 0;
+		virtual void drawSVG(void *_cairo_context,const TDrawStructureOptions &options,  const TRenderInitData & ri,const TDrawElementExtraParams &draw_el_params,const TMeshOutputInfo *meshing_info) const = 0;
 
 		/** Class factory from element name, or NULL for an unknown element:
 		  *  Element names:

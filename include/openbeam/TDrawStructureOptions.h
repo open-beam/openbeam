@@ -42,6 +42,7 @@ namespace openbeam
 		double image_width; //!< Default: 1024px (Height is automatically determined)
 		double node_radius; //!< Default: 5e-2;
 		double deformed_scale_factor; //!< Scale of deformed states (Default=0 -> means autodetermination from \a deformed_scale_auto_max_image_ratio)
+		double deformed_scale_factor_for_bbox;
 		double deformed_scale_auto_max_image_ratio; //!< Used to auto determinate \a deformed_scale_factor: the ratio of the image size that will equal the maximum displacement of a deformed state. Default=0.1 (10%)
 		double node_loads_max_relative_size; //!< Maximum size (in ratio wrt the largest structure dimension) of the largest load on a node. Default: 0.1 (10%)
 		double labels_size; //!< Default: 15
@@ -63,6 +64,7 @@ namespace openbeam
 			image_width(1024),
 			node_radius(2e-2),
 			deformed_scale_factor(0),
+			deformed_scale_factor_for_bbox(0),
 			deformed_scale_auto_max_image_ratio(0.1),
 			node_loads_max_relative_size(0.1),
 			labels_size(15.0),
@@ -91,5 +93,13 @@ namespace openbeam
 		const TStaticSolveProblemInfo *solver_info;
 		num_t deformed_scale_factor;
 	};
+
+	struct TRenderInitData
+	{
+		num_t min_x, max_x, min_y ,max_y;
+		double width, height;
+		double scaleFactor;
+	};
+
 
 }

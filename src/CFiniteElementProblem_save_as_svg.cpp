@@ -46,15 +46,6 @@ bool CFiniteElementProblem::saveAsImageSVG(
 {
 	return saveAsImage(filename, true, options, solver_info,meshing_info );
 }
-namespace openbeam
-{
-	struct TRenderInitData
-	{
-		num_t min_x, max_x, min_y ,max_y;
-		double width, height;
-		double scaleFactor;
-	};
-}
 
 
 bool CFiniteElementProblem::saveAsImage(
@@ -69,18 +60,19 @@ bool CFiniteElementProblem::saveAsImage(
 	TRenderInitData ri;
 
 	// get the Bounding box:
-	this->getBoundingBox(ri.min_x, ri.max_x, ri.min_y ,ri.max_y);
+	this->getBoundingBox(ri.min_x, ri.max_x, ri.min_y ,ri.max_y, true /*deformed*/,solver_info, options.deformed_scale_factor_for_bbox );
 
 	{
 		// a little more margin:
-		const num_t Ax = std::max(ri.max_x-ri.min_x, 1.0);
-		const num_t Ay = std::max(ri.max_y-ri.min_y, 1.0);
+		const num_t Ax = std::max(ri.max_x-ri.min_x, 0.4);
+		const num_t Ay = std::max(ri.max_y-ri.min_y, 0.8);
+		const num_t min_A = std::min(Ax,Ay);
 
-		const num_t margin = 0.20;
-		ri.min_x -= margin*Ax;
-		ri.max_x += margin*Ax;
-		ri.min_y -= margin*Ay;
-		ri.max_y += margin*Ay;
+		const num_t margin = 0.15;
+		ri.min_x -= margin*min_A;
+		ri.max_x += margin*min_A;
+		ri.min_y -= margin*min_A;
+		ri.max_y += margin*min_A;
 	}
 
 	// Image size:
@@ -136,7 +128,10 @@ bool CFiniteElementProblem::renderToCairoContext(
 	const num_t min_x = ri.min_x, max_x = ri.max_x;
 	const num_t min_y = ri.min_y, max_y = ri.max_y;
 
+	// "Screen constant sized" objects -------------
 	const double NODE_LABEL_SIZE  = options.labels_size / ri.scaleFactor;
+	const_cast<TDrawStructureOptions *>(&options)->node_radius = 3 / ri.scaleFactor;
+	// --------------
 
 	Cairo::RefPtr<Cairo::Context> &cr = *reinterpret_cast<Cairo::RefPtr<Cairo::Context>*>(_cairo_context);
 
@@ -170,7 +165,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 			el_params.draw_original_position = true;
 
 			cr->save();
-			el->drawSVG(&cr,opts2,el_params,meshing_info);
+			el->drawSVG(&cr,opts2,ri,el_params,meshing_info);
 			cr->restore();
 		}
 	}
@@ -189,7 +184,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 
 			if (options.show_node_labels && !options.show_nodes_deformed)
 			{
-				cr->move_to(p.t.coords[0]+1.8*options.node_radius,p.t.coords[1]+0.8*options.node_radius);
+				cr->move_to(p.t.coords[0]+1.3*options.node_radius,p.t.coords[1]+0.8*options.node_radius);
 				cr->show_text( getNodeLabel(i) );
 			}
 		}
@@ -226,7 +221,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 			el_params.deformed_scale_factor = DEFORMED_SCALE_FACTOR;
 
 			cr->save();
-			el->drawSVG(&cr,options,el_params,meshing_info);
+			el->drawSVG(&cr,options,ri,el_params,meshing_info);
 			cr->restore();
 		}
 	}
@@ -249,7 +244,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 
 			if (options.show_node_labels)
 			{
-				cr->move_to(pt[0]+1.8*options.node_radius,pt[1]+0.8*options.node_radius);
+				cr->move_to(pt[0]+1.3*options.node_radius,pt[1]+0.8*options.node_radius);
 				cr->show_text( getNodeLabel(i) );
 			}
 		}
@@ -264,7 +259,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 
 		// Dimensions of constraint plots:
 		const double R = options.node_radius;
-		const double SCALE = R; // ...
+		const double SCALE = R*2; // ...
 		const double W = SCALE*0.9;
 		const double H  = SCALE*1.8;
 		const double H2 = SCALE*0.8;

@@ -255,7 +255,7 @@ namespace openbeam
 		num_t getMaximumDeformedDisplacement(const TStaticSolveProblemInfo & solver_info) const;
 
 		/** Computes the bounding box of all existing nodes */
-		void getBoundingBox(num_t &min_x, num_t &max_x, num_t &min_y ,num_t &max_y) const;
+		void getBoundingBox(num_t &min_x, num_t &max_x, num_t &min_y , num_t &max_y, bool deformed = false,  const TStaticSolveProblemInfo *solver_info=NULL, num_t deformed_scale_factor=1.0) const;
 
 		/** @} */
 		// ----------------------------------------------------------------------------

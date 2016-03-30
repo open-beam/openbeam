@@ -348,20 +348,33 @@ num_t CFiniteElementProblem::getMaximumDeformedDisplacement(const TStaticSolvePr
 }
 
 /** Computes the bounding box of all existing nodes */
-void CFiniteElementProblem::getBoundingBox(num_t &min_x, num_t &max_x, num_t &min_y ,num_t &max_y) const
+void CFiniteElementProblem::getBoundingBox(num_t &min_x, num_t &max_x, num_t &min_y ,num_t &max_y, bool deformed, const TStaticSolveProblemInfo *solver_info, num_t deformed_scale_factor) const
 {
+	OBASSERT(!deformed || solver_info!=NULL);
+
 	min_x = min_y =  std::numeric_limits<num_t>::max();
 	max_x = max_y = -std::numeric_limits<num_t>::max();
 
 	const size_t nNodes = getNumberOfNodes();
 	for (size_t i=0;i<nNodes;i++)
 	{
-		const TRotationTrans3D &p = this->getNodePose(i);
-		min_x=std::min(min_x, p.t.coords[0]);
-		max_x=std::max(max_x, p.t.coords[0]);
+		if (!deformed) {
+			const TRotationTrans3D &p = this->getNodePose(i);
+			min_x=std::min(min_x, p.t.coords[0]);
+			max_x=std::max(max_x, p.t.coords[0]);
 
-		min_y=std::min(min_y, p.t.coords[1]);
-		max_y=std::max(max_y, p.t.coords[1]);
+			min_y=std::min(min_y, p.t.coords[1]);
+			max_y=std::max(max_y, p.t.coords[1]);
+		} else
+		{
+			TVector3 pt;
+			this->getNodeDeformedPosition(i, pt,*solver_info,deformed_scale_factor);
+			min_x=std::min(min_x, pt[0]);
+			max_x=std::max(max_x, pt[0]);
+
+			min_y=std::min(min_y, pt[1]);
+			max_y=std::max(max_y, pt[1]);
+		}
 	}
 }
 
