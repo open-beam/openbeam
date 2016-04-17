@@ -102,6 +102,11 @@ int main_code(int argc, char**argv)
 
 	TCLAP::SwitchArg             arg_draw_mesh("","mesh-draw","Visualize mesh",cmd);
 
+	TCLAP::ValueArg<double>      arg_margin_bottom("","draw-margin-bottom","(Default:auto)",false,-1.0,"1.0",cmd);
+	TCLAP::ValueArg<double>      arg_margin_top("","draw-margin-top","(Default:auto)",false,-1.0,"1.0",cmd);
+	TCLAP::ValueArg<double>      arg_margin_left("","draw-margin-left","(Default:auto)",false,-1.0,"1.0",cmd);
+	TCLAP::ValueArg<double>      arg_margin_right("","draw-margin-right","(Default:auto)",false,-1.0,"1.0",cmd);
+
 
  	// Parse arguments:
 	if (!cmd.parse( argc, argv ))
@@ -266,6 +271,11 @@ int main_code(int argc, char**argv)
 		draw_options.nodes_original_alpha = 0.15;
 		draw_options.constraints_original_alpha = draw_options.nodes_original_alpha;
 
+		draw_options.margin_bottom = arg_margin_bottom.getValue();
+		draw_options.margin_top = arg_margin_top.getValue();
+		draw_options.margin_left = arg_margin_left.getValue();
+		draw_options.margin_right = arg_margin_right.getValue();
+
 		draw_options.show_elements_original = true;
 		draw_options.show_elements_deformed = true;
 		draw_options.elements_original_alpha = 0.12;
@@ -333,6 +343,11 @@ int main_code(int argc, char**argv)
 		draw_options.show_elements_original = true;
 		draw_options.show_elements_deformed = false;
 
+		draw_options.margin_bottom = arg_margin_bottom.getValue();
+		draw_options.margin_top = arg_margin_top.getValue();
+		draw_options.margin_left = arg_margin_left.getValue();
+		draw_options.margin_right = arg_margin_right.getValue();
+
 		const string sFilOriginal = arg_svg_filename_prefix.getValue() + string("_original.svg");
 		problem_to_solve->saveAsImageSVG(sFilOriginal, draw_options, &sInfo, !arg_draw_mesh.isSet() ? mesh_info : NULL  );
 
@@ -346,7 +361,8 @@ int main_code(int argc, char**argv)
 		draw_options.deformed_scale_factor = arg_svg_deformed_factor.getValue();
 
 		const string sFilDeformed = arg_svg_filename_prefix.getValue() + string("_deformed.svg");
-		problem_to_solve->saveAsImageSVG(sFilDeformed, draw_options, &sInfo, !arg_draw_mesh.isSet() ? mesh_info : NULL  );
+		TImageSaveOutputInfo img_out_info;
+		problem_to_solve->saveAsImageSVG(sFilDeformed, draw_options, &sInfo, !arg_draw_mesh.isSet() ? mesh_info : NULL , &img_out_info  );
 
 		cout <<
 			"<div width=\"100%\"> <!-- FIGURES -->\n"
@@ -359,7 +375,7 @@ int main_code(int argc, char**argv)
 				"<b>Deformation animation:</b> (&times; "<< arg_svg_deformed_factor.getValue() <<")<br>\n"
 				" <div class='animatedimage'>\n";
 			for (size_t i=0;i<anim_svg_files.size();i++)
-				cout << " <img src='" << anim_svg_files[i] <<  "' width=\"" << arg_out_images_width.getValue() <<  "\"/>";
+				cout << " <img src='" << anim_svg_files[i] <<  "' width=\"" << img_out_info.img_width <<  "\" height=\""<< img_out_info.img_height <<  "\"/>";
 			cout << "\n </div>\n"
 				"</div><br/>\n";
 
@@ -722,6 +738,8 @@ int main_code(int argc, char**argv)
 		}
 	}
 
+	OB_TODO("Generate vector plots ==> http://stackoverflow.com/a/4935945/1631514");
+
 	// Create HTML graphs of stress for each meshed element:
 	// -----------------------------------------------------
 	if (arg_stress_plots.isSet() && out_html && mesh_info!=NULL)
@@ -733,12 +751,11 @@ int main_code(int argc, char**argv)
 
 		// For each original bar:
 		std::vector<size_t> idx_of_first_plot_for_each_beam;
+		std::stringstream sIndivPlotsBuf;
 
 		lst_html_graphs.reserve(mi.element2elements.size() * 3);
 		for (size_t idx_bar = 0 ; idx_bar < mi.element2elements.size();idx_bar++)
 		{
-			cout << "<h3>" << openbeam::localization::_t(STR_Bar) << " " << idx_bar << "</h3>\n";
-
 			// Find out the original length of the bar:
 			const std::vector<size_t> &org_nodes_idxs = mi.element2nodes[idx_bar];
 			const size_t node0 = *org_nodes_idxs.begin();
@@ -828,14 +845,15 @@ int main_code(int argc, char**argv)
 			}
 
 			// HTML Place holder for the graph:
-			cout << "<div id='graph_"<<idx_N<<"' "<<sGraphStyle <<"></div>\n";
-			cout << "<div id='graph_"<<idx_Vy<<"' "<<sGraphStyle <<"></div>\n";
-			cout << "<div id='graph_"<<idx_Mz<<"' "<<sGraphStyle <<"></div>\n";
-			cout << "<div id='graph_"<<idx_Ux<<"' "<<sGraphStyle <<"></div>\n";
-			cout << "<div id='graph_"<<idx_Uy<<"' "<<sGraphStyle <<"></div>\n";
-			cout << "<div id='graph_"<<idx_URotz<<"' "<<sGraphStyle <<"></div>\n";
-			cout << "<div id='graph_"<<idx_Mx<<"' "<<sGraphStyle <<"></div>\n";
-			cout << "<div id='graph_"<<idx_URotx<<"' "<<sGraphStyle <<"></div>\n";
+			sIndivPlotsBuf << "<h3>" << openbeam::localization::_t(STR_Bar) << " " << idx_bar << "</h3>\n";
+			sIndivPlotsBuf << "<div id='graph_"<<idx_N<<"' "<<sGraphStyle <<"></div>\n";
+			sIndivPlotsBuf << "<div id='graph_"<<idx_Vy<<"' "<<sGraphStyle <<"></div>\n";
+			sIndivPlotsBuf << "<div id='graph_"<<idx_Mz<<"' "<<sGraphStyle <<"></div>\n";
+			sIndivPlotsBuf << "<div id='graph_"<<idx_Ux<<"' "<<sGraphStyle <<"></div>\n";
+			sIndivPlotsBuf << "<div id='graph_"<<idx_Uy<<"' "<<sGraphStyle <<"></div>\n";
+			sIndivPlotsBuf << "<div id='graph_"<<idx_URotz<<"' "<<sGraphStyle <<"></div>\n";
+			sIndivPlotsBuf << "<div id='graph_"<<idx_Mx<<"' "<<sGraphStyle <<"></div>\n";
+			sIndivPlotsBuf << "<div id='graph_"<<idx_URotx<<"' "<<sGraphStyle <<"></div>\n";
 
 		}
 
@@ -847,8 +865,6 @@ int main_code(int argc, char**argv)
 			const string sContBeamsIDs = arg_plots_continuous_beam.getValue();
 			vector_string sLstContBeamIDs;
 			tokenize(sContBeamsIDs,", ",sLstContBeamIDs);
-
-			cout << "<h3>" << openbeam::localization::_t(STR_Bar) << " " << sContBeamsIDs << "</h3>\n";
 
 			// N/Vy/Mz stress: add 3 graphs
 			// Displacement field X,Y,RotZ: add 3 graphs
@@ -931,6 +947,7 @@ int main_code(int argc, char**argv)
 			gd_Rotx.x = gd_N.x;
 
 			// HTML Place holder for the graph:
+			cout << "<h3>" << openbeam::localization::_t(STR_Bar) << " " << sContBeamsIDs << "</h3>\n";
 			cout << "<div id='graph_"<<idx_N<<"' "<<sGraphStyle <<"></div>\n";
 			cout << "<div id='graph_"<<idx_Vy<<"' "<<sGraphStyle <<"></div>\n";
 			cout << "<div id='graph_"<<idx_Mz<<"' "<<sGraphStyle <<"></div>\n";
@@ -940,6 +957,8 @@ int main_code(int argc, char**argv)
 			cout << "<div id='graph_"<<idx_Mx<<"' "<<sGraphStyle <<"></div>\n";
 			cout << "<div id='graph_"<<idx_URotx<<"' "<<sGraphStyle <<"></div>\n";
 		}
+
+		cout << sIndivPlotsBuf.str();
 	}
 
 	if (out_html)

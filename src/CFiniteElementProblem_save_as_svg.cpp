@@ -31,20 +31,22 @@ bool CFiniteElementProblem::saveAsImagePNG(
 	const std::string &filename,
 	const TDrawStructureOptions & options,
 	const TStaticSolveProblemInfo * solver_info,
-	const TMeshOutputInfo *meshing_info
+	const TMeshOutputInfo *meshing_info,
+	TImageSaveOutputInfo *out_img_info
 	) const
 {
-	return saveAsImage(filename, false, options, solver_info,meshing_info );
+	return saveAsImage(filename, false, options, solver_info,meshing_info,out_img_info );
 }
 
 bool CFiniteElementProblem::saveAsImageSVG(
 	const std::string &filename,
 	const TDrawStructureOptions & options,
 	const TStaticSolveProblemInfo * solver_info,
-	const TMeshOutputInfo *meshing_info
+	const TMeshOutputInfo *meshing_info,
+	TImageSaveOutputInfo *out_img_info
 	) const
 {
-	return saveAsImage(filename, true, options, solver_info,meshing_info );
+	return saveAsImage(filename, true, options, solver_info,meshing_info,out_img_info );
 }
 
 
@@ -53,7 +55,8 @@ bool CFiniteElementProblem::saveAsImage(
 	const bool is_svg,
 	const TDrawStructureOptions & options,
 	const TStaticSolveProblemInfo * solver_info,
-	const TMeshOutputInfo *meshing_info
+	const TMeshOutputInfo *meshing_info,
+	TImageSaveOutputInfo *out_img_info
 	) const
 {
 #if OPENBEAM_HAS_CAIRO
@@ -62,17 +65,17 @@ bool CFiniteElementProblem::saveAsImage(
 	// get the Bounding box:
 	this->getBoundingBox(ri.min_x, ri.max_x, ri.min_y ,ri.max_y, true /*deformed*/,solver_info, options.deformed_scale_factor_for_bbox );
 
+	// Additional margin:
 	{
-		// a little more margin:
 		const num_t Ax = std::max(ri.max_x-ri.min_x, 0.4);
 		const num_t Ay = std::max(ri.max_y-ri.min_y, 0.8);
 		const num_t min_A = std::min(Ax,Ay);
 
 		const num_t margin = 0.15;
-		ri.min_x -= margin*min_A;
-		ri.max_x += margin*min_A;
-		ri.min_y -= margin*min_A;
-		ri.max_y += margin*min_A;
+		ri.min_x -= (options.margin_left<0) ? margin*min_A : options.margin_left;
+		ri.max_x += (options.margin_right<0) ? margin*min_A : options.margin_right;
+		ri.min_y -= (options.margin_bottom<0) ? margin*min_A : options.margin_bottom;
+		ri.max_y += (options.margin_top<0) ? margin*min_A : options.margin_top;
 	}
 
 	// Image size:
@@ -82,6 +85,11 @@ bool CFiniteElementProblem::saveAsImage(
 	ri.scaleFactor = options.image_width/ri.width;
 	ri.width*=ri.scaleFactor;
 	ri.height*=ri.scaleFactor;
+
+	if (out_img_info) {
+		out_img_info->img_width = ri.width;
+		out_img_info->img_height = ri.height;
+	}
 
     Cairo::RefPtr<Cairo::Surface> surface;
     if (is_svg)

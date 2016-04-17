@@ -117,6 +117,14 @@ namespace openbeam
 		std::deque<std::vector<size_t> >  element2elements;  //!< List of smaller element IDs resulting from meshing the element [i]
 	};
 
+	struct TImageSaveOutputInfo
+	{
+		unsigned int img_width, img_height;
+
+		TImageSaveOutputInfo() : img_width(0), img_height(0)
+		{}
+	};
+
 
 
 	/** A complete problem of finite elements.
@@ -169,9 +177,9 @@ namespace openbeam
 		  * \param options Many parameters and switches to control what will be drawn and hiden.
 		  * \return true on success
 		  */
-		bool saveAsImageSVG(const std::string &file,const TDrawStructureOptions & options,const TStaticSolveProblemInfo * solver_info = NULL,const TMeshOutputInfo *meshing_info = NULL) const;
-		bool saveAsImagePNG(const std::string &file,const TDrawStructureOptions & options,const TStaticSolveProblemInfo * solver_info = NULL,const TMeshOutputInfo *meshing_info = NULL) const;
-		bool saveAsImage(const std::string &file,const bool is_svg,const TDrawStructureOptions & options,const TStaticSolveProblemInfo * solver_info = NULL,const TMeshOutputInfo *meshing_info = NULL) const;
+		bool saveAsImageSVG(const std::string &file,const TDrawStructureOptions & options,const TStaticSolveProblemInfo * solver_info = NULL,const TMeshOutputInfo *meshing_info = NULL,TImageSaveOutputInfo *out_img_info = NULL) const;
+		bool saveAsImagePNG(const std::string &file,const TDrawStructureOptions & options,const TStaticSolveProblemInfo * solver_info = NULL,const TMeshOutputInfo *meshing_info = NULL,TImageSaveOutputInfo *out_img_info = NULL) const;
+		bool saveAsImage(const std::string &file,const bool is_svg,const TDrawStructureOptions & options,const TStaticSolveProblemInfo * solver_info = NULL,const TMeshOutputInfo *meshing_info = NULL,TImageSaveOutputInfo *out_img_info = NULL ) const;
 
 		bool renderToCairoContext(
 			void * _cairo_context,
