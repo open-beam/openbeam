@@ -643,9 +643,9 @@ int main_code(int argc, char**argv)
 				"<td bgcolor=\"#E0E0E0\">DX (mm)</td>"
 				"<td bgcolor=\"#E0E0E0\">DY (mm)</td>"
 				"<td bgcolor=\"#E0E0E0\">DZ (mm)</td>"
-				"<td bgcolor=\"#E0E0E0\">RX (rad)</td>"
-				"<td bgcolor=\"#E0E0E0\">RY (rad)</td>"
-				"<td bgcolor=\"#E0E0E0\">RZ (rad)</td></tr>\n";
+				"<td bgcolor=\"#E0E0E0\">RX (deg)</td>"
+				"<td bgcolor=\"#E0E0E0\">RY (deg)</td>"
+				"<td bgcolor=\"#E0E0E0\">RZ (deg)</td></tr>\n";
 
 			for (size_t i=0;i<nTotalNodes;i++)
 			{
@@ -653,8 +653,11 @@ int main_code(int argc, char**argv)
 				for (int k=0;k<6;k++)
 					if (U[i][k]==0)
 						cout <<  "<td>0</td>";
-					else
-						cout << format("<td>%.03f</td>", U[i][k]*1e3);
+					else {
+						if (k<3)
+						     cout << format("<td>%.03f</td>", U[i][k]*1e3);
+						else cout << format("<td>%.02f</td>", U[i][k]*180/M_PI);
+					}
 				cout << "</tr>\n";
 			}
 			cout << "</table>\n";
