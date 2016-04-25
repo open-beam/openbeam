@@ -23,6 +23,9 @@
 
 #include "types.h"
 #include "TDrawStructureOptions.h"
+#if OPENBEAM_HAS_QT5Svg
+#include <QtSvg>
+#endif
 
 namespace openbeam
 {
@@ -103,6 +106,9 @@ namespace openbeam
 
 		/** Draws the element to a SVG Cairo context (a pointer to a Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed options */
 		virtual void drawSVG(void *_cairo_context,const TDrawStructureOptions &options,  const TRenderInitData & ri,const TDrawElementExtraParams &draw_el_params,const TMeshOutputInfo *meshing_info) const = 0;
+#if OPENBEAM_HAS_QT5Svg
+		virtual void drawQtSVG( QSvgGenerator &svg, const TDrawStructureOptions &options, const TRenderInitData & ri, const TDrawElementExtraParams &draw_el_params, const TMeshOutputInfo *meshing_info) const = 0;
+#endif
 
 		/** Class factory from element name, or NULL for an unknown element:
 		  *  Element names:

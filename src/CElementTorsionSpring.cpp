@@ -90,6 +90,11 @@ void CElementTorsionSpring::loadParamsFromSet( const TParamSet & params, const T
 	}
 }
 
+#if OPENBEAM_HAS_QT5Svg
+void CElementTorsionSpring::drawQtSVG(QSvgGenerator &svg, const TDrawStructureOptions &options, const TRenderInitData & ri, const TDrawElementExtraParams &draw_el_params, const TMeshOutputInfo *meshing_info) const
+{
+}
+#endif
 
 /** Draws the element to a SVG Cairo context (a pointer to a Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed options */
 void CElementTorsionSpring::drawSVG(void *_cairo_context,const TDrawStructureOptions &options,  const TRenderInitData & ri,const TDrawElementExtraParams &draw_el_params,const TMeshOutputInfo *meshing_info) const

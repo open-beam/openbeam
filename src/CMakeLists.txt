@@ -17,5 +17,8 @@ ADD_LIBRARY(openbeam
 	${INTERN_HS_LIST} ${INTERN_CPPS_LIST}
 	)
 	
-target_link_libraries(openbeam ${OPENBEAM_LINK_LIBS})
+target_link_libraries(openbeam 
+	${OPENBEAM_LINK_LIBS}
+	${Qt5Svg_LIBRARIES}
+	)
 

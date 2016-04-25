@@ -1,19 +1,14 @@
 #cmake_minimum_required(VERSION 2.8.11)
 project(OpenBeamStudio)
 
-# Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-# Instruct CMake to run moc automatically when needed.
-set(CMAKE_AUTOMOC ON)
-
-if(POLICY CMP0020)
-  cmake_policy(SET CMP0020 NEW)
-endif()
-
 find_package(Qt5Widgets QUIET)  # Find the QtWidgets library
 IF (NOT Qt5Widgets_FOUND)
 	MESSAGE(STATUS "*WARNING* Qt5 not found. Cannot build this target. \n  Add the installation prefix of Qt5Widgets to CMAKE_PREFIX_PATH \n  or set Qt5Widgets_DIR to a directory containing one of the above files, typically: 'C:\\Qt\\5.X\\msvcXXXX_64\\lib\\cmake\\Qt5Widgets'")
 ELSE()
+	add_definitions(${Qt5Widgets_DEFINITIONS})
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+
 	INCLUDE_DIRECTORIES("${OpenBeam_SOURCE_DIR}/3rdparty/")
 
 	set(FORMS
@@ -37,7 +32,8 @@ ELSE()
 
 	# Use the Widgets module from Qt 5.
 	target_link_libraries(OpenBeamStudio
-		Qt5::Widgets 
+		${Qt5Widgets_LIBRARIES}
+		${Qt5Svg_LIBRARIES}
 		openbeam)
 
 	# for builds inside the main SDK

@@ -32,6 +32,12 @@
 #   include <sys/stat.h> // mkdir()
 #endif
 
+#ifdef _MSC_VER
+#include <direct.h> // mkdir()
+#define mkdir _mkdir
+#define chdir _chdir
+#endif
+
 
 using namespace openbeam;
 using namespace openbeam::localization;
@@ -148,7 +154,11 @@ int main_code(int argc, char**argv)
 	}
 
 	if (arg_out_dir.isSet()) {
+#ifdef __GNUC__
 		::mkdir( arg_out_dir.getValue().c_str(), 0777);
+#else
+		::mkdir(arg_out_dir.getValue().c_str());
+#endif
 		if (0!=::chdir(arg_out_dir.getValue().c_str()))
 			throw std::runtime_error("Error changing to directory in --out-dir");
 	}
