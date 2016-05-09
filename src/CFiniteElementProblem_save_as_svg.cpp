@@ -93,6 +93,7 @@ bool CFiniteElementProblem::saveAsImage(
 
     Cairo::RefPtr<Cairo::Surface> surface;
     if (is_svg)
+//		surface = Cairo::PdfSurface::create(filename, ri.width, ri.height);
 		  surface = Cairo::SvgSurface::create(filename, ri.width, ri.height);
 	else  surface = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, ri.width, ri.height);
 
@@ -149,12 +150,14 @@ bool CFiniteElementProblem::renderToCairoContext(
 	cr->transform(mat);
 	cr->set_font_matrix(mat_font);
 
+#if 0 // Transparent bg:
 	// background color:
     cr->save(); // save the state of the context
     cr->set_source_rgb(0.95,0.95,0.95);
     cr->rectangle (ri.min_x,ri.min_y,   ri.max_x-ri.min_x, ri.max_y-ri.min_y);
     cr->fill();
     cr->restore(); // color is back to black now
+#endif
 
 	// Edges original:  ==============================================
 	if (options.show_elements_original)
@@ -187,6 +190,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 		for (size_t i=0;i<nNodesToDraw;i++)
 		{
 			const TRotationTrans3D &p = this->getNodePose(i);
+			cr->move_to(p.t.coords[0],p.t.coords[1]);
 			cr->arc(p.t.coords[0],p.t.coords[1], options.node_radius, 0, 2*M_PI);
 			cr->fill();
 
@@ -247,6 +251,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 			TVector3 pt;
 			this->getNodeDeformedPosition(i,pt,*solver_info, DEFORMED_SCALE_FACTOR );
 
+			cr->move_to(pt[0],pt[1]);
 			cr->arc(pt[0],pt[1], options.node_radius, 0, 2*M_PI);
 			cr->fill();
 

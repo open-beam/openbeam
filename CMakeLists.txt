@@ -72,6 +72,8 @@ SET(OPENBEAM_HAS_CAIRO 0)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${OpenBeam_SOURCE_DIR})
 FIND_PACKAGE(Cairo)
 
+# pangommcairo
+
 # Save vars (for some reason they are overwriten by another pkg_check_modules() call):
 SET(MY_CAIRO_VERSION  ${CAIRO_VERSION})
 SET(MY_CAIRO_LIBRARIES  ${CAIRO_LIBRARIES})
