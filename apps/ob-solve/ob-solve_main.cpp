@@ -81,6 +81,7 @@ int main_code(int argc, char**argv)
 	TCLAP::SwitchArg             arg_stress("","stress","Show element stress as text (Default: no)",cmd);
 	TCLAP::SwitchArg             arg_stress_plots("","stress-plots","Show element stress as graphs, if using HTML output (Default: no)",cmd);
 	TCLAP::SwitchArg             arg_svg("","svg","Enable generation of SVG images (Default: no)",cmd);
+	TCLAP::SwitchArg             arg_sep_plots("", "sep-plots", "Generate separate plot files (Default: no)", cmd);
 
 	TCLAP::ValueArg<std::string> arg_plots_continuous_beam("","plots-continuous-beam","Generate plots for a sequence of elements which are interpreted as one single continuous beam",false,"","0,1,2",cmd);
 	
@@ -751,11 +752,9 @@ int main_code(int argc, char**argv)
 		}
 	}
 
-	OB_TODO("Generate vector plots ==> http://stackoverflow.com/a/4935945/1631514");
-
 	// Create HTML graphs of stress for each meshed element:
 	// -----------------------------------------------------
-	if (arg_stress_plots.isSet() && out_html && mesh_info!=NULL)
+	if (arg_stress_plots.isSet() && (out_html || arg_sep_plots.isSet()) && mesh_info!=NULL)
 	{
 		const TMeshOutputInfo & mi = *mesh_info;
 
@@ -810,15 +809,15 @@ int main_code(int argc, char**argv)
 			gd_Mz.x.resize(nE+1);  gd_Mz.y.resize(nE+1);
 
 			TGraphData &gd_Ux = lst_html_graphs[idx_Ux];
-			gd_Ux.title = "Desplazamiento: \\u0394x (mm)";  gd_Ux.x_label = "x (m)"; gd_Ux.y_label = "\\u0394x (mm)";
+			gd_Ux.title = "Desplazamiento: $\\delta_x$ (mm)";  gd_Ux.x_label = "x (m)"; gd_Ux.y_label = "$\\delta_x$ (mm)";
 			gd_Ux.x.resize(nE+1);  gd_Ux.y.resize(nE+1);
 			
 			TGraphData &gd_Uy = lst_html_graphs[idx_Uy];
-			gd_Uy.title = "Desplazamiento: \\u0394y (mm)";  gd_Uy.x_label = "x (m)"; gd_Uy.y_label = "\\u0394y (mm)";
+			gd_Uy.title = "Desplazamiento: $\\delta_y$ (mm)";  gd_Uy.x_label = "x (m)"; gd_Uy.y_label = "$\\delta_y$ (mm)";
 			gd_Uy.x.resize(nE+1);  gd_Uy.y.resize(nE+1);
 
 			TGraphData &gd_Rotz = lst_html_graphs[idx_URotz];
-			gd_Rotz.title = "Giro Z: \\u03B8z (\\u00B0)";  gd_Rotz.x_label = "x (m)"; gd_Rotz.y_label = "\\u03B8z (\\u00B0)";
+			gd_Rotz.title = "Giro Z: $\\theta_z$ ($^\\circ$)";  gd_Rotz.x_label = "x (m)"; gd_Rotz.y_label = "$\\theta_z$ ($^\\circ$)";
 			gd_Rotz.x.resize(nE+1);  gd_Rotz.y.resize(nE+1);
 			
 			TGraphData &gd_Mx = lst_html_graphs[idx_Mx];
@@ -826,7 +825,7 @@ int main_code(int argc, char**argv)
 			gd_Mx.x.resize(nE+1);  gd_Mx.y.resize(nE+1);
 
 			TGraphData &gd_Rotx = lst_html_graphs[idx_URotx];
-			gd_Rotx.title = "Giro X: \\u03B8x (\\u00B0)";  gd_Rotx.x_label = "x (m)"; gd_Rotx.y_label = "\\u03B8x (\\u00B0)";
+			gd_Rotx.title = "Giro X: $\\theta_x$ ($^\\circ$)";  gd_Rotx.x_label = "x (m)"; gd_Rotx.y_label = "$\\theta_x$ ($^\\circ$)";
 			gd_Rotx.x.resize(nE+1);  gd_Rotx.y.resize(nE+1);
 
 			double x = 0;
@@ -1011,6 +1010,68 @@ int main_code(int argc, char**argv)
 			"  google.setOnLoadCallback(drawAllPlots);\n"
 			"</script>\n";
 	}
+
+	// generate individual graph files:
+	if (arg_sep_plots.isSet())
+	{
+		const char * sPythonTemplate =
+			"import matplotlib as mpl\n"
+			"mpl.use('Agg')\n"
+			"import matplotlib.pyplot as plt\n"
+			"\n"
+			"fig = plt.figure(figsize = (15, 5), dpi = 80)\n"
+			"ax = fig.add_subplot(111)\n"
+			"ax.plot(%s,%s,marker='.')\n"
+			"ax.set_title(r'%s')\n"
+			"plt.xlabel(r'%s')\n"
+			"plt.ylabel(r'%s')\n"
+			"ax.grid(True)\n"
+			"fig.savefig('%s.pdf')\n"
+			"fig.savefig('%s.png')\n";
+
+		for (size_t i = 0; i<lst_html_graphs.size(); i++)
+		{
+			const TGraphData &gd = lst_html_graphs[i];
+
+			const string sOutPy   = openbeam::format("plot%03u.py", (unsigned int)i);
+			const string sOutFile = openbeam::format("plot%03u", (unsigned int)i);
+			FILE *f = fopen(sOutPy.c_str(),"wt");
+			if (!f) throw std::runtime_error(openbeam::format("can't save output file: `%s`.",sOutPy.c_str()) );
+
+			string sX = "[", sY = "[";
+			const size_t N = gd.x.size();
+			for (size_t k = 0; k < N; k++) 
+			{
+				sX += openbeam::format("%.3e", gd.x[k]);
+				sY += openbeam::format("%.3e", gd.y[k]);
+				if (k == (N - 1)) {
+					sX += "]";
+					sY += "]";
+				}else {
+					sX += ","; 
+					sY += ","; 
+				}
+			}
+
+			fprintf(f,sPythonTemplate,
+				sX.c_str(), // x data
+				sY.c_str(), // y data
+				gd.title.c_str(), // title
+				gd.x_label.c_str(), // x lb
+				gd.y_label.c_str(), // y lb
+				sOutFile.c_str(), sOutFile.c_str()
+				);
+
+			fclose(f);
+
+			// Invoke:
+			const string sCmd = openbeam::format("python %s", sOutPy.c_str());
+			int ret = ::system(sCmd.c_str());
+			if (ret != 0)
+				throw std::runtime_error(openbeam::format("Error executing cmd: `%s`. Missing Phyton cli?", sCmd.c_str()));
+		}
+	}
+
 
 	if (out_html && !out_html_no_head)
 	{

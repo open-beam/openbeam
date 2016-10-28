@@ -47,6 +47,10 @@ ELSE(UNIX)
 	SET(DEFAULT_SHARED_LIBS OFF)
 ENDIF(UNIX)
 
+IF (MSVC)
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+ENDIF()
+
 SET(BUILD_SHARED_LIBS ${DEFAULT_SHARED_LIBS} CACHE BOOL "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)")
 SET(BUILD_EXAMPLES ON CACHE BOOL "Build examples?")
 
