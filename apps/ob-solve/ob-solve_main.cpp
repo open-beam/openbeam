@@ -54,6 +54,7 @@ void listDOFs2titles(const std::vector<TDoF> & dofs,vector<string> &dof_titles, 
 
 struct TGraphData
 {
+	std::string filePrefix;
 	std::string title;
 	std::string x_label, y_label; // Plot axis labels
 	vector<double> x,y; // Plot data
@@ -796,35 +797,45 @@ int main_code(int argc, char**argv)
 
 			lst_html_graphs.resize( idx_N + 8 );
 
+			const string sFilPrefix = openbeam::format("element%03u_", (unsigned int)idx_bar);
+
 			TGraphData &gd_N = lst_html_graphs[idx_N];
+			gd_N.filePrefix = sFilPrefix;
 			gd_N.title = "Axil: N (kN)";  gd_N.x_label = "x (m)"; gd_N.y_label = "N (kN)";
 			gd_N.x.resize(nE+1);  gd_N.y.resize(nE+1);
 
 			TGraphData &gd_Vy = lst_html_graphs[idx_Vy];
+			gd_Vy.filePrefix = sFilPrefix;
 			gd_Vy.title = "Cortante: Vy (kN)";  gd_Vy.x_label = "x (m)"; gd_Vy.y_label = "Vy (kN)";
 			gd_Vy.x.resize(nE+1);  gd_Vy.y.resize(nE+1);
 
 			TGraphData &gd_Mz = lst_html_graphs[idx_Mz];
+			gd_Mz.filePrefix = sFilPrefix;
 			gd_Mz.title = "Flector: Mz (kNm)";  gd_Mz.x_label = "x (m)"; gd_Mz.y_label = "Mz (kNm)";
 			gd_Mz.x.resize(nE+1);  gd_Mz.y.resize(nE+1);
 
 			TGraphData &gd_Ux = lst_html_graphs[idx_Ux];
+			gd_Ux.filePrefix = sFilPrefix;
 			gd_Ux.title = "Desplazamiento: $\\delta_x$ (mm)";  gd_Ux.x_label = "x (m)"; gd_Ux.y_label = "$\\delta_x$ (mm)";
 			gd_Ux.x.resize(nE+1);  gd_Ux.y.resize(nE+1);
 			
 			TGraphData &gd_Uy = lst_html_graphs[idx_Uy];
+			gd_Uy.filePrefix = sFilPrefix;
 			gd_Uy.title = "Desplazamiento: $\\delta_y$ (mm)";  gd_Uy.x_label = "x (m)"; gd_Uy.y_label = "$\\delta_y$ (mm)";
 			gd_Uy.x.resize(nE+1);  gd_Uy.y.resize(nE+1);
 
 			TGraphData &gd_Rotz = lst_html_graphs[idx_URotz];
+			gd_Rotz.filePrefix = sFilPrefix;
 			gd_Rotz.title = "Giro Z: $\\theta_z$ ($^\\circ$)";  gd_Rotz.x_label = "x (m)"; gd_Rotz.y_label = "$\\theta_z$ ($^\\circ$)";
 			gd_Rotz.x.resize(nE+1);  gd_Rotz.y.resize(nE+1);
 			
 			TGraphData &gd_Mx = lst_html_graphs[idx_Mx];
+			gd_Mx.filePrefix = sFilPrefix;
 			gd_Mx.title = "Torsor: Mx (kNm)";  gd_Mx.x_label = "x (m)"; gd_Mx.y_label = "Mx (kNm)";
 			gd_Mx.x.resize(nE+1);  gd_Mx.y.resize(nE+1);
 
 			TGraphData &gd_Rotx = lst_html_graphs[idx_URotx];
+			gd_Rotx.filePrefix = sFilPrefix;
 			gd_Rotx.title = "Giro X: $\\theta_x$ ($^\\circ$)";  gd_Rotx.x_label = "x (m)"; gd_Rotx.y_label = "$\\theta_x$ ($^\\circ$)";
 			gd_Rotx.x.resize(nE+1);  gd_Rotx.y.resize(nE+1);
 
@@ -891,30 +902,31 @@ int main_code(int argc, char**argv)
 			const size_t idx_URotx = idx_N+7;
 
 			lst_html_graphs.resize( idx_N + 8 );
+			const string sFilPrefix = openbeam::format("elements_%s_", sContBeamsIDs.c_str() );
 
 			TGraphData &gd_N = lst_html_graphs[idx_N];
-			gd_N.title = "Axil: N (kN)";  gd_N.x_label = "x (m)"; gd_N.y_label = "N (kN)";
-
+			gd_N.title = "Axil: N (kN)";  gd_N.x_label = "x (m)"; gd_N.y_label = "N (kN)"; gd_N.filePrefix = sFilPrefix;
+			
 			TGraphData &gd_Vy = lst_html_graphs[idx_Vy];
-			gd_Vy.title = "Cortante: Vy (kN)";  gd_Vy.x_label = "x (m)"; gd_Vy.y_label = "Vy (kN)";
+			gd_Vy.title = "Cortante: Vy (kN)";  gd_Vy.x_label = "x (m)"; gd_Vy.y_label = "Vy (kN)"; gd_Vy.filePrefix = sFilPrefix;
 
 			TGraphData &gd_Mz = lst_html_graphs[idx_Mz];
-			gd_Mz.title = "Flector: Mz (kNm)";  gd_Mz.x_label = "x (m)"; gd_Mz.y_label = "Mz (kNm)";
+			gd_Mz.title = "Flector: Mz (kNm)";  gd_Mz.x_label = "x (m)"; gd_Mz.y_label = "Mz (kNm)"; gd_Mz.filePrefix = sFilPrefix;
 
 			TGraphData &gd_Ux = lst_html_graphs[idx_Ux];
-			gd_Ux.title = "Desplazamiento: \\u0394x (mm)";  gd_Ux.x_label = "x (m)"; gd_Ux.y_label = "\\u0394x (mm)";
+			gd_Ux.title = "Desplazamiento $\\delta_x$ (mm)";  gd_Ux.x_label = "x (m)"; gd_Ux.y_label = "$\\delta_x$ (mm)"; gd_Ux.filePrefix = sFilPrefix;
 			
 			TGraphData &gd_Uy = lst_html_graphs[idx_Uy];
-			gd_Uy.title = "Desplazamiento: \\u0394y (mm)";  gd_Uy.x_label = "x (m)"; gd_Uy.y_label = "\\u0394y (mm)";
+			gd_Uy.title = "Desplazamiento $\\delta_y$ (mm)";  gd_Uy.x_label = "x (m)"; gd_Uy.y_label = "$\\delta_y$ (mm)"; gd_Uy.filePrefix = sFilPrefix;
 
 			TGraphData &gd_Rotz = lst_html_graphs[idx_URotz];
-			gd_Rotz.title = "Giro Z: \\u03B8z (\\u00B0)";  gd_Rotz.x_label = "x (m)"; gd_Rotz.y_label = "\\u03B8z (\\u00B0)";
+			gd_Rotz.title = "Giro Z: \\u03B8z (\\u00B0)";  gd_Rotz.x_label = "x (m)"; gd_Rotz.y_label = "\\u03B8z (\\u00B0)"; gd_Rotz.filePrefix = sFilPrefix;
 
 			TGraphData &gd_Mx = lst_html_graphs[idx_Mx];
-			gd_Mx.title = "Torsor: Mx (kNm)";  gd_Mx.x_label = "x (m)"; gd_Mx.y_label = "Mx (kNm)";
+			gd_Mx.title = "Torsor: Mx (kNm)";  gd_Mx.x_label = "x (m)"; gd_Mx.y_label = "Mx (kNm)"; gd_Mx.filePrefix = sFilPrefix;
 
 			TGraphData &gd_Rotx = lst_html_graphs[idx_URotx];
-			gd_Rotx.title = "Giro X: \\u03B8x (\\u00B0)";  gd_Rotx.x_label = "x (m)"; gd_Rotx.y_label = "\\u03B8x (\\u00B0)";
+			gd_Rotx.title = "Giro X: \\u03B8x (\\u00B0)";  gd_Rotx.x_label = "x (m)"; gd_Rotx.y_label = "\\u03B8x (\\u00B0)"; gd_Rotx.filePrefix = sFilPrefix;
 
 
 			// Accumulate the graphs from a number of other graphs:
@@ -1034,7 +1046,7 @@ int main_code(int argc, char**argv)
 			const TGraphData &gd = lst_html_graphs[i];
 
 			const string sOutPy   = openbeam::format("plot%03u.py", (unsigned int)i);
-			const string sOutFile = openbeam::format("plot%03u", (unsigned int)i);
+			const string sOutFile = openbeam::format("%splot%03u", gd.filePrefix.c_str(), (unsigned int)i);
 			FILE *f = fopen(sOutPy.c_str(),"wt");
 			if (!f) throw std::runtime_error(openbeam::format("can't save output file: `%s`.",sOutPy.c_str()) );
 
