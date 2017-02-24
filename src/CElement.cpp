@@ -228,6 +228,7 @@ CElement * CElement::createElementByName(const std::string &s)
 	if (strCmpI("BEAM2D_AR",s)) return new CElementBeam_2D_AR;
 	if (strCmpI("BEAM2D_RA",s)) return new CElementBeam_2D_RA;
 	if (strCmpI("BEAM2D_RR",s)) return new CElementBeam_2D_RR;
+	if (strCmpI("BEAM2D_RD", s)) return new CElementBeam_2D_RD;
 	if (strCmpI("SPRING_1D",s)) return new CElementSpring;
 	if (strCmpI("SPRING_XYZ",s)) return new CElementSpringXYZ;
 	if (strCmpI("SPRING_TORSION",s)) return new CElementTorsionSpring;

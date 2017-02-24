@@ -22,12 +22,23 @@
 
 #pragma once
 
-#include "CElementSpring.h"
-#include "CElementSpringXYZ.h"
-#include "CElementTorsionSpring.h"
-#include "CElementBeam_2D_AA.h"
-#include "CElementBeam_2D_RA.h"
-#include "CElementBeam_2D_AR.h"
-#include "CElementBeam_2D_RR.h"
-#include "CElementBeam_2D_RD.h"
+#include "CBaseElementBeam.h"
 
+namespace openbeam
+{
+	/** A 2D beam element whose two ends are "rigid" and a "slider" (local Y axis) links, respectively (x,y,phi) and (x,phi).
+	  */
+	class CElementBeam_2D_RD : public CBaseElementBeam
+	{
+	public:
+		CElementBeam_2D_RD();
+		CElementBeam_2D_RD(const size_t from_node_id, const size_t to_node_id);
+
+		/** Return the stiffness submatrices between each pair of edges in this element, for the current element state.
+		  */
+		virtual void getLocalStiffnessMatrices( openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t &outSubMats ) const;
+
+		virtual void getLocalDoFs(std::vector<TUsedDoFs> &dofs) const;
+
+	};
+}

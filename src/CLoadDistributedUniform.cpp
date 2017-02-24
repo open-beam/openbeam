@@ -125,7 +125,7 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
 		f2[1] = q_n*L*(5./8);
 		m2  = -q_n*L*L/8;
 	}
-	else throw std::runtime_error("Unsupported element type for load 'CLoadConstTemperature'");
+	else throw std::runtime_error("Unsupported element type for load 'CLoadDistributedUniform'");
 
 #if 0
 	cout << "L = " << L << " f1: " << f1.transpose() << "<br>" <<endl;
