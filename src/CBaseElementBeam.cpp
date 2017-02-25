@@ -25,6 +25,7 @@
 #include <openbeam/CElementBeam_2D_AR.h>
 #include <openbeam/CElementBeam_2D_RA.h>
 #include <openbeam/CElementBeam_2D_RR.h>
+#include <openbeam/CElementBeam_2D_RD.h>
 #include <openbeam/CStructureProblem.h>
 
 #include <openbeam/TDrawStructureOptions.h>
@@ -254,17 +255,26 @@ void CBaseElementBeam::do_mesh(const size_t my_idx, CStructureProblem &out_fem, 
 		const size_t nj = my_nodes[idx_el+1];
 		if (idx_el==0)
 		{
+			OB_TODO("Make virtual method to allow each element to tell its special first and ending element.");
 			// First element:
 			if (dynamic_cast<CElementBeam_2D_AR*>(this)!=NULL || dynamic_cast<CElementBeam_2D_AA*>(this)!=NULL)
 				new_el = new CElementBeam_2D_AR(ni,nj);
-			else new_el = new CElementBeam_2D_RR(ni,nj);
+//			else if (dynamic_cast<CElementBeam_2D_DR*>(this)!=NULL)
+//					new_el = new CElementBeam_2D_DR(ni,nj);
+			else {
+				new_el = new CElementBeam_2D_RR(ni,nj);
+			}
 		}
 		else if (idx_el==nElements-1)
 		{
 			// Last element:
 			if (dynamic_cast<CElementBeam_2D_RA*>(this)!=NULL || dynamic_cast<CElementBeam_2D_AA*>(this)!=NULL)
 				new_el = new CElementBeam_2D_RA(ni,nj);
-			else new_el = new CElementBeam_2D_RR(ni,nj);
+			else if (dynamic_cast<CElementBeam_2D_RD*>(this)!=NULL)
+					new_el = new CElementBeam_2D_RD(ni,nj);
+			else {
+				new_el = new CElementBeam_2D_RR(ni,nj);
+			}
 		}
 		else
 		{
@@ -280,4 +290,3 @@ void CBaseElementBeam::do_mesh(const size_t my_idx, CStructureProblem &out_fem, 
 	}
 
 }
-
