@@ -4,14 +4,9 @@
 #
 # Execute with: 
 #
-# ob-solver -i demo4.txt --html -o p4.html --show-U --show-FR --stress
+# ob-solver -i demo5.txt --html -o p5.html --show-U --show-FR --stress
 #
 # -------------------------------------------------------
-
-VAR, G = 9.81
-
-VAR, D = 2         # Dimensions of the problem
-VAR, M = G * 100   # Load
 
 PARAMSET,id=IPE200, E=2.1e11, A=28.5e-4, Iz=1940e-8
 
@@ -20,17 +15,27 @@ PARAMSET,id=IPE200, E=2.1e11, A=28.5e-4, Iz=1940e-8
 # -------------------------------------------------
 [GEOMETRY]
 
-NODE, id=0,  0,0,0
-NODE, id=1,  D,0,0
-NODE, id=2,  0,D,0
+NODE, id=0,  0,0     // A
+NODE, id=1,  2,0     // 
+NODE, id=2,  2,1.2   // E  
+NODE, id=3,  2,1.7   // D  
+NODE, id=4,  0,1.7   // B
+NODE, id=5,  2+1.7321,2.7, 0, 120  // C. tilted
 
 ELEMENT, id=0, type=BEAM2D_RR,  from=0, to=1, paramset=IPE200
-ELEMENT, id=1, type=BEAM2D_RR,  from=0, to=2, paramset=IPE200
+ELEMENT, id=1, type=BEAM2D_RD,  from=1, to=2, paramset=IPE200
 
-CONSTRAINT, node=2, dof=DXDY
-CONSTRAINT, node=1, dof=DXRZ
+ELEMENT, id=2, type=BEAM2D_RR,  from=2, to=3, paramset=IPE200
+ELEMENT, id=3, type=BEAM2D_RR,  from=3, to=5, paramset=IPE200
+
+ELEMENT, id=4, type=BEAM2D_AA,  from=3, to=4, paramset=IPE200
+
+
+CONSTRAINT, node=0, dof=DXDYRZ
+CONSTRAINT, node=4, dof=DX
+CONSTRAINT, node=5, dof=DY
 
 # -----------------------
 [LOADS]
-LOAD, node=0, dof=RZ, M
+ELOAD, element=3, type=DISTRIB_UNIFORM, Q=2000, DX=0.8660,DY=-0.5,DZ=0
 
