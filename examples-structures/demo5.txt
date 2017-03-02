@@ -2,9 +2,8 @@
 # Example of a FE problem for the OpenBeam library
 #  By Jose Luis Blanco Claraco (2017)
 #
-# Execute with: 
+# Execute with:
 #
-# ob-solver -i demo5.txt --html -o p5.html --show-U --show-FR --stress
 # ~/code/openbeam/build/bin/ob-solve -i demo5.txt --svg --html -o index.html --stress-plots --stress  --out-animation-num-frames 20 --out-images-width 600 --anim-show-node-labels --svg-prefix demo5 --svg-deformed-factor 100 --anim-keep-files --show-U --out-dir demo5 -l es --plots-continuous-beam 0,1,2,3 --mesh --mesh-resolution 0.10 --draw-margin-left 0.5  --draw-margin-right 0.5  --draw-margin-bottom 0.2 --draw-margin-top 0.25 --show-FR
 #
 # -------------------------------------------------------
@@ -17,34 +16,28 @@ PARAMSET,id=IPE200, E=2.1e11, A=28.5e-4, Iz=1940e-8
 [GEOMETRY]
 
 NODE, id=0,  0,0     // A
-NODE, id=1,  2,0     // 
-NODE, id=2,  2,1.2   // E  
-NODE, id=3,  2,1.7   // D  
-NODE, id=4,  0,1.7   // B
-NODE, id=5,  2+1.7321,2.7, 0, 120  // C. tilted
-
+NODE, id=1,  2,0     // B
+NODE, id=2,  2,1   // C
+NODE, id=3,  2,2   // D
+NODE, id=4,  3,3   // E
 
 NODELABEL, id=0, A
-NODELABEL, id=2, E
+NODELABEL, id=1, B
+NODELABEL, id=2, C
 NODELABEL, id=3, D
-NODELABEL, id=4, B
-NODELABEL, id=5, C
+NODELABEL, id=4, D
 
 
 ELEMENT, id=0, type=BEAM2D_RR,  from=0, to=1, paramset=IPE200
 ELEMENT, id=1, type=BEAM2D_RD,  from=1, to=2, paramset=IPE200
 
-ELEMENT, id=2, type=BEAM2D_RR,  from=2, to=3, paramset=IPE200
-ELEMENT, id=3, type=BEAM2D_RR,  from=3, to=5, paramset=IPE200
-
-ELEMENT, id=4, type=BEAM2D_AA,  from=3, to=4, paramset=IPE200
+ELEMENT, id=2, type=BEAM2D_RA,  from=2, to=3, paramset=IPE200
+ELEMENT, id=3, type=BEAM2D_AR,  from=3, to=4, paramset=IPE200
 
 
-CONSTRAINT, node=0, dof=DXDYRZ
-CONSTRAINT, node=4, dof=DX
-CONSTRAINT, node=5, dof=DY
+CONSTRAINT, node=0, dof=DXDY
+CONSTRAINT, node=4, dof=DXDYRZ
 
 # -----------------------
 [LOADS]
-ELOAD, element=3, type=DISTRIB_UNIFORM, Q=2000, DX=0.8660,DY=-0.5,DZ=0
-
+ELOAD, element=3, type=DISTRIB_UNIFORM, Q=5000, DX=0.7071,DY=-0.7071,DZ=0
