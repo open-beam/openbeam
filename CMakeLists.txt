@@ -17,10 +17,11 @@
 #  |     You should have received a copy of the GNU General Public License     |
 #  |     along with OpenBeam.  If not, see <http://www.gnu.org/licenses/>.     |
 #  |                                                                           |
-#  +---------------------------------------------------------------------------+ 
+#  +---------------------------------------------------------------------------+
 
 PROJECT(OpenBeam)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+set (CMAKE_CXX_STANDARD 11)
 
 if(COMMAND cmake_policy)
       cmake_policy(SET CMP0003 NEW)
@@ -89,7 +90,7 @@ IF(NOT WIN32)
 	include(FindPkgConfig)
 	pkg_check_modules(CAIROMM cairomm-svg-1.0)
 ENDIF(NOT WIN32)
-	
+
 
 IF(CAIRO_FOUND AND CAIROMM_FOUND)
         MESSAGE(STATUS "cairo found: ${MY_CAIRO_VERSION}")
@@ -104,13 +105,13 @@ IF(CAIRO_FOUND AND CAIROMM_FOUND)
                 MESSAGE(STATUS "   CAIROMM_INCLUDE_DIR = ${CAIROMM_INCLUDE_DIR}")
                 MESSAGE(STATUS "   CAIROMM_CFLAGS = ${CAIROMM_CFLAGS}")
         ENDIF($ENV{VERBOSE})
-        
+
         INCLUDE_DIRECTORIES(${MY_CAIRO_INCLUDE_DIR})
         INCLUDE_DIRECTORIES(${CAIROMM_INCLUDE_DIR})
 
 	ADD_DEFINITIONS(${MY_CAIRO_CFLAGS})
 	ADD_DEFINITIONS(${CAIROMM_CFLAGS})
-        
+
         SET(OPENBEAM_LINK_LIBS ${OPENBEAM_LINK_LIBS} ${MY_CAIRO_LIBRARIES} ${CAIROMM_LIBRARIES})
 
 	SET(OPENBEAM_HAS_CAIRO 1)
@@ -179,5 +180,3 @@ set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"${CMAKE_CURRENT_SOURCE_DIR}/include\" \"${
 set(CMAKE_LIB_DIRS_CONFIGCMAKE "${LIBRARY_OUTPUT_PATH}")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/OpenBeamConfig.cmake.in" "${CMAKE_BINARY_DIR}/OpenBeamConfig.cmake" IMMEDIATE @ONLY)
-
-
