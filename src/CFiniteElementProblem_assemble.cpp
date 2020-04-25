@@ -228,7 +228,7 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
     K.setFromTriplets(K_tri.begin(), K_tri.end());
 
     if (openbeam::getVerbosityLevel() >= 3)
-        OB_MESSAGE(3) << "Complete K:\n" << Eigen::MatrixX(K) << std::endl;
+        OB_MESSAGE(3) << "Complete K:\n" << Eigen::MatrixXd(K) << std::endl;
 
     // Split K into bounded(R) and free (L) dofs:
     // ------------------------------------------------
