@@ -1,0 +1,38 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#  By Jose Luis Blanco Claraco (2020)
+#
+# Execute with:
+#
+# ~/code/openbeam/build/bin/ob-solve -i model1.txt --svg --html -o index.html --stress-plots --stress  --out-animation-num-frames 20 --out-images-width 600 --anim-show-node-labels --svg-prefix model1 --svg-deformed-factor 3000 --anim-keep-files --show-U --out-dir model1 -l es --mesh --mesh-resolution 0.10 --draw-margin-left 0.5  --draw-margin-right 0.5  --draw-margin-bottom 0.2 --draw-margin-top 0.25 --show-FR
+#
+# -------------------------------------------------------
+
+PARAMSET,id=IPE200, E=2.1e11, A=28.5e-4, Iz=1940e-8
+
+# -------------------------------------------------
+#  Geometry: nodes, elements & constraints
+# -------------------------------------------------
+[GEOMETRY]
+
+NODE, id=0,  0, 0   // A
+NODE, id=1,  0, 1   // B
+NODE, id=2,  2, 1   // C
+NODE, id=3,  2, 0   // D
+
+NODELABEL, id=0, A
+NODELABEL, id=1, B
+NODELABEL, id=2, C
+NODELABEL, id=3, D
+
+
+ELEMENT, id=0, type=BEAM2D_RR,  from=0, to=1, paramset=IPE200
+ELEMENT, id=1, type=BEAM2D_AA,  from=1, to=2, paramset=IPE200
+ELEMENT, id=2, type=BEAM2D_RR,  from=2, to=3, paramset=IPE200
+
+CONSTRAINT, node=0, dof=DXDYRZ
+CONSTRAINT, node=3, dof=DXDYRZ
+
+# -----------------------
+[LOADS]
+LOAD, node=1, dof=DX, 1e3
