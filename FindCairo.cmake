@@ -20,7 +20,7 @@ else(CAIRO_INCLUDE_DIR AND CAIRO_LIBRARIES)
 
 if(NOT WIN32)
   # use pkg-config to get the directories and then use these values
-  # in the FIND_PATH() and FIND_LIBRARY() calls
+  # in the find_path() and find_library() calls
   include(FindPkgConfig)
   if(PACKAGE_FIND_VERSION_COUNT GREATER 0)
     set(_cairo_version_cmp ">=${PACKAGE_FIND_VERSION}")

@@ -6,8 +6,8 @@
 #  Usage from an external project:
 #    In your CMakeLists.txt, add these lines:
 #
-#    FIND_PACKAGE(OpenBeam REQUIRED )
-#    TARGET_LINK_LIBRARIES(MY_TARGET_NAME ${OpenBeam_LIBS})
+#    find_package(OpenBeam REQUIRED )
+#    target_link_libraries(MY_TARGET_NAME ${OpenBeam_LIBS})
 #
 #    This file will define the following variables:
 #      - OpenBeam_LIBS                 : The list of libraries to links against.
@@ -24,29 +24,29 @@ get_filename_component(THIS_OpenBeam_CONFIG_PATH "${CMAKE_CURRENT_LIST_FILE}" PA
 # ======================================================
 
 # Provide the include directories to the caller
-SET(OpenBeam_INCLUDE_DIRS @CMAKE_INCLUDE_DIRS_CONFIGCMAKE@)
+set(OpenBeam_INCLUDE_DIRS @CMAKE_INCLUDE_DIRS_CONFIGCMAKE@)
 
-INCLUDE_DIRECTORIES(${OpenBeam_INCLUDE_DIRS})
+include_directories(${OpenBeam_INCLUDE_DIRS})
 
 # ======================================================
 # Link directories to add to the user project:
 # ======================================================
 
 # Provide the libs directory anyway, it may be needed in some cases.
-SET(OpenBeam_LIB_DIR @CMAKE_LIB_DIRS_CONFIGCMAKE@)
+set(OpenBeam_LIB_DIR @CMAKE_LIB_DIRS_CONFIGCMAKE@)
 
-LINK_DIRECTORIES(${OpenBeam_LIB_DIR})
+link_directories(${OpenBeam_LIB_DIR})
 
 # ====================================================================
 # Link libraries: 
 # ====================================================================
-SET(OpenBeam_LIBS ${OpenBeam_LIBS} openbeam)
+set(OpenBeam_LIBS ${OpenBeam_LIBS} openbeam)
 
 # ======================================================
 #  Version variables:
 # ======================================================
-SET(OpenBeam_VERSION @OpenBeam_VERSION@)
-SET(OpenBeam_VERSION_MAJOR  @OpenBeam_VERSION_MAJOR@)
-SET(OpenBeam_VERSION_MINOR  @OpenBeam_VERSION_MINOR@)
-SET(OpenBeam_VERSION_PATCH  @OpenBeam_VERSION_PATCH@)
+set(OpenBeam_VERSION @OpenBeam_VERSION@)
+set(OpenBeam_VERSION_MAJOR  @OpenBeam_VERSION_MAJOR@)
+set(OpenBeam_VERSION_MINOR  @OpenBeam_VERSION_MINOR@)
+set(OpenBeam_VERSION_PATCH  @OpenBeam_VERSION_PATCH@)
 
