@@ -17,53 +17,73 @@
    |     You should have received a copy of the GNU General Public License     |
    |     along with OpenBeam.  If not, see <http://www.gnu.org/licenses/>.     |
    |                                                                           |
-   +---------------------------------------------------------------------------+ */
-
+   +---------------------------------------------------------------------------+
+ */
 
 #pragma once
 
-#include "types.h"
 #include "CElement.h"
+#include "types.h"
 
 namespace openbeam
 {
-	/** A base class for Beam elements; not usable as an standalone element. */
-	class CBaseElementBeam : public CElement
-	{
-	public:
-		CBaseElementBeam(const bool pinned_end0, const bool pinned_end1);
-		CBaseElementBeam(const size_t from_node_id, const size_t to_node_id,const bool pinned_end0, const bool pinned_end1);
+/** A base class for Beam elements; not usable as an standalone element. */
+class CBaseElementBeam : public CElement
+{
+   public:
+    CBaseElementBeam(const bool pinned_end0, const bool pinned_end1);
+    CBaseElementBeam(
+        const size_t from_node_id, const size_t to_node_id,
+        const bool pinned_end0, const bool pinned_end1);
 
-		num_t    E;   //!< Young modulus (N/m^2)
-		num_t    A;   //!< Section (m^2)
-		num_t    Iz;  //!< Section inertia moment (m^4)
-		num_t    G;   //!< Shear modulus of elasticity (N/m^2)
-		num_t    J;   //!< Polar moment of inertia (m^4)
+    num_t E;  //!< Young modulus (N/m^2)
+    num_t A;  //!< Section (m^2)
+    num_t Iz;  //!< Section inertia moment (m^4)
+    num_t G;  //!< Shear modulus of elasticity (N/m^2)
+    num_t J;  //!< Polar moment of inertia (m^4)
 
-		/** Sets the basic beam parameters from another existing element. */
-		void copyCommonBeamParamsFrom(const CBaseElementBeam &o) {
-			E=o.E;
-			A=o.A;
-			Iz=o.Iz;
-			G=o.G;
-			J=o.J;
-		}
+    /** Sets the basic beam parameters from another existing element. */
+    void copyCommonBeamParamsFrom(const CBaseElementBeam& o)
+    {
+        E  = o.E;
+        A  = o.A;
+        Iz = o.Iz;
+        G  = o.G;
+        J  = o.J;
+    }
 
-		/** Draws the element to a SVG Cairo context (a pointer to a Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed options */
-		virtual void drawSVG(void *_cairo_context,const TDrawStructureOptions &options,  const TRenderInitData & ri,const TDrawElementExtraParams &draw_el_params,const TMeshOutputInfo *meshing_info) const;
+    /** Draws the element to a SVG Cairo context (a pointer to a
+     * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
+     * options */
+    virtual void drawSVG(
+        void* _cairo_context, const TDrawStructureOptions& options,
+        const TRenderInitData&         ri,
+        const TDrawElementExtraParams& draw_el_params,
+        const TMeshOutputInfo*         meshing_info) const;
 #if OPENBEAM_HAS_QT5Svg
-		virtual void drawQtSVG(QSvgGenerator &svg, const TDrawStructureOptions &options, const TRenderInitData & ri, const TDrawElementExtraParams &draw_el_params, const TMeshOutputInfo *meshing_info) const;
+    virtual void drawQtSVG(
+        QSvgGenerator& svg, const TDrawStructureOptions& options,
+        const TRenderInitData&         ri,
+        const TDrawElementExtraParams& draw_el_params,
+        const TMeshOutputInfo*         meshing_info) const;
 #endif
 
-		/** Mesh this element into a set of (possibly) smaller ones */
-		virtual void do_mesh(const size_t my_idx, CStructureProblem &out_fem, TMeshOutputInfo &out_info, const TMeshParams & params);
+    /** Mesh this element into a set of (possibly) smaller ones */
+    virtual void do_mesh(
+        const size_t my_idx, CStructureProblem& out_fem,
+        TMeshOutputInfo& out_info, const TMeshParams& params);
 
-		/** Parse a set of parameters by (casi insensitive) name and set the element values from them.
-		  *  Each element must document the supported parameters and their meaning.  */
-		virtual void loadParamsFromSet( const TParamSet & params, const TEvaluationContext &eval);
+    /** Parse a set of parameters by (casi insensitive) name and set the element
+     * values from them.
+     *  Each element must document the supported parameters and their meaning.
+     */
+    virtual void loadParamsFromSet(
+        const TParamSet& params, const TEvaluationContext& eval);
 
-	private:
-		bool m_pinned_end0,m_pinned_end1;  //!< Whether each end of the beam is "pinned" (i.e. allows free rotation). This is only used for drawing purposes
-
-	};
-}
+   private:
+    bool m_pinned_end0,
+        m_pinned_end1;  //!< Whether each end of the beam is "pinned" (i.e.
+                        //!< allows free rotation). This is only used for
+                        //!< drawing purposes
+};
+}  // namespace openbeam

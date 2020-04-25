@@ -17,11 +17,10 @@
    |     You should have received a copy of the GNU General Public License     |
    |     along with OpenBeam.  If not, see <http://www.gnu.org/licenses/>.     |
    |                                                                           |
-   +---------------------------------------------------------------------------+ */
-
+   +---------------------------------------------------------------------------+
+ */
 
 #pragma once
-
 
 #include <openbeam/types.h>
 
@@ -31,16 +30,19 @@
 
 namespace ExpressionEvaluator
 {
-
-  enum
-  {
+enum
+{
     eval_ok = 0,
     eval_unbalanced,
     eval_invalidoperator,
     eval_invalidoperand,
     eval_evalerr
-  };
+};
 
-  int calculate(const std::string &expr, float &r, const std::map<std::string,num_t,openbeam::ci_less> &user_symbols );
-  int calculate(const std::string &expr, double &r, const std::map<std::string,num_t,openbeam::ci_less> &user_symbols );
-}
+int calculate(
+    const std::string& expr, float& r,
+    const std::map<std::string, num_t, openbeam::ci_less>& user_symbols);
+int calculate(
+    const std::string& expr, double& r,
+    const std::map<std::string, num_t, openbeam::ci_less>& user_symbols);
+}  // namespace ExpressionEvaluator

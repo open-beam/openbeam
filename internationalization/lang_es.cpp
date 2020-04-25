@@ -17,30 +17,29 @@
    |     You should have received a copy of the GNU General Public License     |
    |     along with OpenBeam.  If not, see <http://www.gnu.org/licenses/>.     |
    |                                                                           |
-   +---------------------------------------------------------------------------+ */
+   +---------------------------------------------------------------------------+
+ */
 
 #include "localization.h"
 
 /** String tables for en (English) language - Strings MUST BE in the same
-  *  order than declared in strings.h
-  * Make sure this file is encoded in UTF-8
-  */
+ *  order than declared in strings.h
+ * Make sure this file is encoded in UTF-8
+ */
 const char* openbeam::localization::strs_es[] = {
-	"Restricciones", // STR_Constraints
-	"restricción", // STR_constraint
-	"Cargas", // STR_Loads
-	"carga", // STR_load
-	"Desplazamientos", // STR_Displacements
-	"desplazamiento", // STR_displacement
-	"Reacciones", // STR_Reactions
-	"reacción", // STR_reaction
-	"GDL",  // STR_dof
-	"nodo", // STR_node
-	"y", // STR_and
-	"Pulsar para ampliar", // STR_click_to_enlarge
-	"Matriz de rigidez global",//STR_GlobalStiffnessMatrix
-    "Matrices de rigidez de todos los elementos", // STR_AllElementsStiffnessMatrices
-	"Barra",// STR_Bar
+    "Restricciones",  // STR_Constraints
+    "restricción",  // STR_constraint
+    "Cargas",  // STR_Loads
+    "carga",  // STR_load
+    "Desplazamientos",  // STR_Displacements
+    "desplazamiento",  // STR_displacement
+    "Reacciones",  // STR_Reactions
+    "reacción",  // STR_reaction
+    "GDL",  // STR_dof
+    "nodo",  // STR_node
+    "y",  // STR_and
+    "Pulsar para ampliar",  // STR_click_to_enlarge
+    "Matriz de rigidez global",  // STR_GlobalStiffnessMatrix
+    "Matrices de rigidez de todos los elementos",  // STR_AllElementsStiffnessMatrices
+    "Barra",  // STR_Bar
 };
-
-

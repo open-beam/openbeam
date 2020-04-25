@@ -17,8 +17,8 @@
    |     You should have received a copy of the GNU General Public License     |
    |     along with OpenBeam.  If not, see <http://www.gnu.org/licenses/>.     |
    |                                                                           |
-   +---------------------------------------------------------------------------+ */
-
+   +---------------------------------------------------------------------------+
+ */
 
 #pragma once
 
@@ -26,19 +26,22 @@
 
 namespace openbeam
 {
-	/** A 2D beam element whose two ends are "articulated" and "rigid" links, respectively (x,y) and (x,y,phi).
-	  */
-	class CElementBeam_2D_AR : public CBaseElementBeam
-	{
-	public:
-		CElementBeam_2D_AR();
-		CElementBeam_2D_AR(const size_t from_node_id, const size_t to_node_id);
+/** A 2D beam element whose two ends are "articulated" and "rigid" links,
+ * respectively (x,y) and (x,y,phi).
+ */
+class CElementBeam_2D_AR : public CBaseElementBeam
+{
+   public:
+    CElementBeam_2D_AR();
+    CElementBeam_2D_AR(const size_t from_node_id, const size_t to_node_id);
 
-		/** Return the stiffness submatrices between each pair of edges in this element, for the current element state.
-		  */
-		virtual void getLocalStiffnessMatrices( openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t &outSubMats ) const;
+    /** Return the stiffness submatrices between each pair of edges in this
+     * element, for the current element state.
+     */
+    virtual void getLocalStiffnessMatrices(
+        openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t& outSubMats)
+        const;
 
-		virtual void getLocalDoFs(std::vector<TUsedDoFs> &dofs) const;
-
-	};
-}
+    virtual void getLocalDoFs(std::vector<TUsedDoFs>& dofs) const;
+};
+}  // namespace openbeam

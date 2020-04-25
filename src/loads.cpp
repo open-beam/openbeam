@@ -17,8 +17,8 @@
    |     You should have received a copy of the GNU General Public License     |
    |     along with OpenBeam.  If not, see <http://www.gnu.org/licenses/>.     |
    |                                                                           |
-   +---------------------------------------------------------------------------+ */
-
+   +---------------------------------------------------------------------------+
+ */
 
 #include <openbeam/loads.h>
 
@@ -27,20 +27,19 @@ using namespace openbeam;
 
 OB_TODO("It seems to be a bug with simple shafts with torsional loads")
 
-
 /** Class factory from element name, or NULL for an unknown element:
-  *  Element names:
-  *		- "TEMPERATURE": CLoadConstTemperature
-  *		- "DISTRIB_UNIFORM": CLoadDistributedUniform
-  *		- "CONCENTRATED": CLoadConcentratedForce
-  *		- "TRIANGULAR": CLoadDistributedTriangular
-  */
-CLoadOnBeam * CLoadOnBeam::createLoadByName(const std::string &s)
+ *  Element names:
+ *		- "TEMPERATURE": CLoadConstTemperature
+ *		- "DISTRIB_UNIFORM": CLoadDistributedUniform
+ *		- "CONCENTRATED": CLoadConcentratedForce
+ *		- "TRIANGULAR": CLoadDistributedTriangular
+ */
+CLoadOnBeam* CLoadOnBeam::createLoadByName(const std::string& s)
 {
-	if (strCmpI("TEMPERATURE",s))  return new CLoadConstTemperature;
-	if (strCmpI("DISTRIB_UNIFORM",s))      return new CLoadDistributedUniform;
-	if (strCmpI("CONCENTRATED",s)) return new CLoadConcentratedForce;
-	if (strCmpI("TRIANGULAR",s)) return new CLoadDistributedTriangular;
+    if (strCmpI("TEMPERATURE", s)) return new CLoadConstTemperature;
+    if (strCmpI("DISTRIB_UNIFORM", s)) return new CLoadDistributedUniform;
+    if (strCmpI("CONCENTRATED", s)) return new CLoadConcentratedForce;
+    if (strCmpI("TRIANGULAR", s)) return new CLoadDistributedTriangular;
 
-	return NULL;
+    return NULL;
 }

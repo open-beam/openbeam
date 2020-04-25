@@ -17,11 +17,9 @@
    |     You should have received a copy of the GNU General Public License     |
    |     along with OpenBeam.  If not, see <http://www.gnu.org/licenses/>.     |
    |                                                                           |
-   +---------------------------------------------------------------------------+ */
-
+   +---------------------------------------------------------------------------+
+ */
 
 #pragma once
 
-
 typedef double num_t;
-

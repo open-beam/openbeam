@@ -4,47 +4,47 @@
   | Copyright (C) 2015  Jose Luis Blanco Claraco                            |
   | Distributed under GNU General Public License version 3                  |
   |   See <http://www.gnu.org/licenses/>                                    |
-  +-------------------------------------------------------------------------+  */
+  +-------------------------------------------------------------------------+ */
 
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
 #include <QFileSystemModel>
+#include <QMainWindow>
 #include <QSettings>
 
 #include "highlighter.h"
 
 #include <openbeam/openbeam.h>
 
-namespace Ui {
+namespace Ui
+{
 class MainWindow;
 }
 
 class MainWindow : public QMainWindow
 {
-	Q_OBJECT
+    Q_OBJECT
 
-public:
-	explicit MainWindow(QWidget *parent = 0);
-	~MainWindow();
+   public:
+    explicit MainWindow(QWidget* parent = 0);
+    ~MainWindow();
 
-private slots:
-	void on_tvBrowserDirs_clicked(const QModelIndex &index);
-	void on_action_Open_model_triggered();
+   private slots:
+    void on_tvBrowserDirs_clicked(const QModelIndex& index);
+    void on_action_Open_model_triggered();
 
-private:
-	Ui::MainWindow *ui;
-	QSettings m_app_setting;
+   private:
+    Ui::MainWindow* ui;
+    QSettings       m_app_setting;
 
-	QFileSystemModel *m_dirmodel;
-	Highlighter * m_highlighter;
+    QFileSystemModel* m_dirmodel;
+    Highlighter*      m_highlighter;
 
-	void setupTreeView();
-	void setupEditor();
+    void setupTreeView();
+    void setupEditor();
 
-
-	void loadOpenBeamFile(const QString &sPath);
+    void loadOpenBeamFile(const QString& sPath);
 };
 
-#endif // MAINWINDOW_H
+#endif  // MAINWINDOW_H

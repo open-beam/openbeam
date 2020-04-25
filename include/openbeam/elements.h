@@ -17,17 +17,16 @@
    |     You should have received a copy of the GNU General Public License     |
    |     along with OpenBeam.  If not, see <http://www.gnu.org/licenses/>.     |
    |                                                                           |
-   +---------------------------------------------------------------------------+ */
-
+   +---------------------------------------------------------------------------+
+ */
 
 #pragma once
 
+#include "CElementBeam_2D_AA.h"
+#include "CElementBeam_2D_AR.h"
+#include "CElementBeam_2D_RA.h"
+#include "CElementBeam_2D_RD.h"
+#include "CElementBeam_2D_RR.h"
 #include "CElementSpring.h"
 #include "CElementSpringXYZ.h"
 #include "CElementTorsionSpring.h"
-#include "CElementBeam_2D_AA.h"
-#include "CElementBeam_2D_RA.h"
-#include "CElementBeam_2D_AR.h"
-#include "CElementBeam_2D_RR.h"
-#include "CElementBeam_2D_RD.h"
-

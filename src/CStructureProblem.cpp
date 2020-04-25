@@ -17,38 +17,27 @@
    |     You should have received a copy of the GNU General Public License     |
    |     along with OpenBeam.  If not, see <http://www.gnu.org/licenses/>.     |
    |                                                                           |
-   +---------------------------------------------------------------------------+ */
-
-
+   +---------------------------------------------------------------------------+
+ */
 
 #include <openbeam/CStructureProblem.h>
 
 #include <set>
 
-
 using namespace std;
 using namespace openbeam;
 using namespace Eigen;
 
+CStructureProblem::CStructureProblem() {}
 
-CStructureProblem::CStructureProblem()
-{
-
-}
-
-CStructureProblem::~CStructureProblem()
-{
-	clear();
-}
-
+CStructureProblem::~CStructureProblem() { clear(); }
 
 void CStructureProblem::clear()
 {
     CFiniteElementProblem::clear();  // Call my base class clear()
 
-	free_assoc_container(m_loads_on_beams);
+    free_assoc_container(m_loads_on_beams);
 }
-
 
 // Update all internal lists after changing the structure.
 void CStructureProblem::updateAll()
@@ -56,70 +45,73 @@ void CStructureProblem::updateAll()
     // Make sure beams are divided into smaller elements:
     //...
 
-    CFiniteElementProblem::updateAll(); // Call my base class updateAll():
+    CFiniteElementProblem::updateAll();  // Call my base class updateAll():
 }
 
-void CStructureProblem::addLoadAtBeam(const size_t element_index, CLoadOnBeam* load)
+void CStructureProblem::addLoadAtBeam(
+    const size_t element_index, CLoadOnBeam* load)
 {
-	m_loads_on_beams.insert( std::multimap<size_t,CLoadOnBeam*>::value_type(element_index,load));
+    m_loads_on_beams.insert(
+        std::multimap<size_t, CLoadOnBeam*>::value_type(element_index, load));
 }
 
-/** Process loads on elements and populate the \a m_loads_at_each_dof_equivs and \a m_extra_stress_for_each_element
-*/
+/** Process loads on elements and populate the \a m_loads_at_each_dof_equivs and
+ * \a m_extra_stress_for_each_element
+ */
 void CStructureProblem::internalComputeStressAndEquivalentLoads()
 {
-	m_loads_at_each_dof_equivs.clear(); // Clear previous results
-	m_extra_stress_for_each_element.clear();
+    m_loads_at_each_dof_equivs.clear();  // Clear previous results
+    m_extra_stress_for_each_element.clear();
 
-	for (std::multimap<size_t,CLoadOnBeam*>::const_iterator it=m_loads_on_beams.begin();it!=m_loads_on_beams.end();++it)
-	{
-		CElement    *el = this->getElement(it->first);
-		CLoadOnBeam *l  = it->second;
+    for (std::multimap<size_t, CLoadOnBeam*>::const_iterator it =
+             m_loads_on_beams.begin();
+         it != m_loads_on_beams.end(); ++it)
+    {
+        CElement*    el = this->getElement(it->first);
+        CLoadOnBeam* l  = it->second;
 
-		TElementStress     stress;
-		std::vector<array6 > loads;
+        TElementStress      stress;
+        std::vector<array6> loads;
 
-		l->computeStressAndEquivalentLoads(el,stress,loads);
+        l->computeStressAndEquivalentLoads(el, stress, loads);
 
-		// Remember: std::map<size_t,num_t> m_loads_at_each_dof_equivs
-		//              map: DoF index in the problem -> load value
-		OBASSERT( el->conected_nodes_ids.size() == loads.size() )
+        // Remember: std::map<size_t,num_t> m_loads_at_each_dof_equivs
+        //              map: DoF index in the problem -> load value
+        OBASSERT(el->conected_nodes_ids.size() == loads.size())
 
-		// For each element edge (two in a typical beam):
-		for (size_t p=0;p<loads.size();p++)
-		{
-			const size_t idx_node = el->conected_nodes_ids[p];
-			for (int d=0;d<6;d++)
-			{
-				const int dof_idx = m_problem_DoFs_inverse_list[idx_node].dof_index[d];
-				if (dof_idx>=0)
-				{
-					m_loads_at_each_dof_equivs[dof_idx]+=loads[p][d];
-				}
-				else
-				{
-					// Just in case: a load should NOT exists in a DOF which hasn't been included in the problem:
-					OBASSERT_DEBUG( std::abs(loads[p][d]) < 1e-9 )
-				}
-			}
-		}
+        // For each element edge (two in a typical beam):
+        for (size_t p = 0; p < loads.size(); p++)
+        {
+            const size_t idx_node = el->conected_nodes_ids[p];
+            for (int d = 0; d < 6; d++)
+            {
+                const int dof_idx =
+                    m_problem_DoFs_inverse_list[idx_node].dof_index[d];
+                if (dof_idx >= 0)
+                { m_loads_at_each_dof_equivs[dof_idx] += loads[p][d]; }
+                else
+                {
+                    // Just in case: a load should NOT exists in a DOF which
+                    // hasn't been included in the problem:
+                    OBASSERT_DEBUG(std::abs(loads[p][d]) < 1e-9)
+                }
+            }
+        }
 
-
-		// Remember: std::map<size_t, std::vector<array6 > > m_extra_stress_for_each_element;
-		//              map: element index -> vector for each "port" -> vector of 6 stresses values.
-		TElementStress &v = m_extra_stress_for_each_element[it->first];
-		if (v.size()!=stress.size())
-		{
-			// First time, just copy:
-			v = stress;
-		}
-		else
-		{
-			// Accumulate effects: sum up.
-			for (size_t p=0;p<v.size();p++)
-					v[p] += stress[p];
-		}
-
-	}
-
+        // Remember: std::map<size_t, std::vector<array6 > >
+        // m_extra_stress_for_each_element;
+        //              map: element index -> vector for each "port" -> vector
+        //              of 6 stresses values.
+        TElementStress& v = m_extra_stress_for_each_element[it->first];
+        if (v.size() != stress.size())
+        {
+            // First time, just copy:
+            v = stress;
+        }
+        else
+        {
+            // Accumulate effects: sum up.
+            for (size_t p = 0; p < v.size(); p++) v[p] += stress[p];
+        }
+    }
 }

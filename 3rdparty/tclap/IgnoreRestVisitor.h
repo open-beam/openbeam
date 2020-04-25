@@ -19,34 +19,32 @@
  *
  *****************************************************************************/
 
-
 #ifndef TCLAP_IGNORE_REST_VISITOR_H
 #define TCLAP_IGNORE_REST_VISITOR_H
 
-#include <tclap/Visitor.h>
 #include <tclap/Arg.h>
+#include <tclap/Visitor.h>
 
-namespace TCLAP {
-
+namespace TCLAP
+{
 /**
  * A Vistor that tells the CmdLine to begin ignoring arguments after
  * this one is parsed.
  */
-class IgnoreRestVisitor: public Visitor
+class IgnoreRestVisitor : public Visitor
 {
-	public:
+   public:
+    /**
+     * Constructor.
+     */
+    IgnoreRestVisitor() : Visitor() {}
 
-		/**
-		 * Constructor.
-		 */
-		IgnoreRestVisitor() : Visitor() {}
-
-		/**
-		 * Sets Arg::_ignoreRest.
-		 */
-		void visit() { Arg::beginIgnoring();  }
+    /**
+     * Sets Arg::_ignoreRest.
+     */
+    void visit() { Arg::beginIgnoring(); }
 };
 
-}
+}  // namespace TCLAP
 
 #endif

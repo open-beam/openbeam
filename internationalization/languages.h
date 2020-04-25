@@ -17,7 +17,8 @@
    |     You should have received a copy of the GNU General Public License     |
    |     along with OpenBeam.  If not, see <http://www.gnu.org/licenses/>.     |
    |                                                                           |
-   +---------------------------------------------------------------------------+ */
+   +---------------------------------------------------------------------------+
+ */
 
 #pragma once
 
@@ -25,20 +26,19 @@ namespace openbeam
 {
 namespace localization
 {
-	// This list must be kept synch with "lang_names" in localization.cpp
-	enum TLanguage
-	{
-		LANG_EN = 0,
-		LANG_ES,
+// This list must be kept synch with "lang_names" in localization.cpp
+enum TLanguage
+{
+    LANG_EN = 0,
+    LANG_ES,
 
-		// Always leave this as the last one
-		NUMBER_OF_LANGUAGES
-	};
+    // Always leave this as the last one
+    NUMBER_OF_LANGUAGES
+};
 
-	// Add one declaration for each language declared above.
-	//  Strings are defined in the files "lang_**.cpp".
-	extern const char* strs_en[];
-	extern const char* strs_es[];
-}
-}
-
+// Add one declaration for each language declared above.
+//  Strings are defined in the files "lang_**.cpp".
+extern const char* strs_en[];
+extern const char* strs_es[];
+}  // namespace localization
+}  // namespace openbeam

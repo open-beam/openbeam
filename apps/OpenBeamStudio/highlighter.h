@@ -20,16 +20,16 @@ class Highlighter : public QSyntaxHighlighter
 {
     Q_OBJECT
 
-public:
-    Highlighter(QTextDocument *parent = 0);
+   public:
+    Highlighter(QTextDocument* parent = 0);
 
-protected:
-    void highlightBlock(const QString &text) Q_DECL_OVERRIDE;
+   protected:
+    void highlightBlock(const QString& text) Q_DECL_OVERRIDE;
 
-private:
+   private:
     struct HighlightingRule
     {
-        QRegExp pattern;
+        QRegExp         pattern;
         QTextCharFormat format;
     };
     QVector<HighlightingRule> highlightingRules;
@@ -45,4 +45,4 @@ private:
     QTextCharFormat functionFormat;
 };
 
-#endif // HIGHLIGHTER_H
+#endif  // HIGHLIGHTER_H
