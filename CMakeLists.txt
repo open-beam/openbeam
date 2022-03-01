@@ -152,7 +152,7 @@ include_directories("${${PROJECT_NAME}_SOURCE_DIR}/internationalization/")
 # Force usage of UNICODE projects, which is not the default in MSVC:
 if(MSVC)
 	add_definitions(-DUNICODE -D_UNICODE -D_CRT_NONSTDC_NO_WARNINGS)
-endif(MSVC)
+endif()
 
 # Set optimized building:
 if(CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -168,8 +168,7 @@ add_subdirectory(apps)
 
 if(BUILD_EXAMPLES)
 	add_subdirectory(examples-code)
-endif(BUILD_EXAMPLES)
-
+endif()
 
 # -------------------------------------------------------------------------------------------
 #  ${BIN_DIR}/OpenBeamConfig.cmake           -> For use *without* "make install"

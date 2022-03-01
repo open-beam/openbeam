@@ -6,7 +6,7 @@ A C++ library for mechanical structures: a definition language, parser, static s
 
 ![openbeam-demo](doc/openbeam-demo.gif)
 
-Features: 
+Features:
  - TODO!
 
 
@@ -25,3 +25,13 @@ sudo apt-get install build-essential cmake libqt5-dev qt5-qmake libqt5svg5-dev
 Windows: Just use CMake as usual. Required: Visual C++ 2008 or newer.
 
 
+## Compile web app:
+
+Install emsdk.
+
+```bash
+cmake -DCMAKE_TOOLCHAIN_PATH=path/to/Emscripten.cmake ..
+make
+```
+
+Test locally: `python3 -m http.server 8000`

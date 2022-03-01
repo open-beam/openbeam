@@ -56,6 +56,8 @@ int main_code()
     ps["E"]  = "2.1e11";
     ps["A"]  = "2.120E-03";
     ps["Iz"] = "3.490E-06";
+    ps["G"]  = "1e-4";
+    ps["J"]  = "1e-4";
 
     for (size_t i = 0; i < problem.getNumberOfElements(); i++)
         problem.getElement(i)->loadParamsFromSet(ps);
