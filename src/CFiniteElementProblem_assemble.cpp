@@ -1,7 +1,7 @@
 /* +---------------------------------------------------------------------------+
    |              OpenBeam - C++ Finite Element Analysis library               |
    |                                                                           |
-   |   Copyright (C) 2010-2013  Jose Luis Blanco Claraco                       |
+   |   Copyright (C) 2010-2021  Jose Luis Blanco Claraco                       |
    |                              University of Malaga                         |
    |                                                                           |
    | OpenBeam is free software: you can redistribute it and/or modify          |
