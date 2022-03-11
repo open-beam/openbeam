@@ -8,7 +8,7 @@ namespace e = emscripten;
 class AppOpenBeam
 {
    public:
-    void Initialize();
+    void LoadStructureDefinition(const std::string& def);
     void SayHello();
 };
 
@@ -16,6 +16,7 @@ EMSCRIPTEN_BINDINGS(EMTest)
 {
     e::class_<AppOpenBeam>("AppOpenBeam")
         .constructor()
-        .function("Initialize", &AppOpenBeam::Initialize)
+        .function(
+            "LoadStructureDefinition", &AppOpenBeam::LoadStructureDefinition)
         .function("SayHello", &AppOpenBeam::SayHello);
 }

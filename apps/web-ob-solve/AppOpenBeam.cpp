@@ -2,9 +2,9 @@
 
 #include <iostream>
 
-void AppOpenBeam::Initialize()
+void AppOpenBeam::LoadStructureDefinition(const std::string& def)
 {
-    std::cout << "Initializing application." << std::endl;
+    std::cout << "Parsing structure definition:\n" << def << std::endl;
 }
 
 void AppOpenBeam::SayHello()
