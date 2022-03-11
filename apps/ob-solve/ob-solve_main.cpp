@@ -22,11 +22,11 @@
 
 #include <localization.h>  // Internationalization support
 #include <openbeam/openbeam.h>
+#include <stdio.h>  // for unlink()
 #include <tclap/CmdLine.h>
 
-#include <stdio.h>  // for unlink()
 #include <iostream>
-#include <memory>  // for auto_ptr<>
+#include <memory>
 
 #ifdef __GNUC__
 #include <sys/stat.h>  // mkdir()
@@ -240,14 +240,14 @@ int main_code(int argc, char** argv)
     }
 
     // Redirect output to file?
-    auto_ptr<CConsoleRedirector> console_redirect;
+    std::shared_ptr<CConsoleRedirector> console_redirect;
     if (arg_output.isSet())
     {
         // By creating this object all will be handled automatically: We'll just
         // need to write to cout as normal.
         const std::string fil_redirect_output = arg_output.getValue();
-        console_redirect                      = auto_ptr<CConsoleRedirector>(
-            new CConsoleRedirector(fil_redirect_output, false, false));
+        console_redirect = std::make_shared<CConsoleRedirector>(
+            fil_redirect_output, false, false);
     }
 
     // Start HTML preamble:
@@ -737,8 +737,9 @@ int main_code(int argc, char** argv)
                 cout << dof.node_id;
                 cout << "</sub>";
                 cout << "</td><td>";
-                cout << (info.F_f[i] == 0.0) ? std::string("0")
-                                             : format("%.2f", info.F_f[i]);
+                cout
+                    << ((info.F_f[i] == 0.0) ? std::string("0")
+                                             : format("%.2f", info.F_f[i]));
                 cout << "</td></tr>\n";
             }
 

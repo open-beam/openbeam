@@ -17,7 +17,7 @@ set_target_properties(${PROJECT_NAME}
     PROPERTIES LINK_FLAGS 
     "-s DEMANGLE_SUPPORT=1 --bind"
 )
-#--preload-file ${CMAKE_SOURCE_DIR}/assets
+# --preload-file ${CMAKE_SOURCE_DIR}/examples-structures
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE

@@ -3,18 +3,21 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>EM Test</title>
-    <script type="text/javascript" src="web-ob-solve.js"></script>
+    <title>OpenBeam online App</title>
+     <script>
+      var Module = {
+      onRuntimeInitialized: function() {
+      var instance = new Module.AppOpenBeam();
+      instance.Initialize();
+      instance.SayHello();
+      }
+    };
+  </script>
+  <script type="text/javascript" src="web-ob-solve.js" defer></script>
 </head>
 
 <body>
     Check browser console.
-
-    <script type="text/javascript">
-        var instance = new Module.AppOpenBeam();
-        instance.Initialize();
-        instance.SayHello();
-    </script>
 </body>
 
 </html>
