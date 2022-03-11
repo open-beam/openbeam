@@ -22,6 +22,7 @@
 
 #include <openbeam/CFiniteElementProblem.h>
 #include <openbeam/CStructureProblem.h>
+
 #include "CTextFileLinesParser.h"
 #include "ExpressionEvaluator.h"
 
@@ -127,7 +128,7 @@ bool CFiniteElementProblem::loadFromStream(
         true  // #
     );
 
-    f.setInputStream(&is);
+    f.open(is);
 
     return this->internal_loadFromFile(&f, err_msgs, warn_msgs);
 }
@@ -149,14 +150,20 @@ bool CFiniteElementProblem::loadFromFile(
     if (file == "-")
     {
         // File "-" means: console input
-        f.setInputStream(&std::cin);
+        f.open(std::cin);
     }
-    else if (!f.open(file))
+    else
     {
-        if (err_msgs)
-            err_msgs->push_back(
-                std::string("Error opening file for reading: ") + file);
-        return false;
+        auto fil = std::ifstream(file);
+        if (fil.is_open())
+        {
+            f.open(fil);
+
+            if (err_msgs)
+                err_msgs->push_back(
+                    std::string("Error opening file for reading: ") + file);
+            return false;
+        }
     }
 
     return this->internal_loadFromFile(&f, err_msgs, warn_msgs);

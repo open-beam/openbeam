@@ -29,6 +29,14 @@
 using namespace openbeam;
 using namespace std;
 
+/** Return true if "str" starts with "subStr" (case sensitive)  \sa
+ * strStartsI  */
+static bool strStarts(const std::string& s1, const std::string& s2)
+{
+    // if s1 is shorter it's not a problem
+    return !::strncmp(s1.c_str(), s2.c_str(), s2.size());
+}
+
 CTextFileLinesParser::CTextFileLinesParser(const std::string& fil)
 {
     open(fil);
@@ -94,9 +102,9 @@ bool CTextFileLinesParser::getNextLine(std::istringstream& buf)
         lin = openbeam::trim(lin);
         if (lin.empty()) continue;  // Ignore empty lines.
         // Ignore comments lines, starting with "#" or "//".
-        if ((m_filter_SH_comments && openbeam::strStarts(lin, "#")) ||
-            (m_filter_C_comments && openbeam::strStarts(lin, "//")) ||
-            (m_filter_MATLAB_comments && openbeam::strStarts(lin, "%")))
+        if ((m_filter_SH_comments && strStarts(lin, "#")) ||
+            (m_filter_C_comments && strStarts(lin, "//")) ||
+            (m_filter_MATLAB_comments && strStarts(lin, "%")))
             continue;
         // Parse the line as a string stream:
         buf.str(lin);
