@@ -32,7 +32,7 @@ using namespace openbeam;
 CElement::CElement(unsigned char nEdges)
     : conected_nodes_ids(nEdges),
       m_nEdges(nEdges),
-      m_parent(NULL),
+      m_parent(nullptr),
       m_design_rotation_around_linear_axis(0)
 {
 }
@@ -41,7 +41,7 @@ CElement::CElement(
     unsigned char nEdges, const size_t from_node_id, const size_t to_node_id)
     : conected_nodes_ids(nEdges),
       m_nEdges(nEdges),
-      m_parent(NULL),
+      m_parent(nullptr),
       m_design_rotation_around_linear_axis(0)
 {
     OBASSERT(nEdges >= 2)
@@ -260,5 +260,5 @@ CElement* CElement::createElementByName(const std::string& s)
     if (strCmpI("SPRING_XYZ", s)) return new CElementSpringXYZ;
     if (strCmpI("SPRING_TORSION", s)) return new CElementTorsionSpring;
 
-    return NULL;
+    return nullptr;
 }

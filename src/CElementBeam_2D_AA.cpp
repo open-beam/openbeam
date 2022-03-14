@@ -50,7 +50,7 @@ void CElementBeam_2D_AA::getLocalStiffnessMatrices(
     // Compute my current length by getting the poses of the two nodes at each
     // end of the beam:
     OBASSERT_DEBUG(conected_nodes_ids.size() == 2)
-    OBASSERT_DEBUG(m_parent != NULL)
+    OBASSERT_DEBUG(m_parent != nullptr)
 
     const TRotationTrans3D& node0 =
         m_parent->getNodePose(conected_nodes_ids[0]);

@@ -176,7 +176,7 @@ bool CFiniteElementProblem::renderToCairoContext(
         for (size_t i = 0; i < nEle; i++)
         {
             const CElement* el = this->getElement(i);
-            OBASSERT(el != NULL)
+            OBASSERT(el != nullptr)
 
             TDrawElementExtraParams el_params;
             el_params.element_index          = i;
@@ -221,7 +221,7 @@ bool CFiniteElementProblem::renderToCairoContext(
     if (DEFORMED_SCALE_FACTOR == 0 &&
         (options.show_nodes_deformed || options.show_elements_deformed))
     {  // Autoscale of deformations:
-        OBASSERT(solver_info != NULL)
+        OBASSERT(solver_info != nullptr)
         const num_t max_desired_deformation =
             options.deformed_scale_auto_max_image_ratio *
             std::max(max_x - min_x, max_y - min_y);
@@ -236,11 +236,11 @@ bool CFiniteElementProblem::renderToCairoContext(
     // Edges deformed:  ==============================================
     if (options.show_elements_deformed)
     {
-        OBASSERT(solver_info != NULL)
+        OBASSERT(solver_info != nullptr)
         for (size_t i = 0; i < nEle; i++)
         {
             const CElement* el = this->getElement(i);
-            OBASSERT(el != NULL)
+            OBASSERT(el != nullptr)
 
             TDrawElementExtraParams el_params;
             el_params.element_index          = i;
@@ -258,7 +258,7 @@ bool CFiniteElementProblem::renderToCairoContext(
     // Nodes deformed:  ==============================================
     if (options.show_nodes_deformed)
     {
-        OBASSERT(solver_info != NULL)
+        OBASSERT(solver_info != nullptr)
         cr->save();  // save the state of the context
         cr->set_source_rgba(0, 0, 0, options.nodes_deformed_alpha);
 

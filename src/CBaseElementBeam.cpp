@@ -247,7 +247,7 @@ void CBaseElementBeam::do_mesh(
     // Compute my current length by getting the poses of the two nodes at each
     // end of the beam:
     OBASSERT_DEBUG(conected_nodes_ids.size() == 2)
-    OBASSERT_DEBUG(m_parent != NULL)
+    OBASSERT_DEBUG(m_parent != nullptr)
 
     const TRotationTrans3D& node0 =
         m_parent->getNodePose(conected_nodes_ids[0]);
@@ -312,10 +312,10 @@ void CBaseElementBeam::do_mesh(
                 "Make virtual method to allow each element to tell its special "
                 "first and ending element.");
             // First element:
-            if (dynamic_cast<CElementBeam_2D_AR*>(this) != NULL ||
-                dynamic_cast<CElementBeam_2D_AA*>(this) != NULL)
+            if (dynamic_cast<CElementBeam_2D_AR*>(this) != nullptr ||
+                dynamic_cast<CElementBeam_2D_AA*>(this) != nullptr)
                 new_el = new CElementBeam_2D_AR(ni, nj);
-            //			else if (dynamic_cast<CElementBeam_2D_DR*>(this)!=NULL)
+            //			else if (dynamic_cast<CElementBeam_2D_DR*>(this)!=nullptr)
             //					new_el = new CElementBeam_2D_DR(ni,nj);
             else
             {
@@ -325,10 +325,10 @@ void CBaseElementBeam::do_mesh(
         else if (idx_el == nElements - 1)
         {
             // Last element:
-            if (dynamic_cast<CElementBeam_2D_RA*>(this) != NULL ||
-                dynamic_cast<CElementBeam_2D_AA*>(this) != NULL)
+            if (dynamic_cast<CElementBeam_2D_RA*>(this) != nullptr ||
+                dynamic_cast<CElementBeam_2D_AA*>(this) != nullptr)
                 new_el = new CElementBeam_2D_RA(ni, nj);
-            else if (dynamic_cast<CElementBeam_2D_RD*>(this) != NULL)
+            else if (dynamic_cast<CElementBeam_2D_RD*>(this) != nullptr)
                 new_el = new CElementBeam_2D_RD(ni, nj);
             else
             {

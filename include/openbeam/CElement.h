@@ -143,7 +143,7 @@ class CElement
         const TMeshOutputInfo*         meshing_info) const = 0;
 #endif
 
-    /** Class factory from element name, or NULL for an unknown element:
+    /** Class factory from element name, or nullptr for an unknown element:
      *  Element names:
      *		- "BEAM2D_AA": CElementBeam_2D_AA
      *		- "BEAM2D_AR": CElementBeam_2D_AR

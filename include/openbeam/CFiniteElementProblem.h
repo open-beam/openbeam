@@ -185,8 +185,8 @@ class CFiniteElementProblem
      *  \return true on Success
      */
     bool loadFromStream(
-        std::istream& is, vector_string* errMsg = NULL,
-        vector_string* warnMsg = NULL);
+        std::istream& is, vector_string* errMsg = nullptr,
+        vector_string* warnMsg = nullptr);
 
     /** Discard the current problem and loads it by parsing the given text file.
      *  The expected format of the file is described in XXXX.
@@ -198,8 +198,8 @@ class CFiniteElementProblem
      *  \return true on Success
      */
     bool loadFromFile(
-        const std::string& file, vector_string* errMsg = NULL,
-        vector_string* warnMsg = NULL);
+        const std::string& file, vector_string* errMsg = nullptr,
+        vector_string* warnMsg = nullptr);
 
     /** Saves a representation of the problem to a SVG file.
      * \param options Many parameters and switches to control what will be drawn
@@ -207,20 +207,20 @@ class CFiniteElementProblem
      */
     bool saveAsImageSVG(
         const std::string& file, const TDrawStructureOptions& options,
-        const TStaticSolveProblemInfo* solver_info  = NULL,
-        const TMeshOutputInfo*         meshing_info = NULL,
-        TImageSaveOutputInfo*          out_img_info = NULL) const;
+        const TStaticSolveProblemInfo* solver_info  = nullptr,
+        const TMeshOutputInfo*         meshing_info = nullptr,
+        TImageSaveOutputInfo*          out_img_info = nullptr) const;
     bool saveAsImagePNG(
         const std::string& file, const TDrawStructureOptions& options,
-        const TStaticSolveProblemInfo* solver_info  = NULL,
-        const TMeshOutputInfo*         meshing_info = NULL,
-        TImageSaveOutputInfo*          out_img_info = NULL) const;
+        const TStaticSolveProblemInfo* solver_info  = nullptr,
+        const TMeshOutputInfo*         meshing_info = nullptr,
+        TImageSaveOutputInfo*          out_img_info = nullptr) const;
     bool saveAsImage(
         const std::string& file, const bool is_svg,
         const TDrawStructureOptions&   options,
-        const TStaticSolveProblemInfo* solver_info  = NULL,
-        const TMeshOutputInfo*         meshing_info = NULL,
-        TImageSaveOutputInfo*          out_img_info = NULL) const;
+        const TStaticSolveProblemInfo* solver_info  = nullptr,
+        const TMeshOutputInfo*         meshing_info = nullptr,
+        TImageSaveOutputInfo*          out_img_info = nullptr) const;
 
     bool renderToCairoContext(
         void* _cairo_context, const TRenderInitData& ri,
@@ -328,7 +328,7 @@ class CFiniteElementProblem
     void getBoundingBox(
         num_t& min_x, num_t& max_x, num_t& min_y, num_t& max_y,
         bool                           deformed              = false,
-        const TStaticSolveProblemInfo* solver_info           = NULL,
+        const TStaticSolveProblemInfo* solver_info           = nullptr,
         num_t                          deformed_scale_factor = 1.0) const;
 
     /** @} */

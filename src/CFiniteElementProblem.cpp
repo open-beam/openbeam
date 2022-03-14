@@ -44,7 +44,7 @@ void CFiniteElementProblem::clear()
 
 size_t CFiniteElementProblem::insertElement(CElement* el)
 {
-    OBASSERT(el != NULL)
+    OBASSERT(el != nullptr)
     el->setParent(this);
     const size_t idx = m_elements.size();
     m_elements.push_back(el);
@@ -373,7 +373,7 @@ void CFiniteElementProblem::getBoundingBox(
     const TStaticSolveProblemInfo* solver_info,
     num_t                          deformed_scale_factor) const
 {
-    OBASSERT(!deformed || solver_info != NULL);
+    OBASSERT(!deformed || solver_info != nullptr);
 
     min_x = min_y = std::numeric_limits<num_t>::max();
     max_x = max_y = -std::numeric_limits<num_t>::max();

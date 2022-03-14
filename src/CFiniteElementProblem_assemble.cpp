@@ -131,7 +131,7 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
             // Apply nodal coordinates?
             TMatrix66        K_element_nodal;
             const TMatrix66* K_element =
-                NULL;  // Will point to either K_element_org or K_element_nodal
+                nullptr;  // Will point to either K_element_org or K_element_nodal
 
             const TRotationTrans3D& rt_i = this->getNodePose(i_node_idx);
             const TRotationTrans3D& rt_j = this->getNodePose(j_node_idx);
@@ -325,13 +325,13 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
         if (rt_i.r.isIdentity()) continue;  // Nothing to do here.
 
         // Loads (Forces and moments) at "i".
-        num_t*                     Fs[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+        num_t*                     Fs[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
         Eigen::Matrix<num_t, 3, 1> Fi, Mi;
         Fi.setZero();
         Mi.setZero();
 
         // Bounded (translations and rotations) at "i".
-        num_t*                     Us[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+        num_t*                     Us[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
         Eigen::Matrix<num_t, 3, 1> Ui, URi;
         Ui.setZero();
         URi.setZero();

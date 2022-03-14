@@ -31,11 +31,14 @@ namespace openbeam
  * single point. */
 struct CLoadOnBeam
 {
+    CLoadOnBeam()          = default;
+    virtual ~CLoadOnBeam() = default;
+
     virtual void computeStressAndEquivalentLoads(
         const CElement* el, TElementStress& stress,
         std::vector<array6>& loads) = 0;
 
-    /** Class factory from element name, or NULL for an unknown element:
+    /** Class factory from element name, or nullptr for an unknown element:
      *  Element names:
      *		- "TEMPERATURE": CLoadConstTemperature
      *		- "DISTRIB_UNIFORM": CLoadDistributedUniform

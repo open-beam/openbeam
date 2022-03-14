@@ -27,7 +27,7 @@ using namespace openbeam;
 
 OB_TODO("It seems to be a bug with simple shafts with torsional loads")
 
-/** Class factory from element name, or NULL for an unknown element:
+/** Class factory from element name, or nullptr for an unknown element:
  *  Element names:
  *		- "TEMPERATURE": CLoadConstTemperature
  *		- "DISTRIB_UNIFORM": CLoadDistributedUniform
@@ -41,5 +41,5 @@ CLoadOnBeam* CLoadOnBeam::createLoadByName(const std::string& s)
     if (strCmpI("CONCENTRATED", s)) return new CLoadConcentratedForce;
     if (strCmpI("TRIANGULAR", s)) return new CLoadDistributedTriangular;
 
-    return NULL;
+    return nullptr;
 }

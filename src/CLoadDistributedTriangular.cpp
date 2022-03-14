@@ -89,7 +89,7 @@ void CLoadDistributedTriangular::computeStressAndEquivalentLoads(
     num_t m1, m2;
 
     // Bending problem (axial is decoupled, solved below)
-    if (dynamic_cast<const CElementBeam_2D_AA*>(el) != NULL)
+    if (dynamic_cast<const CElementBeam_2D_AA*>(el) != nullptr)
     {
         const CElementBeam_2D_AA* e =
             dynamic_cast<const CElementBeam_2D_AA*>(el);
@@ -101,7 +101,7 @@ void CLoadDistributedTriangular::computeStressAndEquivalentLoads(
         f2[1] = q_n * L * 0.5;
         m2    = 0;
     }
-    else if (dynamic_cast<const CElementBeam_2D_RR*>(el) != NULL)
+    else if (dynamic_cast<const CElementBeam_2D_RR*>(el) != nullptr)
     {
         const CElementBeam_2D_RR* e =
             dynamic_cast<const CElementBeam_2D_RR*>(el);
@@ -111,7 +111,7 @@ void CLoadDistributedTriangular::computeStressAndEquivalentLoads(
         f2[1] = L * (q0_n * 0.5 + (q1_n - q0_n) * 7. / 20.);
         m2    = -L * L * (q0_n * 1. / 12. + (q1_n - q0_n) * 1. / 20.);
     }
-    else if (dynamic_cast<const CElementBeam_2D_RA*>(el) != NULL)
+    else if (dynamic_cast<const CElementBeam_2D_RA*>(el) != nullptr)
     {
         const CElementBeam_2D_RA* e =
             dynamic_cast<const CElementBeam_2D_RA*>(el);
@@ -122,7 +122,7 @@ void CLoadDistributedTriangular::computeStressAndEquivalentLoads(
         f2[1] = q_n * L * (3. / 8);
         m2    = 0;
     }
-    else if (dynamic_cast<const CElementBeam_2D_AR*>(el) != NULL)
+    else if (dynamic_cast<const CElementBeam_2D_AR*>(el) != nullptr)
     {
         const CElementBeam_2D_AR* e =
             dynamic_cast<const CElementBeam_2D_AR*>(el);

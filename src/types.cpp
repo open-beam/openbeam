@@ -150,13 +150,13 @@ void openbeam::tokenize(
 #endif
 
     nextTok = openbeam::strtok(dupStr, inDelimiters.c_str(), &context);
-    while (nextTok != NULL)
+    while (nextTok != nullptr)
     {
         if (do_trim_all_parts)
             outTokens.push_back(openbeam::trim(std::string(nextTok)));
         else
             outTokens.push_back(std::string(nextTok));
-        nextTok = openbeam::strtok(NULL, inDelimiters.c_str(), &context);
+        nextTok = openbeam::strtok(nullptr, inDelimiters.c_str(), &context);
     };
 
     free(dupStr);

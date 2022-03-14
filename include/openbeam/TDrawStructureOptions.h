@@ -109,7 +109,7 @@ struct TDrawElementExtraParams
     TDrawElementExtraParams()
         : draw_original_position(true),
           color_alpha(1),
-          solver_info(NULL),
+          solver_info(nullptr),
           deformed_scale_factor(1)
     {
     }

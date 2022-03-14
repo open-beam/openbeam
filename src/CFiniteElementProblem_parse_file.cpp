@@ -177,7 +177,7 @@ bool CFiniteElementProblem::internal_loadFromFile(
 {
     CTimeLoggerEntry tle(openbeam::timelog, "parseFile");
 
-    OBASSERT(f_ != NULL)
+    OBASSERT(f_ != nullptr)
 
     CTextFileLinesParser& f = *reinterpret_cast<CTextFileLinesParser*>(f_);
 
@@ -903,7 +903,7 @@ bool CFiniteElementProblem::internal_loadFromFile(
         const std::string sErr(e.what());
         if (sErr.empty())
         {
-            // If we catch an exception is because err_msgs=NULL but we found an
+            // If we catch an exception is because err_msgs=nullptr but we found an
             // error, which was already dumped to cerr. So just return false and
             // we're done.
             return false;

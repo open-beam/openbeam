@@ -81,7 +81,7 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
 
     num_t m1, m2;
 
-    if (dynamic_cast<const CElementBeam_2D_AA*>(el) != NULL)
+    if (dynamic_cast<const CElementBeam_2D_AA*>(el) != nullptr)
     {
         const CElementBeam_2D_AA* e =
             dynamic_cast<const CElementBeam_2D_AA*>(el);
@@ -93,7 +93,7 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
         f2[1] = q_n * L * 0.5;
         m2    = 0;
     }
-    else if (dynamic_cast<const CElementBeam_2D_RR*>(el) != NULL)
+    else if (dynamic_cast<const CElementBeam_2D_RR*>(el) != nullptr)
     {
         const CElementBeam_2D_RR* e =
             dynamic_cast<const CElementBeam_2D_RR*>(el);
@@ -105,7 +105,7 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
         f2[1] = q_n * L * 0.5;
         m2    = -q_n * L * L / 12;
     }
-    else if (dynamic_cast<const CElementBeam_2D_RA*>(el) != NULL)
+    else if (dynamic_cast<const CElementBeam_2D_RA*>(el) != nullptr)
     {
         const CElementBeam_2D_RA* e =
             dynamic_cast<const CElementBeam_2D_RA*>(el);
@@ -117,7 +117,7 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
         f2[1] = q_n * L * (3. / 8);
         m2    = 0;
     }
-    else if (dynamic_cast<const CElementBeam_2D_AR*>(el) != NULL)
+    else if (dynamic_cast<const CElementBeam_2D_AR*>(el) != nullptr)
     {
         const CElementBeam_2D_AR* e =
             dynamic_cast<const CElementBeam_2D_AR*>(el);

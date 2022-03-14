@@ -22,6 +22,7 @@
 
 #include <localization.h>  // Internationalization support
 #include <openbeam/openbeam.h>
+#include <openbeam/print_html_matrix.h>
 #include <stdio.h>  // for unlink()
 #include <tclap/CmdLine.h>
 
@@ -45,19 +46,14 @@ using namespace std;
 
 // Auxiliary functions (Implemented below) ----------------------------------
 template <class MATRIX, class ARRAY>
-void print_html_matrix(
-    const MATRIX& K, const vector<string>& row_titles,
-    const vector<string>& col_titles, const ARRAY* rows_to_use = NULL,
-    const ARRAY* cols_to_use = NULL);
-template <class MATRIX, class ARRAY>
 void print_csv_matrix(
     const std::string& out_csv_file, const MATRIX& K,
     const vector<string>& row_titles, const vector<string>& col_titles,
-    const ARRAY* rows_to_use = NULL, const ARRAY* cols_to_use = NULL);
+    const ARRAY* rows_to_use = nullptr, const ARRAY* cols_to_use = nullptr);
 
 void usedDOFs2titles(
     size_t node_id, vector<string>& titles, bool html,
-    const TUsedDoFs* edge_dofs = NULL);
+    const TUsedDoFs* edge_dofs = nullptr);
 void listDOFs2titles(
     const std::vector<TDoF>& dofs, vector<string>& dof_titles, bool html);
 
@@ -301,8 +297,8 @@ int main_code(int argc, char** argv)
 
     mesh_params.max_element_length = arg_mesh_resolution.getValue();
 
-    CStructureProblem* problem_to_solve = NULL;
-    TMeshOutputInfo*   mesh_info        = NULL;
+    CStructureProblem* problem_to_solve = nullptr;
+    TMeshOutputInfo*   mesh_info        = nullptr;
 
     if (arg_meshing.isSet())
     {
@@ -400,7 +396,7 @@ int main_code(int argc, char** argv)
                     arg_svg_filename_prefix.getValue().c_str(), i);
                 problem_to_solve->saveAsImageSVG(
                     sFil, draw_options, &sInfo,
-                    !arg_draw_mesh.isSet() ? mesh_info : NULL);
+                    !arg_draw_mesh.isSet() ? mesh_info : nullptr);
                 anim_svg_files.push_back(sFil);
             }
 
@@ -411,7 +407,7 @@ int main_code(int argc, char** argv)
                     arg_svg_filename_prefix.getValue().c_str(), i);
                 problem_to_solve->saveAsImagePNG(
                     sFil, draw_options, &sInfo,
-                    !arg_draw_mesh.isSet() ? mesh_info : NULL);
+                    !arg_draw_mesh.isSet() ? mesh_info : nullptr);
                 files_to_delete.push_back(sFil);
             }
             if (i == NUM_FRAMES) Ascale = -Ascale;
@@ -465,7 +461,7 @@ int main_code(int argc, char** argv)
             arg_svg_filename_prefix.getValue() + string("_original.svg");
         problem_to_solve->saveAsImageSVG(
             sFilOriginal, draw_options, &sInfo,
-            !arg_draw_mesh.isSet() ? mesh_info : NULL);
+            !arg_draw_mesh.isSet() ? mesh_info : nullptr);
 
         draw_options.show_nodes_original     = true;
         draw_options.nodes_original_alpha    = 0.2;
@@ -481,7 +477,7 @@ int main_code(int argc, char** argv)
         TImageSaveOutputInfo img_out_info;
         problem_to_solve->saveAsImageSVG(
             sFilDeformed, draw_options, &sInfo,
-            !arg_draw_mesh.isSet() ? mesh_info : NULL, &img_out_info);
+            !arg_draw_mesh.isSet() ? mesh_info : nullptr, &img_out_info);
 
         cout << "<div width=\"100%\"> <!-- FIGURES -->\n"
                 "<div align=\"center\"><h3>Figures</h3></div>\n";
@@ -622,7 +618,7 @@ int main_code(int argc, char** argv)
                 cout << "<h3>" << _t(STR_GlobalStiffnessMatrix)
                      << "(K):</h3>\n";
                 print_html_matrix<TDynMatrix, TUsedDoFs>(
-                    K_full_dense, dof_titles, dof_titles);
+                    std::cout, K_full_dense, dof_titles, dof_titles);
             }
         }
 
@@ -688,8 +684,8 @@ int main_code(int argc, char** argv)
                         static_cast<unsigned int>(node_in),
                         static_cast<unsigned int>(node_out));
                     print_html_matrix<TMatrix66, TUsedDoFs>(
-                        sm.matrix, row_titles, col_titles, &edge_dofs_out,
-                        &edge_dofs_in);
+                        std::cout, sm.matrix, row_titles, col_titles,
+                        &edge_dofs_out, &edge_dofs_in);
                 }
                 else
                     cout << sm.matrix << endl << endl;
@@ -939,7 +935,7 @@ int main_code(int argc, char** argv)
     // Create HTML graphs of stress for each meshed element:
     // -----------------------------------------------------
     if (arg_stress_plots.isSet() && (out_html || arg_sep_plots.isSet()) &&
-        mesh_info != NULL)
+        mesh_info != nullptr)
     {
         const TMeshOutputInfo& mi = *mesh_info;
 
@@ -1421,92 +1417,6 @@ int main(int argc, char** argv)
         std::cerr << "Exception: " << e.what() << std::endl;
         return -1;
     }
-}
-
-template <class MATRIX, class ARRAY>
-void print_html_matrix(
-    const MATRIX& K, const vector<string>& row_titles,
-    const vector<string>& col_titles, const ARRAY* rows_to_use,
-    const ARRAY* cols_to_use)
-{
-    const size_t nCols = K.cols();
-    const size_t nRows = K.rows();
-
-    // Determine common factor to make notation clearer:
-    int                common_factor_pow = 0;
-    std::map<int, int> pow10hits;
-    for (size_t i = 0; i < nRows; i++)
-    {
-        if (rows_to_use && !(*rows_to_use)[i]) continue;
-
-        for (size_t j = 0; j < nCols; j++)
-        {
-            if (cols_to_use && !(*cols_to_use)[j]) continue;
-
-            const num_t Kijabs = std::abs(K(i, j));
-
-            if (Kijabs > 0)
-            {
-                const int mag =
-                    static_cast<int>(log10(Kijabs));  // Floor to "int"
-                pow10hits[mag]++;
-            }
-            // else: NO, zeroes do not count
-        }
-    }
-    if (!pow10hits.empty())
-    {
-        map<int, int>::const_iterator it_max = pow10hits.begin();
-        for (map<int, int>::const_iterator it = pow10hits.begin();
-             it != pow10hits.end(); ++it)
-        {
-            if (it->second > it_max->second) it_max = it;
-        }
-        common_factor_pow = it_max->first;
-    }
-
-    const num_t common_factor =
-        pow(static_cast<num_t>(10), static_cast<num_t>(common_factor_pow));
-    const num_t common_factor_inv = 1. / common_factor;
-
-    // Title:
-    cout << "<table border=\"1\" cellpadding=\"9\" cellspacing=\"0\">\n";
-
-    // 1st row:
-    cout << "<tr>";
-    cout << "<td bgcolor=\"#E0E0E0\"> &nbsp; </td>";
-    for (size_t i = 0; i < nCols; i++)
-    {
-        if (cols_to_use && !(*cols_to_use)[i]) continue;
-
-        cout << col_titles[i];
-    }
-    cout << "</tr>\n";
-
-    // The rest of rows:
-    for (size_t i = 0; i < nRows; i++)
-    {
-        if (rows_to_use && !(*rows_to_use)[i]) continue;
-
-        cout << "<tr>";
-        cout << row_titles[i];
-
-        for (size_t j = 0; j < nCols; j++)
-        {
-            if (cols_to_use && !(*cols_to_use)[j]) continue;
-
-            const num_t Kij = K(i, j);
-            if (!Kij)
-                cout << format("<td align=\"right\"> 0 </td>");
-            else
-                cout << format(
-                    "<td align=\"right\"> %.3f </td>", Kij * common_factor_inv);
-        }
-
-        cout << "</tr>\n";
-    }
-    cout << "</table>\n";
-    cout << format("( &times; 10<sup>%i</sup> )<br>\n", common_factor_pow);
 }
 
 template <class MATRIX, class ARRAY>

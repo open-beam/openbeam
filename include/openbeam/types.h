@@ -197,7 +197,7 @@ typedef std::vector<TFaceStress>
 struct TEvaluationContext
 {
     TEvaluationContext()
-        : err_msgs(NULL), warn_msgs(NULL), lin_num(0), lin(NULL)
+        : err_msgs(nullptr), warn_msgs(nullptr), lin_num(0), lin(nullptr)
     {
     }
 
@@ -534,8 +534,8 @@ class array<T, 0>
     }
 
     // direct access to data
-    const T* data() const { return NULL; }
-    T*       data() { return NULL; }
+    const T* data() const { return nullptr; }
+    T*       data() { return nullptr; }
 
     // assignment with type conversion
     template <typename T2>
@@ -634,8 +634,8 @@ class CConsoleRedirector : public std::streambuf
         const std::string& out_file, bool also_to_console = true,
         bool also_cerr = true, bool append_file = false, int bufferSize = 1000)
         : m_of(),
-          sbOld(NULL),
-          sbOld_cerr(NULL),
+          sbOld(nullptr),
+          sbOld_cerr(nullptr),
           m_also_to_console(also_to_console)
     {
         // Open the file:
@@ -668,7 +668,7 @@ class CConsoleRedirector : public std::streambuf
         sync();
         // Restore normal output:
         std::cout.rdbuf(sbOld);
-        if (sbOld_cerr != NULL) std::cerr.rdbuf(sbOld_cerr);
+        if (sbOld_cerr != nullptr) std::cerr.rdbuf(sbOld_cerr);
         if (pbase()) delete[] pbase();
     }
 

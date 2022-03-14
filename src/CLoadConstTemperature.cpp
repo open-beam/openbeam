@@ -35,7 +35,7 @@ void CLoadConstTemperature::computeStressAndEquivalentLoads(
     //  Axial only: N = E A alpha AT
     num_t E, A, alpha;
 
-    if (dynamic_cast<const CBaseElementBeam*>(el) != NULL)
+    if (dynamic_cast<const CBaseElementBeam*>(el) != nullptr)
     {
         const CBaseElementBeam* e = dynamic_cast<const CBaseElementBeam*>(el);
         E                         = e->E;

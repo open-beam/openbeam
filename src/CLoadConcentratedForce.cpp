@@ -95,7 +95,7 @@ void CLoadConcentratedForce::computeStressAndEquivalentLoads(
 
     num_t m1, m2;
 
-    if (dynamic_cast<const CElementBeam_2D_RR*>(el) != NULL)
+    if (dynamic_cast<const CElementBeam_2D_RR*>(el) != nullptr)
     {
         const CElementBeam_2D_RR* e =
             dynamic_cast<const CElementBeam_2D_RR*>(el);
