@@ -25,10 +25,10 @@ set (CMAKE_CXX_STANDARD 11)
 
 if(COMMAND cmake_policy)
       cmake_policy(SET CMP0003 NEW)
-endif(COMMAND cmake_policy)
+endif()
 
 #  Loads the current version number:
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/include/openbeam/openbeam_version.h" STR_OPENBEAM_VERSION_FILE)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/libopenbeam/include/openbeam/openbeam_version.h" STR_OPENBEAM_VERSION_FILE)
 string(REGEX MATCH "OPENBEAM_MAJOR_VERSION[ ]+[0-9]+" CMAKE_OPENBEAM_VERSION_NUMBER_MAJOR "${STR_OPENBEAM_VERSION_FILE}")
 string(REGEX MATCH "[0-9]+" CMAKE_OPENBEAM_VERSION_NUMBER_MAJOR "${CMAKE_OPENBEAM_VERSION_NUMBER_MAJOR}")
 string(REGEX MATCH "OPENBEAM_MINOR_VERSION[ ]+[0-9]+" CMAKE_OPENBEAM_VERSION_NUMBER_MINOR "${STR_OPENBEAM_VERSION_FILE}")
@@ -44,9 +44,9 @@ message(STATUS "Openbeam version: ${OPENBEAM_VERSION}")
 # --------------------------
 if (UNIX)
 	set(DEFAULT_SHARED_LIBS ON)
-else(UNIX)
+else()
 	set(DEFAULT_SHARED_LIBS OFF)
-endif(UNIX)
+endif()
 
 if (MSVC)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -56,8 +56,8 @@ set(BUILD_SHARED_LIBS ${DEFAULT_SHARED_LIBS} CACHE BOOL "Build shared libraries 
 set(BUILD_EXAMPLES ON CACHE BOOL "Build examples?")
 
 # Save all libs and executables in the same place
-set( LIBRARY_OUTPUT_PATH ${${PROJECT_NAME}_BINARY_DIR}/lib CACHE PATH "Output directory for libraries" )
-set( EXECUTABLE_OUTPUT_PATH ${${PROJECT_NAME}_BINARY_DIR}/bin CACHE PATH "Output directory for applications" )
+set(LIBRARY_OUTPUT_PATH ${${PROJECT_NAME}_BINARY_DIR}/lib CACHE PATH "Output directory for libraries" )
+set(EXECUTABLE_OUTPUT_PATH ${${PROJECT_NAME}_BINARY_DIR}/bin CACHE PATH "Output directory for applications" )
 
 
 # --------------------------
@@ -115,9 +115,9 @@ if(CAIRO_FOUND AND CAIROMM_FOUND)
         set(OPENBEAM_LINK_LIBS ${OPENBEAM_LINK_LIBS} ${MY_CAIRO_LIBRARIES} ${CAIROMM_LIBRARIES})
 
 	set(OPENBEAM_HAS_CAIRO 1)
-else(CAIRO_FOUND AND CAIROMM_FOUND)
+else()
         message(STATUS " Cairo and/or cairomm were *not* found: These packages are optional, but SVG rendering will be not available.")
-endif(CAIRO_FOUND AND CAIROMM_FOUND)
+endif()
 
 add_definitions(-DOPENBEAM_HAS_CAIRO=${OPENBEAM_HAS_CAIRO})
 
@@ -146,8 +146,8 @@ add_definitions(-DOPENBEAM_HAS_QT5Svg=${OPENBEAM_HAS_QT5Svg})
 # --------------------------
 # Global compiler flags
 # --------------------------
-include_directories("${${PROJECT_NAME}_SOURCE_DIR}/include/")
-include_directories("${${PROJECT_NAME}_SOURCE_DIR}/internationalization/")
+include_directories("${${PROJECT_NAME}_SOURCE_DIR}/libopenbeam/include/")
+include_directories("${${PROJECT_NAME}_SOURCE_DIR}/libopenbeam/internationalization/")
 
 # Force usage of UNICODE projects, which is not the default in MSVC:
 if(MSVC)
@@ -156,18 +156,31 @@ endif()
 
 # Set optimized building:
 if(CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_BUILD_TYPE MATCHES "Debug")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mtune=native")
-endif(CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_BUILD_TYPE MATCHES "Debug")
-
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+endif()
 
 # --------------------------
-#       The beef
+# The library
 # --------------------------
-add_subdirectory(src)
+add_subdirectory(libopenbeam)
+
+# --------------------------
+# Apps
+# --------------------------
 add_subdirectory(apps)
 
+# --------------------------
+# Examples
+# --------------------------
 if(BUILD_EXAMPLES)
-	add_subdirectory(examples-code)
+        add_subdirectory(examples-code)
+endif()
+
+# --------------------------
+# web apps:
+# --------------------------
+if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+        add_subdirectory(web-apps)
 endif()
 
 # -------------------------------------------------------------------------------------------
