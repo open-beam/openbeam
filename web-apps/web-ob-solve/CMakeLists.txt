@@ -8,6 +8,12 @@ add_executable(${PROJECT_NAME}
     AppOpenBeam.cpp
     )
 
+add_dependencies(web_apps_all ${PROJECT_NAME})
+
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${OpenBeam_BINARY_DIR}/bin-js
+)
 target_link_libraries(${PROJECT_NAME}
     openbeam
     ${OPENBEAM_LINK_LIBS}

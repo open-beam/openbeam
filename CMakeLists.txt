@@ -21,7 +21,7 @@
 
 project(OpenBeam)
 cmake_minimum_required(VERSION 3.1)
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 
 if(COMMAND cmake_policy)
       cmake_policy(SET CMP0003 NEW)
@@ -181,11 +181,27 @@ endif()
 # --------------------------
 if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
         add_subdirectory(web-apps)
+
+        add_custom_target(web
+                DEPENDS web_apps_all
+                COMMAND ${CMAKE_COMMAND} 
+                -DWEB_OUTPUT_DIR=${CMAKE_BINARY_DIR}/html
+                -DOPENBEAM_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+                -DOPENBEAM_BINARY_DIR=${CMAKE_BINARY_DIR}
+                -P ${CMAKE_SOURCE_DIR}/script_deploy_web.cmake
+        )
+
+        add_custom_target(web-and-serve
+                DEPENDS web
+                COMMAND python3 -m http.server 8080
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/html
+        )
 endif()
 
 # -------------------------------------------------------------------------------------------
 #  ${BIN_DIR}/OpenBeamConfig.cmake           -> For use *without* "make install"
 # -------------------------------------------------------------------------------------------
+#TODO: Update to use modern cmake exported targets
 
 # Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
 set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"${CMAKE_CURRENT_SOURCE_DIR}/include\" \"${EIGEN3_INCLUDE_DIR}\"")
