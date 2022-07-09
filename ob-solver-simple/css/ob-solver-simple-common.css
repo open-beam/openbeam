@@ -1,0 +1,82 @@
+#top-toolbar {
+    width: 100%;
+    /*height: 60px;*/
+    margin-top: 2px;
+}
+
+#OutputArea {
+    width: 100%;
+}
+
+.emscripten {
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+div.emscripten {
+    text-align: center;
+}
+
+ul {
+    list-style-type: none;
+    display: inline-block;
+    margin-block-start: 0;
+    margin-block-end: 0;
+}
+
+li {
+    display: inline-block;
+}
+
+input[type="checkbox"][id^="cb"] {
+    display: none;
+}
+
+label {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    height: 50px;
+    border: 1px solid;
+    width: 50px;
+}
+
+label:before {
+    background-color: red;
+    color: white;
+    display: block;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    transition-duration: 0.4s;
+}
+
+label img {
+    height: 100%;
+    width: 100%;
+}
+
+:checked+label {
+    border-color: red;
+}
+
+:checked+label:before {
+    content: "✓";
+    background-color: red;
+    border: 1px solid red;
+    z-index: 99;
+}
+
+/*:checked+label img {
+    z-index: -1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 50px;
+    width: 50px;
+}*/

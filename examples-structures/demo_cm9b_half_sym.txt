@@ -1,0 +1,50 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#  
+#  2011-2022, (C) Jose Luis Blanco Claraco
+#
+#  Problem in list CM9 (bottom) from course textbook in 
+#   University of Malaga.
+#
+#          https://github.com/open-beam/openbeam
+# -------------------------------------------------------
+
+# A symmetry-reduced version of the "full" problem:
+# Notice the "0.5" factors in elements A & Iz parameters:
+
+PARAMSET,id=MY_BEAM,  E=2e11, A=20e-4, Iz=200e-8
+PARAMSET,id=MY_BEAM_HALF,  E=2e11, A=0.5*20e-4, Iz=0.5*200e-8
+PARAMSET,id=MY_CABLE, E=2e11, A=0.5e-4
+
+VAR, Q = 1000   # External distributed load (N/m)
+
+# -------------------------------------------------
+#  Geometry: nodes, elements & constraints
+# -------------------------------------------------
+[GEOMETRY]
+
+NODE, id=0,  0,0,0
+NODE, id=1,  0,3,0
+NODE, id=2,  0,4,0
+NODE, id=3, -2,3.5,0
+
+ELEMENT, id=0, type=BEAM2D_RR,  from=0, to=1, paramset=MY_BEAM_HALF
+ELEMENT, id=1, type=BEAM2D_RR,  from=1, to=2, paramset=MY_BEAM_HALF
+ELEMENT, id=2, type=BEAM2D_RA,  from=1, to=3, paramset=MY_BEAM
+
+ELEMENT, id=3, type=BEAM2D_AA,  from=2, to=3, paramset=MY_CABLE
+
+CONSTRAINT, node=0, dof=DXDYRZ
+
+# Symmetry constraints:
+CONSTRAINT, node=1, dof=DXRZ
+CONSTRAINT, node=2, dof=DXRZ
+
+# -----------------------
+[LOADS]
+
+ELOAD, element=2, type=DISTRIB_UNIFORM, Q=Q, DX=0,DY=-1,DZ=0
+
+ELOAD, element=0, type=TEMPERATURE, deltaT=30
+ELOAD, element=1, type=TEMPERATURE, deltaT=30
+

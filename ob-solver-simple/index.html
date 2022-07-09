@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,90 +20,118 @@
 
     <title>OpenBeam online App</title>
 
-    <script language="javascript" type="text/javascript" src="https://codemirror.net/lib/codemirror.js"></script>
-    <script language="javascript" type="text/javascript" src="https://codemirror.net/mode/perl/perl.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://codemirror.net/lib/codemirror.css"></link>
-    <link rel="stylesheet" type="text/css" href="https://codemirror.net/theme/abbott.css"></link>
+    <script type="text/javascript" src="../js-ace-min-noconflict/ace.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../js-ace-min-noconflict/ext-linking.js" charset="utf-8"></script>
 
-    <script type="text/javascript" src="../js/web-ob-solve.js" defer></script>
+    <link rel="stylesheet" type="text/css" media="screen" href="css/ob-solver-simple-common.css" />
+    <link rel="stylesheet" type="text/css" media="all and (orientation:portrait)"
+        href="css/ob-solver-simple-portrait.css" />
+    <link rel="stylesheet" type="text/css" media="all and (orientation:landscape)"
+        href="css/ob-solver-simple-landscape.css" />
 
-     <script>
-     // var Module = {
-     // onRuntimeInitialized: function() {
-     // ...
-
-     function buildStructure()
-     {
-      var instance = new Module.AppOpenBeam();
-      editor.save(); // save text to textarea
-      var s = document.getElementById('StructureDefinitionArea').value;
-      
-      var ret = instance.LoadStructureDefinition(s);
-      var ret2 = instance.Solve();
-      
-      var reactions = instance.GetReactionsAsHTML();
-      
-      document.getElementById('OutputArea').value = ret + ret2;
-
-      document.getElementById('OutputReactions').innerHTML = reactions;
-     }
-  </script>
+    <script type="text/javascript" src="js/ob-solver-simple.js" charset="utf-8"></script>
 </head>
 
 <body>
-    Check browser console.
-    
-    <div>
-    <textarea id="StructureDefinitionArea" name="StructureDefinitionArea"># Place your structure definition here.
-# -------------------------------------------------------
-# Example of a FE problem for the OpenBeam library
-#  Problem in section 5.1 from course textbook.
-# -------------------------------------------------------
-VAR, P = 1000
+    <div id="top-toolbar">
+        <button title="Back to main project site" onclick="backHome()">↩</button>
 
-# -------------------------------------------------
-#  Geometry: nodes, elements & constraints
-# -------------------------------------------------
-[GEOMETRY]
+        &nbsp;
 
-# Command "NODE": Declares a new node
-# Usage:  NODE,  <ID>,  <X>, <Y> [, <Z>]
-NODE, id=0,  0   ,0, 0
-NODE, id=1,  0.5 ,0, 0
-NODE, id=2,  0   ,1, 0
+        <span id="examplesLabel">Examples:</span>
+        <select id="demoSelect" onchange="loadDemoFile(this.value)"></select>
 
-PARAMSET,id=MY_BAR, E=2.0e11, A=2e-4,Iz=1940e-8
+        &nbsp;
 
-ELEMENT, id=0, type=BEAM2D_AA,  from=0, to=1, paramset=MY_BAR
-ELEMENT, id=1, type=BEAM2D_AA,  from=0, to=2, paramset=MY_BAR
-ELEMENT, id=2, type=BEAM2D_AA,  from=1, to=2, paramset=MY_BAR
+        <button title="Parse YAML and solve structure" onclick="buildStructure()">Solve</button>
+        <button title="Go to documentation" onclick="showHelp()">Help</button>
 
-CONSTRAINT, node=0, dof=DXDY
-CONSTRAINT, node=1, dof=DY
+        <ul>
+            <li><abbr title="Node labels">
+                    <input type="checkbox" id="cbShowNodeLabels" onchange="updateVisualization()" checked />
+                    <label for="cbShowNodeLabels"><img src="imgs/cbShowNodeLabels.png" /></label>
+                </abbr>
+            </li>
+            <li><abbr title="Show loads">
+                    <input type="checkbox" id="cbShowLoads" onchange="updateVisualization()" checked />
+                    <label for="cbShowLoads"><img src="imgs/cbShowLoads.png" /></label>
+                </abbr>
+            </li>
+            <li><abbr title="Show deformed">
+                    <input type="checkbox" id="cbShowDeformed" onchange="onStopAnimation(); updateVisualization()" />
+                    <label for="cbShowDeformed"><img src="imgs/cbShowDeformed.png" /></label>
+                </abbr>
+            </li>
+            <li><abbr title="Play animation">
+                    <input type="checkbox" id="cbShowDeformedAnim" onchange="onPlayAnimationClick()" />
+                    <label for="cbShowDeformedAnim"><img src="imgs/cbShowDeformedAnim.png" /></label>
+                </abbr>
+            </li>
+            <li><abbr title="Show axil force">
+                    <input type="checkbox" id="cbShowN" onchange="updateVisualization()" />
+                    <label for="cbShowN"><img src="imgs/cbShowN.png" /></label>
+                </abbr>
+            </li>
+            <li><abbr title="Show shear force Vy">
+                    <input type="checkbox" id="cbShowVy" onchange="updateVisualization()" />
+                    <label for="cbShowVy"><img src="imgs/cbShowVy.png" /></label>
+                </abbr>
+            </li>
+            <li><abbr title="Show bending moment Mz">
+                    <input type="checkbox" id="cbShowMz" onchange="updateVisualization()" />
+                    <label for="cbShowMz"><img src="imgs/cbShowMz.png" /></label>
+                </abbr>
+            </li>
+            <li><abbr title="Show shear force Vz">
+                    <input type="checkbox" id="cbShowVz" onchange="updateVisualization()" />
+                    <label for="cbShowVz"><img src="imgs/cbShowVz.png" /></label>
+                </abbr>
+            </li>
+            <li><abbr title="Show bending moment My">
+                    <input type="checkbox" id="cbShowMy" onchange="updateVisualization()" />
+                    <label for="cbShowMy"><img src="imgs/cbShowMy.png" /></label>
+                </abbr>
+            </li>
+            <li><abbr title="Show torsion moment">
+                    <input type="checkbox" id="cbShowMx" onchange="updateVisualization()" />
+                    <label for="cbShowMx"><img src="imgs/cbShowMx.png" /></label>
+                </abbr>
+            </li>
+        </ul>
 
-# -----------------------
-[LOADS]
+        &nbsp;
 
-LOAD, node=2, dof=DX, +P
-</textarea>
+        <div class="spinner" id="spinner"></div>
+        <div class="emscripten" id="status">Downloading...</div>
+        <div class="emscripten">
+            <progress value="0" max="100" id="progress" hidden=1></progress>
+        </div>
+
     </div>
-    
-    <button onclick="buildStructure()">Parse this structure...</button>
 
-    <div>
-    <textarea readonly id="OutputArea" cols="100" rows="10">(output messages)</textarea>
+    <div id="main">
+        <div id="parent">
+            <div id="editor"></div>
+        </div>
+        <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
     </div>
 
-    <div id="OutputReactions">(Reactions)</div>
+
+    <div>
+        <textarea readonly id="OutputArea" rows="4">(output messages)</textarea>
+    </div>
+    <div id="Results">(Results)</div>
 
 
-<script>
-    var editor = CodeMirror.fromTextArea(document.getElementById('StructureDefinitionArea'), {
-    lineNumbers: true,
-    mode: 'text/x-yaml',
-    theme: 'abbott',
-    });
-</script>
+    <script type="text/javascript" src="js/ob-solver-simple-post.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../js/web-ob-solve.js" defer></script>
 
+    <script type="text/javascript">
+        var sc_project = 6918510;
+        var sc_invisible = 1;
+        var sc_security = "d4180ad8"; 
+    </script>
+    <script type="text/javascript" src="//www.statcounter.com/counter/counter.js" async></script>
 </body>
+
 </html>

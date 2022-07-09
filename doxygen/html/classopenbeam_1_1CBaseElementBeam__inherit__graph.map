@@ -1,0 +1,9 @@
+<map id="openbeam::CBaseElementBeam" name="openbeam::CBaseElementBeam">
+<area shape="rect" id="node1" title=" " alt="" coords="216,143,448,170"/>
+<area shape="rect" id="node3" href="$classopenbeam_1_1CElementBeam__2D__AA.html" title=" " alt="" coords="496,5,696,47"/>
+<area shape="rect" id="node4" href="$classopenbeam_1_1CElementBeam__2D__AR.html" title=" " alt="" coords="496,71,696,112"/>
+<area shape="rect" id="node5" href="$classopenbeam_1_1CElementBeam__2D__RA.html" title=" " alt="" coords="496,136,696,177"/>
+<area shape="rect" id="node6" href="$classopenbeam_1_1CElementBeam__2D__RD.html" title=" " alt="" coords="496,201,696,243"/>
+<area shape="rect" id="node7" href="$classopenbeam_1_1CElementBeam__2D__RR.html" title=" " alt="" coords="496,267,696,308"/>
+<area shape="rect" id="node2" href="$classopenbeam_1_1CElement.html" title=" " alt="" coords="5,143,168,170"/>
+</map>

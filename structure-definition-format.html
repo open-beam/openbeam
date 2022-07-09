@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Problem definition file format &mdash; OpenBeam  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+      <link rel="stylesheet" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+      <link rel="stylesheet" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Implemented finite elements" href="finite_elements.html" />
+    <link rel="prev" title="Installing" href="compile.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+            <a href="index.html" class="icon icon-home"> OpenBeam
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference external" href="ob-solver-simple/#http://">Online solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compile.html">Installing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Problem definition file format</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#parameters">1. Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#beam-sections">2. Beam sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#geometry-nodes">3. Geometry: nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#geometry-elements">4. Geometry: elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#geometry-constraints">5. Geometry: constraints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loads-on-nodes">6. Loads on nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#distributed-loads-on-the-elements">7. Distributed loads on the elements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="finite_elements.html">Implemented finite elements</a></li>
+<li class="toctree-l1"><a class="reference external" href="doxygen/html/classes.html#http://">C++ API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OpenBeam</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Problem definition file format</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/structure-definition-format.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="problem-definition-file-format">
+<span id="yaml-definition"></span><h1>Problem definition file format<a class="headerlink" href="#problem-definition-file-format" title="Permalink to this headline"></a></h1>
+<p>OpenBeam reads problem definitions from a YAML file, with the format explained in this page.
+You can also directly jump to see the <a class="reference external" href="https://github.com/open-beam/openbeam/tree/master/examples-structures">YAML example files</a>
+or test and edit them in the <a class="reference external" href="ob-solver-simple/">online app</a>.</p>
+<p>Then, come back to this page when in doubt about how to define a particular
+element, load, or parameter.</p>
+<details class="sphinx-bs dropdown card mb-3" open="open">
+<summary class="summary-title card-header">
+YAML format summary<div class="summary-down docutils">
+<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
+<div class="summary-up docutils">
+<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
+</summary><div class="summary-content card-body docutils">
+<p class="card-text">You can learn more on the YAML format in its <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">Wikipedia article</a>
+or directly in its <a class="reference external" href="https://yaml.org/">official site</a>. Here we provide a quick cheatsheet only:</p>
+<p class="card-text"><strong>Comments</strong>: A <code class="docutils literal notranslate"><span class="pre">#</span></code> means that the rest of the line is a comment, so it is ignored by the YAML parser.</p>
+<p class="card-text"><strong>Maps</strong> or <strong>Dictionaries</strong>: It is the main data structure used in the OpenBeam problem definition files.
+It defines a map between <code class="docutils literal notranslate"><span class="pre">keys</span> <span class="pre">=&gt;</span> <span class="pre">values</span></code> with this format:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dictionary_name</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">key1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100e34</span><span class="w"></span>
+<span class="w">  </span><span class="nt">key2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span><span class="w"></span>
+<span class="w">  </span><span class="nt">key3</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;a</span><span class="nv"> </span><span class="s">text</span><span class="nv"> </span><span class="s">can</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">defined</span><span class="nv"> </span><span class="s">like</span><span class="nv"> </span><span class="s">this&#39;</span><span class="w"></span>
+<span class="w">  </span><span class="nt">key4</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;or</span><span class="nv"> </span><span class="s">like</span><span class="nv"> </span><span class="s">this</span><span class="nv"> </span><span class="s">too&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="nt">key5</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">also_a_text_string</span><span class="w"></span>
+</pre></div>
+</div>
+<p class="card-text">The short JSON-like version works too:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dictionary_name</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key1</span><span class="p">:</span><span class="w"> </span><span class="nv">100e34</span><span class="p p-Indicator">,</span><span class="nt"> key2</span><span class="p">:</span><span class="w"> </span><span class="nv">foo</span><span class="p p-Indicator">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p class="card-text"><strong>IMPORTANT</strong>: The space after the colon <code class="docutils literal notranslate"><span class="pre">:</span></code> is mandatory.</p>
+</div>
+</details><section id="parameters">
+<h2>1. Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline"></a></h2>
+<p>This <strong>optional</strong> section allows you to define variables or
+parameters, to easily parameterize a structure dimensions,
+loads, etc.
+Its format is just a YAML map, which each key being converted
+into a parameter.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Mathematical expressions and formulas can be used in all entries,
+including the parameters that have been defined
+formerly. This is an extension of YAML implemented in OpenBeam,
+making use of <a class="reference external" href="https://docs.mrpt.org/reference/latest/class_mrpt_expr_CRuntimeCompiledExpression.html">mrpt::expr::CRuntimeCompiledExpression</a>
+which in turn uses the <a class="reference external" href="https://github.com/ArashPartow/exprtk#readme">exprtk language</a>.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># -------------------------------------------------</span><span class="w"></span>
+<span class="c1">#  Parameters</span><span class="w"></span>
+<span class="c1"># -------------------------------------------------</span><span class="w"></span>
+<span class="nt">parameters</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">G</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9.81</span><span class="w"></span>
+<span class="w">  </span><span class="nt">L</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">         </span><span class="c1"># Dimensions of the problem</span><span class="w"></span>
+<span class="w">  </span><span class="nt">P</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">G * 1000</span><span class="w">  </span><span class="c1"># External load value</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The YAML short format is also supported:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> G</span><span class="p">:</span><span class="w"> </span><span class="nv">9.81</span><span class="p p-Indicator">,</span><span class="nt"> L</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> P</span><span class="p">:</span><span class="w"> </span><span class="nv">G * 1000</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="beam-sections">
+<h2>2. Beam sections<a class="headerlink" href="#beam-sections" title="Permalink to this headline"></a></h2>
+<p>This <strong>optional</strong> section allows you to define short names for beam
+sections that will be used in more than one element.
+A mandatory <code class="docutils literal notranslate"><span class="pre">name</span></code> key must be defined, along with the material and
+beam section geometry parameters that will be needed by the particular
+finite element.</p>
+<p>Example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># -------------------------------------------------</span><span class="w"></span>
+<span class="c1"># beam sections</span><span class="w"></span>
+<span class="c1"># -------------------------------------------------</span><span class="w"></span>
+<span class="nt">beam_sections</span><span class="p">:</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IPE200</span><span class="w"></span>
+<span class="w">  </span><span class="nt">E</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.1e11</span><span class="w">     </span><span class="c1"># Young module</span><span class="w"></span>
+<span class="w">  </span><span class="nt">A</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">28.5e-4</span><span class="w">    </span><span class="c1"># Area</span><span class="w"></span>
+<span class="w">  </span><span class="nt">Iz</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1940e-8</span><span class="w">   </span><span class="c1"># Second moment of area in z</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="geometry-nodes">
+<h2>3. Geometry: nodes<a class="headerlink" href="#geometry-nodes" title="Permalink to this headline"></a></h2>
+<p>Each node must be assigned a unique <code class="docutils literal notranslate"><span class="pre">id</span></code> number, coordinates (in 2D or 3D),
+and an <strong>optinal label</strong>, for easy identification of node names in diagrams
+and animations.
+In case of tilted planes using nodal coordinates, additional entries <code class="docutils literal notranslate"><span class="pre">rot_x</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rot_y</span></code> and <code class="docutils literal notranslate"><span class="pre">rot_z</span></code> may be added to especify the roll, pitch, and yaw
+rotation angles <strong>in degrees</strong>, respectively. Planar structures only need to
+specify <code class="docutils literal notranslate"><span class="pre">rot_z</span></code>.</p>
+<p>Example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nodes</span><span class="p">:</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="w">   </span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">A</span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2*L</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">B</span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">3*L</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">C</span><span class="p p-Indicator">,</span><span class="nt"> rot_z</span><span class="p">:</span><span class="w"> </span><span class="nv">45</span><span class="p p-Indicator">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="geometry-elements">
+<h2>4. Geometry: elements<a class="headerlink" href="#geometry-elements" title="Permalink to this headline"></a></h2>
+<p>This section defines how many finite elements exist,
+to which nodes they are attached, and their type.</p>
+<p>For the full list of finite elements implemented in
+this library, along with their <code class="docutils literal notranslate"><span class="pre">type</span></code> names and
+mathematical definitions, see <a class="reference internal" href="finite_elements.html#finite-elements"><span class="std std-ref">Implemented finite elements</span></a>.</p>
+<p>Example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nodes</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">BEAM2D_RA</span><span class="p p-Indicator">,</span><span class="nt"> nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">],</span><span class="nt"> section</span><span class="p">:</span><span class="w"> </span><span class="nv">IPE200</span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">BEAM2D_AR</span><span class="p p-Indicator">,</span><span class="nt"> nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">],</span><span class="nt"> section</span><span class="p">:</span><span class="w"> </span><span class="nv">IPE200</span><span class="p p-Indicator">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="geometry-constraints">
+<h2>5. Geometry: constraints<a class="headerlink" href="#geometry-constraints" title="Permalink to this headline"></a></h2>
+<p>This sections lists all the degrees-of-freedom that are
+constrained such that their displacement is zero (or any other fixed value).</p>
+<p>Each YAML map entry must define the node <code class="docutils literal notranslate"><span class="pre">id</span></code> number
+(as defined in the <a class="reference external" href="#geometry-nodes">node section above</a>)
+and <strong>which DoF are constrained</strong>, using these names:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> or <code class="docutils literal notranslate"><span class="pre">DZ</span></code>: Translation in one axis only (X,Y,Z).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RX</span></code>, <code class="docutils literal notranslate"><span class="pre">RY</span></code> or <code class="docutils literal notranslate"><span class="pre">RZ</span></code>: Rotation along one axis only (X,Y,Z).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DXDYDZ</span></code>: All translations are constrained.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RXRYRZ</span></code>: All rotations are constrained.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DXDY</span></code>, <code class="docutils literal notranslate"><span class="pre">DXDZ</span></code>, <code class="docutils literal notranslate"><span class="pre">DYDZ</span></code> : Translation in two axis is constrained.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DXDYRZ</span></code>: A very common case in 2D structures: translation in X and Y, and rotation in Z are constrained.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DXRZ</span></code>: Translation in X and rotation in Z are constrained.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DYRZ</span></code>: Translation in Y and rotation in Z are constrained.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DXDYRXRZ</span></code>: Translations in X,Y and rotations in X and Z are constrained (for beams with torsion loads).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ALL</span></code> or <code class="docutils literal notranslate"><span class="pre">DXDYDZRXRYRZ</span></code>: All 6 DoFs are constrained.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You do not need to specify constraints in DoFs that are not used
+by your finite elements. For example, to fix a 2D rod element to
+ground, you do not need to explicitly specify that the rotation DoFs
+are zero, since the library will automatically discard the unused DoFs.
+Though, it is not an error to overspecify those constraints, only a
+warning will be generated.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Constraints</span><span class="w"></span>
+<span class="nt">constraints</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DXDYRZ</span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DXDYRZ</span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">  </span><span class="c1">#- {node: 2, dof: DY, value: 1e-3} # optional value different than zero.</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="loads-on-nodes">
+<h2>6. Loads on nodes<a class="headerlink" href="#loads-on-nodes" title="Permalink to this headline"></a></h2>
+<p>This sections allows the definition of concentrated forces or torques
+at particular DoFs of nodes.
+Each entry must define these keys:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The node <code class="docutils literal notranslate"><span class="pre">id</span></code> as defined in the <a class="reference external" href="#geometry-nodes">node section above</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dof</span></code>: The DoF on which the load is defined. Any of:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code>, <code class="docutils literal notranslate"><span class="pre">DZ</span></code>: for forces. Positive values are in the direction of the axes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RX</span></code> (torsion), <code class="docutils literal notranslate"><span class="pre">RY</span></code> (bending), <code class="docutils literal notranslate"><span class="pre">RZ</span></code>  (bending): for torques.</p></li>
+</ul>
+</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Loads:</span><span class="w"></span>
+<span class="nt">node_loads</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DX</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">-P</span><span class="p p-Indicator">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="distributed-loads-on-the-elements">
+<h2>7. Distributed loads on the elements<a class="headerlink" href="#distributed-loads-on-the-elements" title="Permalink to this headline"></a></h2>
+<p>Loads which are distributed along the elements.</p>
+<p>The element <code class="docutils literal notranslate"><span class="pre">id</span></code> number is the 0-based index of the elements
+as defined in the <code class="docutils literal notranslate"><span class="pre">elements</span></code> section above.</p>
+<p>Implemented load <code class="docutils literal notranslate"><span class="pre">type</span></code> are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TEMPERATURE</span></code>: Temperature increment load. Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">deltaT</span></code>: Temperature increment (in Celsius degrees).</p></li>
+<li><p>NOTE: Temperature coefficient is right now fixed to <code class="docutils literal notranslate"><span class="pre">12e-6</span></code>.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DISTRIB_UNIFORM</span></code>: Uniformly distributed load. Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">q</span></code>: Load density value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> (and optionally, <code class="docutils literal notranslate"><span class="pre">DZ</span></code>): They must form a unit vector specifying the load direction.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TRIANGULAR</span></code>: Triangular or trapezoidal load.  Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">q_ini</span></code>, <code class="docutils literal notranslate"><span class="pre">q_end</span></code>: Load density values at the first and second element nodes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> (and optionally, <code class="docutils literal notranslate"><span class="pre">DZ</span></code>): They must form a unit vector specifying the load direction.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CONCENTRATED</span></code>: Concentrated load at a particular point amid the element.  Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">p</span></code>: Concentrated load value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> (and optionally, <code class="docutils literal notranslate"><span class="pre">DZ</span></code>): They must form a unit vector specifying the load direction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dist</span></code>: Distance from the first element node.</p></li>
+</ul>
+</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">element_loads</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">element</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">DISTRIB_UNIFORM</span><span class="p p-Indicator">,</span><span class="nt"> q</span><span class="p">:</span><span class="w"> </span><span class="nv">2000*G</span><span class="p p-Indicator">,</span><span class="nt"> DX</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> DY</span><span class="p">:</span><span class="w"> </span><span class="nv">-1</span><span class="p p-Indicator">,</span><span class="nt"> DZ</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="compile.html" class="btn btn-neutral float-left" title="Installing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="finite_elements.html" class="btn btn-neutral float-right" title="Implemented finite elements" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Jose Luis Blanco Claraco and contributors, University of Almería (Spain).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ 
+<!-- Default Statcounter code for Open-beam.sourceforge.net
+http://open-beam.sourceforge.net/ -->
+<script type="text/javascript">
+  var sc_project = 6918510;
+  var sc_invisible = 1;
+  var sc_security = "d4180ad8"; 
+</script>
+<script type="text/javascript" src="https://www.statcounter.com/counter/counter.js" async></script>
+<noscript>
+  <div class="statcounter"><a title="Web Analytics" href="https://statcounter.com/" target="_blank"><img
+        class="statcounter" src="https://c.statcounter.com/6918510/0/d4180ad8/1/" alt="Web Analytics"
+        referrerPolicy="no-referrer-when-downgrade"></a></div>
+</noscript>
+<!-- End of Statcounter Code -->
+
+
+</body>
+</html>

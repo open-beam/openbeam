@@ -1,0 +1,51 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#
+# Problem in section 5.1 from course textbook in 
+# University of Malaga.
+#        https://github.com/open-beam/openbeam
+# -------------------------------------------------------
+
+# -------------------------------------------------
+#  Parameters
+# -------------------------------------------------
+parameters:
+  P: 1000    # Newtons
+
+# -------------------------------------------------
+# beam sections
+# -------------------------------------------------
+beam_sections:
+- name: MY_BAR
+  E: 2.0e11     # Young module
+  A: 2e-4       # Area
+  Iz: 1940e-8   # Second moment of area in z
+
+# -------------------------------------------------
+#  Geometry: nodes, elements & constraints
+# -------------------------------------------------
+nodes:
+- {id: 0, coords: [0   ,  0], label: A}
+- {id: 1, coords: [0.5 ,  0], label: B}
+- {id: 2, coords: [0   ,  1], label: C}
+
+elements:
+- {type: BEAM2D_AA, nodes: [0, 1], section: MY_BAR}
+- {type: BEAM2D_AA, nodes: [1, 2], section: MY_BAR}
+- {type: BEAM2D_AA, nodes: [0, 2], section: MY_BAR}
+
+# Constraints
+constraints:
+- {node: 0, dof: DXDY}
+- {node: 1, dof: DY}
+#- {node: 1, dof: DY, value: 0.01}
+
+# ----------------------------------------------
+# Loads
+# ----------------------------------------------
+node_loads:
+- {node: 2, dof: DX, value: +P}
+
+#element_loads:
+#- {element: 0, type: TEMPERATURE, deltaT: 20}
+

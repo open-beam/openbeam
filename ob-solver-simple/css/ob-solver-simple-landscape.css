@@ -1,0 +1,27 @@
+#main {
+    display: flex;
+}
+
+#parent {
+    height: 400px;
+    flex: 450px 0 0;
+    /*display: inline-block;
+    float: left;*/
+    position: relative;
+}
+
+#editor {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+#canvas {
+    /*flex-grow: 1;*/
+    width: 800px;
+    border: 1px solid #555;
+    margin: 1px;
+    height: 400px;
+}

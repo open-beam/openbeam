@@ -1,0 +1,40 @@
+#top-toolbar {
+    position: fixed;
+    top: 0;
+    z-index: 100;
+    background-color: #ffffff;
+}
+
+#examplesLabel {
+    display: none;
+}
+
+#demoSelect {
+    width: 100px;
+}
+
+#main {
+    display: block;
+}
+
+#parent {
+    height: 250px;
+    width: 99%;
+    display: inline-block;
+    position: relative;
+}
+
+#editor {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+#canvas {
+    width: 800px;
+    border: 1px solid #555;
+    margin: 1px;
+    height: 400px;
+}

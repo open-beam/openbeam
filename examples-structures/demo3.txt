@@ -1,0 +1,53 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#  
+#  2011-2022, (C) Jose Luis Blanco Claraco
+#
+#  Problem in list CM9 (bottom) from course textbook in 
+#   University of Malaga.
+#
+#          https://github.com/open-beam/openbeam
+# -------------------------------------------------------
+
+VAR, G = 9.81
+
+VAR, D = 2         # Dimensions of the problem
+VAR, P = G * 1000  # External load
+VAR, Q = G * 100   # External distributed load
+
+PARAMSET,id=IPE200, E=2.1e11, A=28.5e-4, Iz=1940e-8
+
+# -------------------------------------------------
+#  Geometry: nodes, elements & constraints
+# -------------------------------------------------
+[GEOMETRY]
+
+NODE, id=0,  0,0,0, 135   # Rotated 135 degrees (nodal coordinates)
+NODE, id=1,  D,D,0
+NODE, id=2,  2*D,D,0
+NODE, id=3,  3*D,D,0
+NODE, id=4,  0,D,0
+NODE, id=5,  2*D,0,0
+NODE, id=6,  2*D,D,0
+
+ELEMENT, id=0, type=BEAM2D_RR,  from=0, to=1, paramset=IPE200
+ELEMENT, id=1, type=BEAM2D_RR,  from=1, to=2, paramset=IPE200
+ELEMENT, id=2, type=BEAM2D_RR,  from=3, to=6, paramset=IPE200
+ELEMENT, id=3, type=BEAM2D_AA,  from=5, to=6, paramset=IPE200
+ELEMENT, id=4, type=BEAM2D_RR,  from=4, to=1, paramset=IPE200
+
+# Strings to emulate the joint conditions 2-6:
+ELEMENT, id=5, type=SPRING_XYZ,  from=2, to=6, Ky=1e20
+ELEMENT, id=6, type=SPRING_TORSION,  from=2, to=6, K=1e20
+
+CONSTRAINT, node=0, dof=DYRZ
+CONSTRAINT, node=5, dof=DY   # Was DXDY but the AA beam model makes DX superfluous
+CONSTRAINT, node=3, dof=DX
+
+# -----------------------
+[LOADS]
+
+LOAD, node=6, dof=DX, -P
+
+ELOAD, element=4, type=DISTRIB_UNIFORM, Q=Q, DX=0,DY=-1,DZ=0
+

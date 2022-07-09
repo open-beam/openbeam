@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Implemented finite elements &mdash; OpenBeam  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
+      <link rel="stylesheet" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+      <link rel="stylesheet" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Problem definition file format" href="structure-definition-format.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+            <a href="index.html" class="icon icon-home"> OpenBeam
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference external" href="ob-solver-simple/#http://">Online solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compile.html">Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure-definition-format.html">Problem definition file format</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Implemented finite elements</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#rod-2d-element-truss">1. Rod 2D element (truss)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#single-pinned-2d-element-beam">1. Single-pinned 2D element (beam)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#d-beam-element">3. 2D beam element</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#d-beam-element-with-slider">4. 2D beam element with slider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linear-spring">5. Linear spring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#two-linear-springs">6. Two linear springs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#torsion-spring">7. Torsion spring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#all-2d-degrees-of-freedom-spring">8. All 2D degrees-of-freedom spring</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="doxygen/html/classes.html#http://">C++ API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OpenBeam</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Implemented finite elements</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/finite_elements.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="implemented-finite-elements">
+<span id="finite-elements"></span><h1>Implemented finite elements<a class="headerlink" href="#implemented-finite-elements" title="Permalink to this headline"></a></h1>
+<p>Type names are the strings that must be used in the <cite>elements</cite>
+section of a YAML definition file (see <a class="reference internal" href="structure-definition-format.html#yaml-definition"><span class="std std-ref">Problem definition file format</span></a>).</p>
+<p>Parameters for each element may be defined on a per-element basis,
+or by means of a <cite>beam_sections</cite> YAML entry to reuse sets of
+parameters for several elements.
+Note that defining more parameters than the minimum required ones
+is not an error,
+e.g. you can define <code class="docutils literal notranslate"><span class="pre">Iz</span></code> for a <code class="docutils literal notranslate"><span class="pre">BEAM2D_AA</span></code> and it
+will neither be used nor an error triggered.</p>
+<section id="rod-2d-element-truss">
+<h2>1. Rod 2D element (truss)<a class="headerlink" href="#rod-2d-element-truss" title="Permalink to this headline"></a></h2>
+<a class="reference internal image-reference" href="_images/element_BEAM2D_AA.png"><img alt="2D rod finite element definition" class="align-right" src="_images/element_BEAM2D_AA.png" style="width: 347px;" /></a>
+<p>A planar (XY) rod element capable of axial stress only.</p>
+<ul class="simple">
+<li><p>Type name: <code class="docutils literal notranslate"><span class="pre">BEAM2D_AA</span></code></p></li>
+<li><p>Number of nodes: 2</p></li>
+<li><p>Required parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">E</span></code>: Young elasticity module.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span></code>: Section area.</p></li>
+</ul>
+</li>
+</ul>
+<div style="clear: both"></div><details class="sphinx-bs dropdown card mb-3">
+<summary class="summary-title card-header">
+Local-coordinates stiffness matrices<div class="summary-down docutils">
+<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
+<div class="summary-up docutils">
+<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
+</summary><div class="summary-content card-body docutils">
+<div class="math">
+<p><img src="_images/math/996ad658e2d15973292d1304f32ed13a7cea8d50.png" alt="\begin{equation*}
+\hat{\mathbf{K}}_{ii} = \hat{\mathbf{K}}_{jj} =
+\begin{blockarray}{ccccccc}
+x &amp; y &amp; z &amp; r_x &amp; r_y &amp; r_z \\
+\begin{block}{(cccccc)c}
+  EA/L &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; x \\
+  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp;  y \\
+  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp;  z \\
+  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp;  r_x \\
+  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp;  r_y \\
+  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp;  r_z \\
+\end{block}
+\end{blockarray}
+\end{equation*}
+
+\begin{equation*}
+\hat{\mathbf{K}}_{ij} =
+\begin{blockarray}{ccccccc}
+x &amp; y &amp; z &amp; r_x &amp; r_y &amp; r_z \\
+\begin{block}{(cccccc)c}
+  -EA/L &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; x \\
+  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp;  y \\
+  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp;  z \\
+  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp;  r_x \\
+  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp;  r_y \\
+  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp;  r_z \\
+\end{block}
+\end{blockarray}
+\end{equation*}"/></p>
+</div></div>
+</details></section>
+<section id="single-pinned-2d-element-beam">
+<h2>1. Single-pinned 2D element (beam)<a class="headerlink" href="#single-pinned-2d-element-beam" title="Permalink to this headline"></a></h2>
+<a class="reference internal image-reference" href="_images/element_BEAM2D_RA.png"><img alt="BEAM2D_AR finite element definition" class="align-right" src="_images/element_BEAM2D_RA.png" style="width: 347px;" /></a>
+<p>A planar (XY) beam element with one pinned end (<strong>no</strong> bending moment)
+and one rigid end (<strong>with</strong> bending moment).
+Two names exist for this element for convenience of users,
+depending on which which node (the first or the second listed node)
+is the pinned one.</p>
+<ul class="simple">
+<li><p>Type name: <code class="docutils literal notranslate"><span class="pre">BEAM2D_AR</span></code> (first node is pinned), <code class="docutils literal notranslate"><span class="pre">BEAM2D_RA</span></code> (second node is pinned)</p></li>
+<li><p>Number of nodes: 2</p></li>
+<li><p>Required parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">E</span></code>: Young elasticity module.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span></code>: Section area.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Iz</span></code>: Second moment of inertia in the <cite>Z</cite> axis.</p></li>
+</ul>
+</li>
+</ul>
+<div style="clear: both"></div></section>
+<section id="d-beam-element">
+<h2>3. 2D beam element<a class="headerlink" href="#d-beam-element" title="Permalink to this headline"></a></h2>
+<a class="reference internal image-reference" href="_images/element_BEAM2D_RR.png"><img alt="BEAM2D_RR finite element definition" class="align-right" src="_images/element_BEAM2D_RR.png" style="width: 347px;" /></a>
+<p>A planar (XY) beam element with both ends able to
+transmit bending moment.</p>
+<ul class="simple">
+<li><p>Type name: <code class="docutils literal notranslate"><span class="pre">BEAM2D_RR</span></code></p></li>
+<li><p>Number of nodes: 2</p></li>
+<li><p>Required parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">E</span></code>: Young elasticity module.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span></code>: Section area.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Iz</span></code>: Second moment of inertia in the <cite>Z</cite> axis.</p></li>
+</ul>
+</li>
+</ul>
+<div style="clear: both"></div></section>
+<section id="d-beam-element-with-slider">
+<h2>4. 2D beam element with slider<a class="headerlink" href="#d-beam-element-with-slider" title="Permalink to this headline"></a></h2>
+<a class="reference internal image-reference" href="_images/element_BEAM2D_RD.png"><img alt="BEAM2D_RD finite element definition" class="align-right" src="_images/element_BEAM2D_RD.png" style="width: 347px;" /></a>
+<p>A planar (XY) beam element with both ends able to
+transmit bending moment, and second node free
+to slide on the local Y axis.</p>
+<ul class="simple">
+<li><p>Type name: <code class="docutils literal notranslate"><span class="pre">BEAM2D_RD</span></code></p></li>
+<li><p>Number of nodes: 2</p></li>
+<li><p>Required parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">E</span></code>: Young elasticity module.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span></code>: Section area.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Iz</span></code>: Second moment of inertia in the <cite>Z</cite> axis.</p></li>
+</ul>
+</li>
+</ul>
+<div style="clear: both"></div></section>
+<section id="linear-spring">
+<h2>5. Linear spring<a class="headerlink" href="#linear-spring" title="Permalink to this headline"></a></h2>
+<a class="reference internal image-reference" href="_images/element_SPRING_1D.png"><img alt="SPRING_1D finite element definition" class="align-right" src="_images/element_SPRING_1D.png" style="width: 200px;" /></a>
+<p>A spring element in the local X direction between two given nodes.</p>
+<ul class="simple">
+<li><p>Type name: <code class="docutils literal notranslate"><span class="pre">SPRING_1D</span></code></p></li>
+<li><p>Number of nodes: 2</p></li>
+<li><p>Required parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">K</span></code>: Stiffness constant.</p></li>
+</ul>
+</li>
+</ul>
+<div style="clear: both"></div></section>
+<section id="two-linear-springs">
+<h2>6. Two linear springs<a class="headerlink" href="#two-linear-springs" title="Permalink to this headline"></a></h2>
+<a class="reference internal image-reference" href="_images/element_SPRING_DXDY.png"><img alt="SPRING_XY finite element definition" class="align-right" src="_images/element_SPRING_DXDY.png" style="width: 200px;" /></a>
+<p>A spring element with two elastic components in the local X and Y
+directions between two given nodes. The picture shows one node being the ground
+but it can be any other problem node too.</p>
+<ul class="simple">
+<li><p>Type name: <code class="docutils literal notranslate"><span class="pre">SPRING_XY</span></code></p></li>
+<li><p>Number of nodes: 2</p></li>
+<li><p>Required parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">Kx</span></code>: Stiffness constant in X.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Ky</span></code>: Stiffness constant in Y.</p></li>
+</ul>
+</li>
+</ul>
+<div style="clear: both"></div></section>
+<section id="torsion-spring">
+<h2>7. Torsion spring<a class="headerlink" href="#torsion-spring" title="Permalink to this headline"></a></h2>
+<a class="reference internal image-reference" href="_images/element_SPRING_TORSION.png"><img alt="SPRING_TORSION finite element definition" class="align-right" src="_images/element_SPRING_TORSION.png" style="width: 200px;" /></a>
+<p>A torsion spring element in the rotation Z axis between two given nodes.</p>
+<ul class="simple">
+<li><p>Type name: <code class="docutils literal notranslate"><span class="pre">SPRING_TORSION</span></code></p></li>
+<li><p>Number of nodes: 2</p></li>
+<li><p>Required parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">K</span></code>: Torsional stiffness constant in Z.</p></li>
+</ul>
+</li>
+</ul>
+<div style="clear: both"></div></section>
+<section id="all-2d-degrees-of-freedom-spring">
+<h2>8. All 2D degrees-of-freedom spring<a class="headerlink" href="#all-2d-degrees-of-freedom-spring" title="Permalink to this headline"></a></h2>
+<a class="reference internal image-reference" href="_images/element_SPRING_DXDYRZ.png"><img alt="SPRING_TORSION finite element definition" class="align-right" src="_images/element_SPRING_DXDYRZ.png" style="width: 200px;" /></a>
+<p>Two linear and one torsion spring element between two given nodes.</p>
+<ul class="simple">
+<li><p>Type name: <code class="docutils literal notranslate"><span class="pre">SPRING_DXDYRZ</span></code></p></li>
+<li><p>Number of nodes: 2</p></li>
+<li><p>Required parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">Kx</span></code>: Torsional stiffness constant in x.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Ky</span></code>: Torsional stiffness constant in y.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">KRz</span></code>: Torsional stiffness constant in rotation around z.</p></li>
+</ul>
+</li>
+</ul>
+<div style="clear: both"></div></section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="structure-definition-format.html" class="btn btn-neutral float-left" title="Problem definition file format" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Jose Luis Blanco Claraco and contributors, University of Almería (Spain).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ 
+<!-- Default Statcounter code for Open-beam.sourceforge.net
+http://open-beam.sourceforge.net/ -->
+<script type="text/javascript">
+  var sc_project = 6918510;
+  var sc_invisible = 1;
+  var sc_security = "d4180ad8"; 
+</script>
+<script type="text/javascript" src="https://www.statcounter.com/counter/counter.js" async></script>
+<noscript>
+  <div class="statcounter"><a title="Web Analytics" href="https://statcounter.com/" target="_blank"><img
+        class="statcounter" src="https://c.statcounter.com/6918510/0/d4180ad8/1/" alt="Web Analytics"
+        referrerPolicy="no-referrer-when-downgrade"></a></div>
+</noscript>
+<!-- End of Statcounter Code -->
+
+
+</body>
+</html>
