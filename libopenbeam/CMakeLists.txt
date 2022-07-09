@@ -12,7 +12,6 @@ add_library(openbeam
 	${SRCS_LIST}
 	${INTERNAL_HDRS_LIST}
 	${HRDS_LIST}
-
 	# Internalization code:
 	${INTERN_HS_LIST} ${INTERN_CPPS_LIST}
 	)
@@ -20,4 +19,6 @@ add_library(openbeam
 target_link_libraries(openbeam
 	${OPENBEAM_LINK_LIBS}
 	${Qt5Svg_LIBRARIES}
+	mrpt::opengl
+	${MRPT_STATIC_LINK_DEPS}
 	)

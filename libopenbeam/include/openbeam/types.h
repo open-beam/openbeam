@@ -24,6 +24,8 @@
 
 #include <openbeam/config.h>
 
+#include <Eigen/Dense>
+#include <Eigen/StdVector>
 #include <cmath>
 #include <cstdlib>
 #include <deque>
@@ -36,9 +38,6 @@
 #include <streambuf>
 #include <string>
 #include <vector>
-
-#include <Eigen/Dense>
-#include <Eigen/StdVector>
 
 // Useful macros ---------------------
 #if defined(__BORLANDC__)
@@ -353,8 +352,7 @@ struct aligned_containers
 template <typename CONTAINER>
 void free_container(CONTAINER& c)
 {
-    for (typename CONTAINER::iterator it = c.begin(); it != c.end(); ++it)
-        delete (*it);
+    for (auto& e : c) delete e;
     c.clear();
 }
 

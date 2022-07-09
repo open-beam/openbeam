@@ -1,8 +1,8 @@
 #  +---------------------------------------------------------------------------+
 #  |              OpenBeam - C++ Finite Element Analysis library               |
 #  |                                                                           |
-#  |   Copyright (C) 2010-2011  Jose Luis Blanco Claraco                       |
-#  |                              University of Malaga                         |
+#  | Copyright (C) 2010-2011  Jose Luis Blanco Claraco, University of Malaga   |
+#  |               2012-2022  Jose Luis Blanco Claraco, University of Almeria  |
 #  |                                                                           |
 #  | OpenBeam is free software: you can redistribute it and/or modify          |
 #  |     it under the terms of the GNU General Public License as published by  |
@@ -42,7 +42,7 @@ message(STATUS "Openbeam version: ${OPENBEAM_VERSION}")
 # --------------------------
 # Build options
 # --------------------------
-if (UNIX)
+if (UNIX AND NOT (CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
 	set(DEFAULT_SHARED_LIBS ON)
 else()
 	set(DEFAULT_SHARED_LIBS OFF)
@@ -76,6 +76,32 @@ set(OPENBEAM_HAS_CAIRO 0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${OpenBeam_SOURCE_DIR})
 find_package(Cairo)
+
+# MRPT for opengl rendering:
+find_package(mrpt-opengl REQUIRED)
+find_package(mrpt-gui REQUIRED)
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+	list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+
+	find_package(Threads)   # Threads::Threads
+	find_package(Filesystem MODULE)
+
+	add_library(mrpt_libfyaml STATIC IMPORTED GLOBAL)
+	add_dependencies(mrpt_libfyaml mrpt_liblibfyaml)
+	
+	find_library(LIBFYAML_LIB fyaml)
+	find_path(LIBFYAML_INCLUDES fyaml.h)
+	set_target_properties(mrpt_libfyaml PROPERTIES IMPORTED_LOCATION ${LIBFYAML_LIB})
+	set_target_properties(mrpt_libfyaml PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${LIBFYAML_INCLUDES})
+	
+	set(MRPT_STATIC_LINK_DEPS
+		Threads::Threads
+		CXX::Filesystem
+		mrpt_libfyaml
+	)
+endif()
+
 
 # pangommcairo
 
@@ -123,25 +149,27 @@ add_definitions(-DOPENBEAM_HAS_CAIRO=${OPENBEAM_HAS_CAIRO})
 
 # Qt5
 # --------------------------------
-# Instruct CMake to run moc automatically when needed.
-set(CMAKE_AUTOMOC ON)
-
-if(POLICY CMP0020)
-  cmake_policy(SET CMP0020 NEW)
+if (NOT (CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
+    # Instruct CMake to run moc automatically when needed.
+    set(CMAKE_AUTOMOC ON)
+    
+    if(POLICY CMP0020)
+        cmake_policy(SET CMP0020 NEW)
+    endif()
+    
+    set(OPENBEAM_HAS_QT5Svg 0)
+    
+    # Find includes in corresponding build directories
+    find_package(Qt5Svg QUIET)  # Find the QtWidgets library
+    if (NOT Qt5Svg_FOUND)
+        message(STATUS "*WARNING* Qt5Svg not found. Cannot build this target. \n  Add the installation prefix of Qt5Widgets to CMAKE_PREFIX_PATH \n  or set Qt5Svg_DIR to a directory containing one of the above files, typically: 'C:\\Qt\\5.X\\msvcXXXX_64\\lib\\cmake\\Qt5Svg'")
+    else()
+        include_directories(${Qt5Svg_INCLUDE_DIRS})
+        add_definitions(${Qt5Svg_DEFINITIONS})
+        set(OPENBEAM_HAS_QT5Svg 1)
+    endif()
+    add_definitions(-DOPENBEAM_HAS_QT5Svg=${OPENBEAM_HAS_QT5Svg})
 endif()
-
-set(OPENBEAM_HAS_QT5Svg 0)
-
-# Find includes in corresponding build directories
-find_package(Qt5Svg QUIET)  # Find the QtWidgets library
-if (NOT Qt5Svg_FOUND)
-	message(STATUS "*WARNING* Qt5Svg not found. Cannot build this target. \n  Add the installation prefix of Qt5Widgets to CMAKE_PREFIX_PATH \n  or set Qt5Svg_DIR to a directory containing one of the above files, typically: 'C:\\Qt\\5.X\\msvcXXXX_64\\lib\\cmake\\Qt5Svg'")
-else()
-	include_directories(${Qt5Svg_INCLUDE_DIRS})
-	add_definitions(${Qt5Svg_DEFINITIONS})
-	set(OPENBEAM_HAS_QT5Svg 1)
-endif()
-add_definitions(-DOPENBEAM_HAS_QT5Svg=${OPENBEAM_HAS_QT5Svg})
 
 # --------------------------
 # Global compiler flags
