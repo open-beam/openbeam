@@ -20,20 +20,32 @@
 
     <title>OpenBeam online App</title>
 
-    <script type="text/javascript" src="///js-ace-min-noconflict/ace.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../js-ace-min-noconflict/ace.js" charset="utf-8"></script>
     <script type="text/javascript" src="../js/web-ob-solve.js" defer></script>
 
-    <!--
+
+
     <style type="text/css" media="screen">
-        #StructureDefinitionArea {
+        #parent {
+            width: 500px;
+            height: 400px;
+            display: inline-block;
+            position: relative;
+        }
+
+        #editor {
             position: absolute;
             top: 0;
             right: 0;
             bottom: 0;
             left: 0;
         }
+
+        #top-toolbar {
+            width: 100%;
+            height: 40px;
+        }
     </style>
-    -->
 
     <script>
         // var Module = {
@@ -54,47 +66,53 @@
             document.getElementById('OutputArea').value = ret + ret2;
 
             document.getElementById('OutputReactions').innerHTML = reactions;
+
+            // Render GL visualization:
+
         }
     </script>
 </head>
 
 <body>
-    Check browser console.
-
-    <div id="StructureDefinitionArea"># Place your structure definition here.
-        # -------------------------------------------------------
-        # Example of a FE problem for the OpenBeam library
-        # Problem in section 5.1 from course textbook.
-        # -------------------------------------------------------
-        VAR, P = 1000
-
-        # -------------------------------------------------
-        # Geometry: nodes, elements & constraints
-        # -------------------------------------------------
-        [GEOMETRY]
-
-        # Command "NODE": Declares a new node
-        # Usage: NODE, ID, X, Y [, Z]
-        NODE, id=0, 0 ,0, 0
-        NODE, id=1, 0.5 ,0, 0
-        NODE, id=2, 0 ,1, 0
-
-        PARAMSET,id=MY_BAR, E=2.0e11, A=2e-4,Iz=1940e-8
-
-        ELEMENT, id=0, type=BEAM2D_AA, from=0, to=1, paramset=MY_BAR
-        ELEMENT, id=1, type=BEAM2D_AA, from=0, to=2, paramset=MY_BAR
-        ELEMENT, id=2, type=BEAM2D_AA, from=1, to=2, paramset=MY_BAR
-
-        CONSTRAINT, node=0, dof=DXDY
-        CONSTRAINT, node=1, dof=DY
-
-        # -----------------------
-        [LOADS]
-
-        LOAD, node=2, dof=DX, +P
+    <div id="top-toolbar">
+        <button onclick="buildStructure()">Parse this structure...</button>
     </div>
 
-    <button onclick="buildStructure()">Parse this structure...</button>
+    <div id="parent">
+        <div id="editor">
+            # Place your structure definition here.
+            # -------------------------------------------------------
+            # Example of a FE problem for the OpenBeam library
+            # Problem in section 5.1 from course textbook.
+            # -------------------------------------------------------
+            VAR, P = 1000
+
+            # -------------------------------------------------
+            # Geometry: nodes, elements & constraints
+            # -------------------------------------------------
+            [GEOMETRY]
+
+            # Command "NODE": Declares a new node
+            # Usage: NODE, ID, X, Y [, Z]
+            NODE, id=0, 0 ,0, 0
+            NODE, id=1, 0.5 ,0, 0
+            NODE, id=2, 0 ,1, 0
+
+            PARAMSET,id=MY_BAR, E=2.0e11, A=2e-4,Iz=1940e-8
+
+            ELEMENT, id=0, type=BEAM2D_AA, from=0, to=1, paramset=MY_BAR
+            ELEMENT, id=1, type=BEAM2D_AA, from=0, to=2, paramset=MY_BAR
+            ELEMENT, id=2, type=BEAM2D_AA, from=1, to=2, paramset=MY_BAR
+
+            CONSTRAINT, node=0, dof=DXDY
+            CONSTRAINT, node=1, dof=DY
+
+            # -----------------------
+            [LOADS]
+
+            LOAD, node=2, dof=DX, +P
+        </div>
+    </div>
 
     <div>
         <textarea readonly id="OutputArea" cols="100" rows="10">(output messages)</textarea>
@@ -103,9 +121,10 @@
     <div id="OutputReactions">(Reactions)</div>
 
     <script>
-        var editor = ace.edit("StructureDefinitionArea");
+        var editor = ace.edit("editor");
         editor.setTheme("ace/theme/monokai");
         editor.session.setMode("ace/mode/ini");
+        editor.resize();
     </script>
 
 </body>
