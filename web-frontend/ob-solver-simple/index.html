@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,90 +20,94 @@
 
     <title>OpenBeam online App</title>
 
-    <script language="javascript" type="text/javascript" src="https://codemirror.net/lib/codemirror.js"></script>
-    <script language="javascript" type="text/javascript" src="https://codemirror.net/mode/perl/perl.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://codemirror.net/lib/codemirror.css"></link>
-    <link rel="stylesheet" type="text/css" href="https://codemirror.net/theme/abbott.css"></link>
-
+    <script type="text/javascript" src="///js-ace-min-noconflict/ace.js" charset="utf-8"></script>
     <script type="text/javascript" src="../js/web-ob-solve.js" defer></script>
 
-     <script>
-     // var Module = {
-     // onRuntimeInitialized: function() {
-     // ...
+    <!--
+    <style type="text/css" media="screen">
+        #StructureDefinitionArea {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+    -->
 
-     function buildStructure()
-     {
-      var instance = new Module.AppOpenBeam();
-      editor.save(); // save text to textarea
-      var s = document.getElementById('StructureDefinitionArea').value;
-      
-      var ret = instance.LoadStructureDefinition(s);
-      var ret2 = instance.Solve();
-      
-      var reactions = instance.GetReactionsAsHTML();
-      
-      document.getElementById('OutputArea').value = ret + ret2;
+    <script>
+        // var Module = {
+        // onRuntimeInitialized: function() {
+        // ...
 
-      document.getElementById('OutputReactions').innerHTML = reactions;
-     }
-  </script>
+        function buildStructure() {
+            var instance = new Module.AppOpenBeam();
+
+            // save text to textarea
+            var s = editor.getValue();
+
+            var ret = instance.LoadStructureDefinition(s);
+            var ret2 = instance.Solve();
+
+            var reactions = instance.GetReactionsAsHTML();
+
+            document.getElementById('OutputArea').value = ret + ret2;
+
+            document.getElementById('OutputReactions').innerHTML = reactions;
+        }
+    </script>
 </head>
 
 <body>
     Check browser console.
-    
-    <div>
-    <textarea id="StructureDefinitionArea" name="StructureDefinitionArea"># Place your structure definition here.
-# -------------------------------------------------------
-# Example of a FE problem for the OpenBeam library
-#  Problem in section 5.1 from course textbook.
-# -------------------------------------------------------
-VAR, P = 1000
 
-# -------------------------------------------------
-#  Geometry: nodes, elements & constraints
-# -------------------------------------------------
-[GEOMETRY]
+    <div id="StructureDefinitionArea"># Place your structure definition here.
+        # -------------------------------------------------------
+        # Example of a FE problem for the OpenBeam library
+        # Problem in section 5.1 from course textbook.
+        # -------------------------------------------------------
+        VAR, P = 1000
 
-# Command "NODE": Declares a new node
-# Usage:  NODE,  <ID>,  <X>, <Y> [, <Z>]
-NODE, id=0,  0   ,0, 0
-NODE, id=1,  0.5 ,0, 0
-NODE, id=2,  0   ,1, 0
+        # -------------------------------------------------
+        # Geometry: nodes, elements & constraints
+        # -------------------------------------------------
+        [GEOMETRY]
 
-PARAMSET,id=MY_BAR, E=2.0e11, A=2e-4,Iz=1940e-8
+        # Command "NODE": Declares a new node
+        # Usage: NODE, ID, X, Y [, Z]
+        NODE, id=0, 0 ,0, 0
+        NODE, id=1, 0.5 ,0, 0
+        NODE, id=2, 0 ,1, 0
 
-ELEMENT, id=0, type=BEAM2D_AA,  from=0, to=1, paramset=MY_BAR
-ELEMENT, id=1, type=BEAM2D_AA,  from=0, to=2, paramset=MY_BAR
-ELEMENT, id=2, type=BEAM2D_AA,  from=1, to=2, paramset=MY_BAR
+        PARAMSET,id=MY_BAR, E=2.0e11, A=2e-4,Iz=1940e-8
 
-CONSTRAINT, node=0, dof=DXDY
-CONSTRAINT, node=1, dof=DY
+        ELEMENT, id=0, type=BEAM2D_AA, from=0, to=1, paramset=MY_BAR
+        ELEMENT, id=1, type=BEAM2D_AA, from=0, to=2, paramset=MY_BAR
+        ELEMENT, id=2, type=BEAM2D_AA, from=1, to=2, paramset=MY_BAR
 
-# -----------------------
-[LOADS]
+        CONSTRAINT, node=0, dof=DXDY
+        CONSTRAINT, node=1, dof=DY
 
-LOAD, node=2, dof=DX, +P
-</textarea>
+        # -----------------------
+        [LOADS]
+
+        LOAD, node=2, dof=DX, +P
     </div>
-    
+
     <button onclick="buildStructure()">Parse this structure...</button>
 
     <div>
-    <textarea readonly id="OutputArea" cols="100" rows="10">(output messages)</textarea>
+        <textarea readonly id="OutputArea" cols="100" rows="10">(output messages)</textarea>
     </div>
 
     <div id="OutputReactions">(Reactions)</div>
 
-
-<script>
-    var editor = CodeMirror.fromTextArea(document.getElementById('StructureDefinitionArea'), {
-    lineNumbers: true,
-    mode: 'text/x-yaml',
-    theme: 'abbott',
-    });
-</script>
+    <script>
+        var editor = ace.edit("StructureDefinitionArea");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/ini");
+    </script>
 
 </body>
+
 </html>
