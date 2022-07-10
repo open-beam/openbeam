@@ -41,10 +41,9 @@ class CElementSpring : public CElement
      * element, for the current element state.
      */
     virtual void getLocalStiffnessMatrices(
-        openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t& outSubMats)
-        const;
+        std::vector<TStiffnessSubmatrix>& outSubMats) const;
 
-    virtual void getLocalDoFs(std::vector<TUsedDoFs>& dofs) const;
+    virtual void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const;
 
     num_t K;  //!< Stiffness constant of the spring (N/m)
 
@@ -53,27 +52,27 @@ class CElementSpring : public CElement
      *  Each element must document the supported parameters and their meaning.
      */
     virtual void loadParamsFromSet(
-        const TParamSet& params, const TEvaluationContext& eval);
+        const param_set_t& params, const EvaluationContext& eval);
 
     /** Draws the element to a SVG Cairo context (a pointer to a
      * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
      * options */
     virtual void drawSVG(
-        void* _cairo_context, const TDrawStructureOptions& options,
-        const TRenderInitData&         ri,
-        const TDrawElementExtraParams& draw_el_params,
-        const TMeshOutputInfo*         meshing_info) const;
+        void* _cairo_context, const DrawStructureOptions& options,
+        const RenderInitData&         ri,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const;
 #if OPENBEAM_HAS_QT5Svg
     virtual void drawQtSVG(
-        QSvgGenerator& svg, const TDrawStructureOptions& options,
-        const TRenderInitData&         ri,
-        const TDrawElementExtraParams& draw_el_params,
-        const TMeshOutputInfo*         meshing_info) const;
+        QSvgGenerator& svg, const DrawStructureOptions& options,
+        const RenderInitData&         ri,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const;
 #endif
 
     /** Mesh this element into a set of (possibly) smaller ones */
     virtual void do_mesh(
         const size_t my_idx, CStructureProblem& out_fem,
-        TMeshOutputInfo& out_info, const TMeshParams& params);
+        MeshOutputInfo& out_info, const MeshParams& params);
 };
 }  // namespace openbeam

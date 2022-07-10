@@ -66,8 +66,8 @@ struct TLangData
 };
 
 // This MUST BE in the same language order as declared in languages.h
-const TLangData lang_data[NUMBER_OF_LANGUAGES] = {{LANG_EN, "en", strs_en},
-                                                  {LANG_ES, "es", strs_es}};
+const TLangData lang_data[NUMBER_OF_LANGUAGES] = {
+    {LANG_EN, "en", strs_en}, {LANG_ES, "es", strs_es}};
 
 /** Selects the language from its 2 letter ISO 639-1 code
  *  ("en","es",...). \return false on unsupported language. */

@@ -28,7 +28,7 @@ using namespace Eigen;
 
 template <class K_DECOMP>
 void solveStaticInternal(
-    const K_DECOMP& K_decomp, TStaticSolveProblemInfo& out_info,
+    const K_DECOMP& K_decomp, StaticSolveProblemInfo& out_info,
     const bool U_b_all_zeros)
 {
     // Uf = Kff^-1 * Ff
@@ -36,7 +36,7 @@ void solveStaticInternal(
 
     if (!U_b_all_zeros)
     {
-        const TDynMatrix Kbf = TDynMatrix(out_info.build_info.K_bf);
+        const DynMatrix Kbf = DynMatrix(out_info.build_info.K_bf);
         // Uf = (Kff^-1 * Ff)  -   Kff^-1 * Kbf * Ub
         out_info.U_f -=
             K_decomp.solve(Kbf.transpose() * out_info.build_info.U_b);
@@ -48,12 +48,12 @@ void solveStaticInternal(
 // reaction forces.
 // ------------------------------------------------------------------------------------------
 void CFiniteElementProblem::solveStatic(
-    TStaticSolveProblemInfo& out_info, const TStaticSolverOptions& opts)
+    StaticSolveProblemInfo& out_info, const StaticSolverOptions& opts)
 {
-    CTimeLoggerEntry tle(openbeam::timelog, "solveStatic");
+    mrpt::system::CTimeLoggerEntry tle(openbeam::timelog, "solveStatic");
 
     // If doing iterations, save the initial location of all nodes:
-    openbeam::aligned_containers<TRotationTrans3D>::deque_t orig_nodes;
+    std::deque<TRotationTrans3D> orig_nodes;
     if (opts.nonLinearIterative) { orig_nodes = this->m_node_poses; }
 
     bool U_b_all_zeros = false;
@@ -73,9 +73,9 @@ void CFiniteElementProblem::solveStatic(
         // Check if all U_b != 0 to use simplified expressions:
         U_b_all_zeros = (out_info.build_info.U_b.array() == 0).all();
 
-        TDynMatrix Kff = TDynMatrix(out_info.build_info.K_ff.transpose());
+        DynMatrix Kff = DynMatrix(out_info.build_info.K_ff.transpose());
 
-        if (opts.algorithm == ssSVD)
+        if (opts.algorithm == StaticSolverAlgorithm::SVD)
         {  // make sym:
             const int N = static_cast<int>(Kff.rows());
             for (int r = 0; r < N; r++)
@@ -91,9 +91,9 @@ void CFiniteElementProblem::solveStatic(
         // below:
         switch (opts.algorithm)
         {
-            case ssLLT:
+            case StaticSolverAlgorithm::LLT:
             {
-                const Eigen::LLT<TDynMatrix> Kff_llt = Kff.llt();
+                const Eigen::LLT<DynMatrix> Kff_llt = Kff.llt();
                 if (!Kff_llt.info() == Eigen::Success)
                 {
                     // There's a structure problem! Probably it's not a
@@ -108,9 +108,9 @@ void CFiniteElementProblem::solveStatic(
             }
             break;
 
-            case ssSVD:
+            case StaticSolverAlgorithm::SVD:
             {
-                const Eigen::JacobiSVD<TDynMatrix> Kff_llt(
+                const Eigen::JacobiSVD<DynMatrix> Kff_llt(
                     Kff, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
                 // Do solve:
@@ -139,26 +139,27 @@ void CFiniteElementProblem::solveStatic(
                     out_info.U_f[i];  // The increment for this DoF
 
                 const size_t dof_idx = out_info.build_info.free_dof_indices[i];
-                const TDoF&  dof     = m_problem_DoFs[dof_idx];
+                const NodeDoF&  dof     = m_problem_DoFs[dof_idx];
 
-                if (dof.dof < 3)
+                if (dof.dofAsInt() < 3)
                 {
                     // X, Y, Z
-                    m_node_poses[dof.node_id].t.coords[dof.dof] += delta_val;
+                    m_node_poses[dof.nodeId].t.coords[dof.dofAsInt()] +=
+                        delta_val;
                 }
                 else
                 {
                     // A rotation:
                     num_t rx = 0, ry = 0, rz = 0;
-                    if (dof.dof == 3)
+                    if (dof.dof == DoF_index::RX)
                         rx = delta_val;
-                    else if (dof.dof == 4)
+                    else if (dof.dof == DoF_index::RY)
                         ry = delta_val;
-                    else if (dof.dof == 5)
+                    else if (dof.dof == DoF_index::RZ)
                         rz = delta_val;
 
-                    m_node_poses[dof.node_id].r.setRot(
-                        m_node_poses[dof.node_id].r.getRot() *
+                    m_node_poses[dof.nodeId].r.setRot(
+                        m_node_poses[dof.nodeId].r.getRot() *
                         TRotation3D(rx, ry, rz).getRot());
                 }
             }
@@ -192,7 +193,7 @@ void CFiniteElementProblem::solveStatic(
     // m_loads_at_each_dof_equivs: The vector of overall loads (F_L') on each
     // DoF due to distributed forces
     //  Map keys are indices of \a m_problem_DoFs
-    for (TListOfLoads::const_iterator it = m_loads_at_each_dof_equivs.begin();
+    for (load_list_t::const_iterator it = m_loads_at_each_dof_equivs.begin();
          it != m_loads_at_each_dof_equivs.end(); ++it)
     {
         const size_t idx_dof = it->first;

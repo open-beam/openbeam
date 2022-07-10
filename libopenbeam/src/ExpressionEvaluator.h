@@ -22,27 +22,16 @@
 
 #pragma once
 
-#include <openbeam/types.h>
+#include <openbeam/config.h>  // num_t
 
-//#pragma warning (disable:4786)
-#include <stack>
+#include <map>
 #include <string>
 
-namespace ExpressionEvaluator
+namespace openbeam
 {
-enum
-{
-    eval_ok = 0,
-    eval_unbalanced,
-    eval_invalidoperator,
-    eval_invalidoperand,
-    eval_evalerr
-};
+/// Evaluate an expression using ExprTK language (via mrpt-expr).
+/// Throws an exception upon error.
+double evaluate(
+    const std::string& expr, const std::map<std::string, double>& userSymbols);
 
-int calculate(
-    const std::string& expr, float& r,
-    const std::map<std::string, num_t, openbeam::ci_less>& user_symbols);
-int calculate(
-    const std::string& expr, double& r,
-    const std::map<std::string, num_t, openbeam::ci_less>& user_symbols);
-}  // namespace ExpressionEvaluator
+}  // namespace openbeam

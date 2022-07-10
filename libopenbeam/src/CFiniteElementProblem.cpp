@@ -28,9 +28,7 @@ using namespace std;
 using namespace openbeam;
 using namespace Eigen;
 
-CFiniteElementProblem::CFiniteElementProblem() {}
-
-CFiniteElementProblem::~CFiniteElementProblem() { clear(); }
+CFiniteElementProblem::~CFiniteElementProblem() = default;
 
 void CFiniteElementProblem::clear()
 {
@@ -39,12 +37,12 @@ void CFiniteElementProblem::clear()
     m_loads_at_each_dof.clear();
     m_loads_at_each_dof_equivs.clear();
     m_extra_stress_for_each_element.clear();
-    free_container(m_elements);
+    m_elements.clear();
 }
 
-size_t CFiniteElementProblem::insertElement(CElement* el)
+size_t CFiniteElementProblem::insertElement(CElement::Ptr el)
 {
-    OBASSERT(el != nullptr)
+    ASSERT_(el);
     el->setParent(this);
     const size_t idx = m_elements.size();
     m_elements.push_back(el);
@@ -52,17 +50,15 @@ size_t CFiniteElementProblem::insertElement(CElement* el)
 }
 
 /** Return a constant pointer to the i'th element in the structure. */
-const CElement* CFiniteElementProblem::getElement(size_t i) const
+CElement::ConstPtr CFiniteElementProblem::getElement(size_t i) const
 {
-    OBASSERT(i < m_elements.size())
-    return m_elements[i];
+    return m_elements.at(i);
 }
 
 /** Return a pointer to the i'th element in the structure. */
-CElement* CFiniteElementProblem::getElement(size_t i)
+const CElement::Ptr& CFiniteElementProblem::getElement(size_t i)
 {
-    OBASSERT(i < m_elements.size())
-    return m_elements[i];
+    return m_elements.at(i);
 }
 
 /** Insert a new constraint in the structure (this objects owns the memory, will
@@ -75,7 +71,7 @@ void CFiniteElementProblem::insertConstraint(
         throw std::runtime_error(
             "insertConstraint(): Empty DOFs (Have you called updateAll() "
             "first?)");
-    OBASSERT(dof_index < m_problem_DoFs.size())
+    ASSERT_(dof_index < m_problem_DoFs.size());
     m_DoF_constraints[dof_index] = value;
 }
 
@@ -85,7 +81,7 @@ void CFiniteElementProblem::setLoadAtDOF(const size_t dof_index, const num_t f)
     if (m_problem_DoFs.empty())
         throw std::runtime_error(
             "setLoadAtDOF(): Empty DOFs (Have you called updateAll() first?)");
-    OBASSERT(dof_index < m_problem_DoFs.size())
+    ASSERT_(dof_index < m_problem_DoFs.size());
     m_loads_at_each_dof[dof_index] = f;
 }
 
@@ -96,7 +92,7 @@ void CFiniteElementProblem::addLoadAtDOF(const size_t dof_index, const num_t f)
     if (m_problem_DoFs.empty())
         throw std::runtime_error(
             "addLoadAtDOF(): Empty DOFs (Have you called updateAll() first?)");
-    OBASSERT(dof_index < m_problem_DoFs.size())
+    ASSERT_(dof_index < m_problem_DoFs.size());
     m_loads_at_each_dof[dof_index] += f;
 }
 
@@ -108,14 +104,13 @@ void CFiniteElementProblem::setNumberOfNodes(size_t N)
 
 void CFiniteElementProblem::setNodePose(size_t idx, const TRotationTrans3D& p)
 {
-    OBASSERT(idx < m_node_poses.size())
-    m_node_poses[idx] = p;
+    m_node_poses.at(idx) = p;
 }
 
 void CFiniteElementProblem::setNodePose(
     size_t idx, const num_t x, const num_t y, const num_t z)
 {
-    OBASSERT(idx < m_node_poses.size())
+    ASSERT_(idx < m_node_poses.size());
 
     TRotationTrans3D& P = m_node_poses[idx];
     P.t.coords[0]       = x;
@@ -153,20 +148,20 @@ void CFiniteElementProblem::updateListDoFs()
     updateNodeConnections();  // We need these data OK. (m_node_connections)
 
     {  // Real clear of "m_problem_DoFs"
-        std::vector<TDoF> dum;
+        std::vector<NodeDoF> dum;
         m_problem_DoFs.swap(dum);
     }
 
     // Go thru nodes, and add those DoF that appear at least once:
     const size_t nNodes = m_node_poses.size();
-    OBASSERT(nNodes == m_node_connections.size())
+    ASSERT_(nNodes == m_node_connections.size());
 
     // Start with a list of all DOFs marked as unused:
     m_problem_DoFs_inverse_list.assign(nNodes, TProblemDOFIndicesForNode());
 
     for (size_t i = 0; i < nNodes; i++)
     {
-        TUsedDoFs dofs;
+        used_DoFs_t dofs;
         for (unsigned char d = 0; d < 6; d++) dofs[d] = false;
 
         for (TNodeConnections::const_iterator it =
@@ -175,13 +170,13 @@ void CFiniteElementProblem::updateListDoFs()
             for (int d = 0; d < 6; d++)
                 if (it->second.dofs[d]) dofs[d] = true;
 
-        for (unsigned char d = 0; d < 6; d++)
+        for (uint8_t d = 0; d < 6; d++)
             if (dofs[d])
             {
                 const int new_dof_index =
                     static_cast<int>(m_problem_DoFs.size());
 
-                m_problem_DoFs.push_back(TDoF(i, d));
+                m_problem_DoFs.push_back(NodeDoF(i, d));
                 m_problem_DoFs_inverse_list[i].dof_index[d] = new_dof_index;
             }
     }
@@ -198,16 +193,16 @@ void CFiniteElementProblem::updateNodeConnections()
 
     for (size_t i = 0; i < nElements; i++)
     {
-        const CElement* el            = m_elements[i];
-        const size_t    nElementFaces = el->conected_nodes_ids.size();
+        const auto   el            = m_elements[i];
+        const size_t nElementFaces = el->conected_nodes_ids.size();
 
-        vector<TUsedDoFs> el_dofs;
+        vector<used_DoFs_t> el_dofs;
         // el->getLocalDoFs(el_dofs);
         el->getGlobalDoFs(el_dofs);
 
         for (size_t k = 0; k < nElementFaces; k++)
         {
-            OBASSERT(el->conected_nodes_ids[k] < nNodes)
+            ASSERT_(el->conected_nodes_ids[k] < nNodes);
             TNodeConnections& nc =
                 m_node_connections[el->conected_nodes_ids[k]];
             nc[i].element_face_id = static_cast<unsigned char>(k);
@@ -224,27 +219,27 @@ std::string CFiniteElementProblem::getProblemDoFsDescription()
     updateListDoFs();
     for (size_t i = 0; i < m_problem_DoFs.size(); i++)
     {
-        s << "DoF #" << i << ": nodeID= " << m_problem_DoFs[i].node_id
+        s << "DoF #" << i << ": nodeID= " << m_problem_DoFs[i].nodeId
           << " DoF=";
         switch (m_problem_DoFs[i].dof)
         {
-            case 0:
+            case DoF_index::DX:
                 s << "x\n";
                 break;
-            case 1:
+            case DoF_index::DY:
                 s << "y\n";
                 break;
-            case 2:
+            case DoF_index::DZ:
                 s << "z\n";
                 break;
-            case 3:
-                s << "thx\n";
+            case DoF_index::RX:
+                s << "rotx\n";
                 break;
-            case 4:
-                s << "thy\n";
+            case DoF_index::RY:
+                s << "roty\n";
                 break;
-            case 5:
-                s << "thz\n";
+            case DoF_index::RZ:
+                s << "rotz\n";
                 break;
             default:
                 break;
@@ -278,9 +273,10 @@ std::vector<size_t> CFiniteElementProblem::complementaryDoFs(
  *  Returns string::npos if the DOF is NOT considered in the problem.
  */
 size_t CFiniteElementProblem::getDOFIndex(
-    const size_t nNode, const TDoFIndex n) const
+    const size_t nNode, const DoF_index n) const
 {
-    int idx = m_problem_DoFs_inverse_list[nNode].dof_index[n];
+    int idx =
+        m_problem_DoFs_inverse_list[nNode].dof_index[static_cast<uint8_t>(n)];
     if (idx < 0)
         return std::string::npos;
     else
@@ -290,13 +286,13 @@ size_t CFiniteElementProblem::getDOFIndex(
 /** Returns the 3D location of the final deformed state after solving the
  * problem */
 void CFiniteElementProblem::getNodeDeformedPosition(
-    size_t i, TVector3& out_final_point,
-    const TStaticSolveProblemInfo& solver_info,
-    const num_t                    exageration_factor) const
+    size_t i, Vector3& out_final_point,
+    const StaticSolveProblemInfo& solver_info,
+    const num_t                   exageration_factor) const
 {
-    OBASSERT_DEBUG(i < m_node_poses.size())
+    ASSERTDEB_(i < m_node_poses.size())
 
-    TVector3 incr_pt;  // Increment in each (x,y,z) coordinate for this node:
+    Vector3 incr_pt;  // Increment in each (x,y,z) coordinate for this node:
 
     const TProblemDOFIndicesForNode& DOFs_i =
         this->m_problem_DoFs_inverse_list[i];
@@ -334,7 +330,7 @@ void CFiniteElementProblem::getNodeDeformedPosition(
 /** Returns the maximum absolute value translation in any X,Y,Z directions
      for a static problem solution */
 num_t CFiniteElementProblem::getMaximumDeformedDisplacement(
-    const TStaticSolveProblemInfo& solver_info) const
+    const StaticSolveProblemInfo& solver_info) const
 {
     num_t cur_max = 0;
 
@@ -370,10 +366,10 @@ num_t CFiniteElementProblem::getMaximumDeformedDisplacement(
 /** Computes the bounding box of all existing nodes */
 void CFiniteElementProblem::getBoundingBox(
     num_t& min_x, num_t& max_x, num_t& min_y, num_t& max_y, bool deformed,
-    const TStaticSolveProblemInfo* solver_info,
-    num_t                          deformed_scale_factor) const
+    const StaticSolveProblemInfo* solver_info,
+    num_t                         deformed_scale_factor) const
 {
-    OBASSERT(!deformed || solver_info != nullptr);
+    ASSERT_(!deformed || solver_info != nullptr);
 
     min_x = min_y = std::numeric_limits<num_t>::max();
     max_x = max_y = -std::numeric_limits<num_t>::max();
@@ -392,7 +388,7 @@ void CFiniteElementProblem::getBoundingBox(
         }
         else
         {
-            TVector3 pt;
+            Vector3 pt;
             this->getNodeDeformedPosition(
                 i, pt, *solver_info, deformed_scale_factor);
             min_x = std::min(min_x, pt[0]);

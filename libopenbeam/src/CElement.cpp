@@ -44,14 +44,13 @@ CElement::CElement(
       m_parent(nullptr),
       m_design_rotation_around_linear_axis(0)
 {
-    OBASSERT(nEdges >= 2)
+    ASSERT_(nEdges >= 2);
     conected_nodes_ids[0] = from_node_id;
     conected_nodes_ids[1] = to_node_id;
 }
 
 void CElement::getGlobalStiffnessMatrices(
-    openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t& outSubMats)
-    const
+    std::vector<TStiffnessSubmatrix>& outSubMats) const
 {
     // Get local matrices:
     // ======================================================
@@ -59,13 +58,13 @@ void CElement::getGlobalStiffnessMatrices(
 
     // Rotate them
     // ======================================================
-    const TMatrix33& R =
+    const Matrix33& R =
         m_global_orientation
             .getRot();  // Reference to the 3D rotation matrix (3x3)
 
     for (size_t i = 0; i < outSubMats.size(); i++)
     {
-        TMatrix66& M = outSubMats[i].matrix;
+        Matrix66& M = outSubMats[i].matrix;
 
         // This is as simple as:
         if ((M.block(0, 0, 3, 3).array() != num_t(0)).any())
@@ -110,17 +109,17 @@ TRotation3D::TRotation3D(const num_t roll, const num_t pitch, const num_t yaw)
 }
 
 void TRotation3D::matrix2angles(
-    const TMatrix33& R, num_t& roll, num_t& pitch, num_t& yaw)
+    const Matrix33& R, num_t& roll, num_t& pitch, num_t& yaw)
 {
-    OBASSERT_DEBUG(
+    ASSERTDEB_(
         std::abs(
             sqrt(square(R(0, 0)) + square(R(1, 0)) + square(R(2, 0))) - 1) <
         3e-3)
-    OBASSERT_DEBUG(
+    ASSERTDEB_(
         std::abs(
             sqrt(square(R(0, 1)) + square(R(1, 1)) + square(R(2, 1))) - 1) <
         3e-3)
-    OBASSERT_DEBUG(
+    ASSERTDEB_(
         std::abs(
             sqrt(square(R(0, 2)) + square(R(1, 2)) + square(R(2, 2))) - 1) <
         3e-3)
@@ -178,8 +177,8 @@ bool TRotation3D::isIdentity() const
 
 void CElement::updateOrientationFromNodePositions()
 {
-    OBASSERT(m_parent)
-    OBASSERT(conected_nodes_ids.size() == 2)
+    ASSERT_(m_parent);
+    ASSERT_(conected_nodes_ids.size() == 2);
 
     const TRotationTrans3D& p1 = m_parent->getNodePose(conected_nodes_ids[0]);
     const TRotationTrans3D& p2 = m_parent->getNodePose(conected_nodes_ids[1]);
@@ -190,17 +189,17 @@ void CElement::updateOrientationFromNodePositions()
 
 /** Return the local DoFs transformed with the current element pose in \a
  * m_global_orientation */
-void CElement::getGlobalDoFs(std::vector<TUsedDoFs>& dofs) const
+void CElement::getGlobalDoFs(std::vector<used_DoFs_t>& dofs) const
 {
     // 1: Get local DOFS:
-    std::vector<TUsedDoFs> local_dofs;
+    std::vector<used_DoFs_t> local_dofs;
     getLocalDoFs(local_dofs);
 
     // 2: Take into account rotations:
     const size_t N = local_dofs.size();
     dofs.resize(N);
 
-    const TMatrix33& R = m_global_orientation.getRot();  // Shortcut
+    const Matrix33& R = m_global_orientation.getRot();  // Shortcut
 
     // Binarize R (this is to prevent numeric innacuracies to make us consider
     // more DoFs than the actual ones):
@@ -249,16 +248,17 @@ void CElement::getGlobalDoFs(std::vector<TUsedDoFs>& dofs) const
 
 /** Class factory from element name.
  */
-CElement* CElement::createElementByName(const std::string& s)
+CElement::Ptr CElement::createElementByName(const std::string& s)
 {
-    if (strCmpI("BEAM2D_AA", s)) return new CElementBeam_2D_AA;
-    if (strCmpI("BEAM2D_AR", s)) return new CElementBeam_2D_AR;
-    if (strCmpI("BEAM2D_RA", s)) return new CElementBeam_2D_RA;
-    if (strCmpI("BEAM2D_RR", s)) return new CElementBeam_2D_RR;
-    if (strCmpI("BEAM2D_RD", s)) return new CElementBeam_2D_RD;
-    if (strCmpI("SPRING_1D", s)) return new CElementSpring;
-    if (strCmpI("SPRING_XYZ", s)) return new CElementSpringXYZ;
-    if (strCmpI("SPRING_TORSION", s)) return new CElementTorsionSpring;
+    if (strCmpI("BEAM2D_AA", s)) return std::make_shared<CElementBeam_2D_AA>();
+    if (strCmpI("BEAM2D_AR", s)) return std::make_shared<CElementBeam_2D_AR>();
+    if (strCmpI("BEAM2D_RA", s)) return std::make_shared<CElementBeam_2D_RA>();
+    if (strCmpI("BEAM2D_RR", s)) return std::make_shared<CElementBeam_2D_RR>();
+    if (strCmpI("BEAM2D_RD", s)) return std::make_shared<CElementBeam_2D_RD>();
+    if (strCmpI("SPRING_1D", s)) return std::make_shared<CElementSpring>();
+    if (strCmpI("SPRING_XYZ", s)) return std::make_shared<CElementSpringXYZ>();
+    if (strCmpI("SPRING_TORSION", s))
+        return std::make_shared<CElementTorsionSpring>();
 
-    return nullptr;
+    return {};
 }

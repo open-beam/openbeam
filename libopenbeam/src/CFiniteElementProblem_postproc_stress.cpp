@@ -30,7 +30,7 @@ using namespace Eigen;
  * post-processing method to evaluate the stress of all the elements.
  */
 void CFiniteElementProblem::postProcCalcStress(
-    TStressInfo& out_stress, const TStaticSolveProblemInfo& solver_info)
+    StressInfo& out_stress, const StaticSolveProblemInfo& solver_info)
 {
     timelog.enter("postProcCalcStress");
 
@@ -38,7 +38,7 @@ void CFiniteElementProblem::postProcCalcStress(
 
     // first, make sure we clear the output "element_stress":
     {
-        std::vector<TElementStress> dumm;
+        std::vector<ElementStress> dumm;
         out_stress.element_stress.swap(dumm);
     }
 
@@ -47,8 +47,8 @@ void CFiniteElementProblem::postProcCalcStress(
     // For convenience, firstly build a simple list with the global displacement
     // of all DOFs,
     //  no matter being free or bounded:
-    const size_t                           nNodes = m_node_poses.size();
-    aligned_containers<TVector6>::vector_t U(nNodes);
+    const size_t         nNodes = m_node_poses.size();
+    std::vector<Vector6> U(nNodes);
     // First only the zeros (ignored DoFs)
     for (size_t n = 0; n < nNodes; n++)
     {
@@ -66,15 +66,15 @@ void CFiniteElementProblem::postProcCalcStress(
     for (size_t i = 0; i < nRestrDOFs; i++)
     {
         const size_t dof_idx = solver_info.build_info.bounded_dof_indices[i];
-        const TDoF&  D       = m_problem_DoFs[dof_idx];
-        U[D.node_id][D.dof]  = solver_info.build_info.U_b[i];
+        const NodeDoF&  D       = m_problem_DoFs[dof_idx];
+        U[D.nodeId][D.dofAsInt()] = solver_info.build_info.U_b[i];
     }
     const size_t nFreeDOFs = solver_info.build_info.free_dof_indices.size();
     for (size_t i = 0; i < nFreeDOFs; i++)
     {
-        const size_t dof_idx = solver_info.build_info.free_dof_indices[i];
-        const TDoF&  D       = m_problem_DoFs[dof_idx];
-        U[D.node_id][D.dof]  = solver_info.U_f[i];
+        const size_t dof_idx       = solver_info.build_info.free_dof_indices[i];
+        const NodeDoF&  D             = m_problem_DoFs[dof_idx];
+        U[D.nodeId][D.dofAsInt()] = solver_info.U_f[i];
     }
 
     // For each element, ask for its stiffness sub-matrices, gather the
@@ -85,16 +85,16 @@ void CFiniteElementProblem::postProcCalcStress(
     //
     for (size_t i = 0; i < nE; i++)
     {
-        CElement*    el     = m_elements[i];
+        auto         el     = m_elements[i];
         const size_t nFaces = el->conected_nodes_ids.size();
 
         // For each face, get the computed displacements of
         //  the corresponding node (Ue)
         //   and convert them to local coords (Uel):
-        aligned_containers<TVector6>::vector_t Uel(nFaces);
+        std::vector<Vector6> Uel(nFaces);
         for (size_t f = 0; f < nFaces; f++)
         {
-            const TVector6& Uf = U[el->conected_nodes_ids[f]];
+            const Vector6& Uf = U[el->conected_nodes_ids[f]];
 
             // 3 translational elements: (x,y,z):
             Uel[f].block(0, 0, 3, 1).noalias() =
@@ -121,7 +121,7 @@ void CFiniteElementProblem::postProcCalcStress(
         }
 
         // Get local stiffness matrices:
-        openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t subMats;
+        std::vector<TStiffnessSubmatrix> subMats;
         el->getLocalStiffnessMatrices(subMats);
 
         /*
@@ -129,7 +129,7 @@ void CFiniteElementProblem::postProcCalcStress(
          * | f_1 | = | K10  K11 |  | u1l |
          *
          */
-        TElementStress& es = out_stress.element_stress[i];
+        ElementStress& es = out_stress.element_stress[i];
         es.resize(nFaces);
 
         for (size_t k = 0; k < subMats.size(); k++)
@@ -151,7 +151,7 @@ void CFiniteElementProblem::postProcCalcStress(
     //
     for (size_t i = 0; i < nE; i++)
     {
-        TElementStress& es = out_stress.element_stress[i];
+        ElementStress& es = out_stress.element_stress[i];
 
         if (!es.empty())
         {
@@ -166,15 +166,15 @@ void CFiniteElementProblem::postProcCalcStress(
 
     // Don't forget to add those stress values in
     // "m_extra_stress_for_each_element;
-    for (std::map<size_t, TElementStress>::const_iterator it =
+    for (std::map<size_t, ElementStress>::const_iterator it =
              m_extra_stress_for_each_element.begin();
          it != m_extra_stress_for_each_element.end(); ++it)
     {
-        OBASSERT(it->first < nE)
-        TElementStress& es = out_stress.element_stress[it->first];
+        ASSERT_(it->first < nE);
+        ElementStress& es = out_stress.element_stress[it->first];
 
-        const TElementStress& es2add = it->second;
-        OBASSERT(es.size() == es2add.size())
+        const ElementStress& es2add = it->second;
+        ASSERT_(es.size() == es2add.size());
 
         for (size_t i = 0; i < es.size(); ++i) es[i] += es2add[i];
     }

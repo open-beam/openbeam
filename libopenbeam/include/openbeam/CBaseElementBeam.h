@@ -31,6 +31,9 @@ namespace openbeam
 class CBaseElementBeam : public CElement
 {
    public:
+    using Ptr      = std::shared_ptr<CBaseElementBeam>;
+    using ConstPtr = std::shared_ptr<const CBaseElementBeam>;
+
     CBaseElementBeam(const bool pinned_end0, const bool pinned_end1);
     CBaseElementBeam(
         const size_t from_node_id, const size_t to_node_id,
@@ -56,29 +59,29 @@ class CBaseElementBeam : public CElement
      * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
      * options */
     virtual void drawSVG(
-        void* _cairo_context, const TDrawStructureOptions& options,
-        const TRenderInitData&         ri,
-        const TDrawElementExtraParams& draw_el_params,
-        const TMeshOutputInfo*         meshing_info) const;
+        void* _cairo_context, const DrawStructureOptions& options,
+        const RenderInitData&         ri,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const;
 #if OPENBEAM_HAS_QT5Svg
     virtual void drawQtSVG(
-        QSvgGenerator& svg, const TDrawStructureOptions& options,
-        const TRenderInitData&         ri,
-        const TDrawElementExtraParams& draw_el_params,
-        const TMeshOutputInfo*         meshing_info) const;
+        QSvgGenerator& svg, const DrawStructureOptions& options,
+        const RenderInitData&         ri,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const;
 #endif
 
     /** Mesh this element into a set of (possibly) smaller ones */
     virtual void do_mesh(
         const size_t my_idx, CStructureProblem& out_fem,
-        TMeshOutputInfo& out_info, const TMeshParams& params);
+        MeshOutputInfo& out_info, const MeshParams& params);
 
     /** Parse a set of parameters by (casi insensitive) name and set the element
      * values from them.
      *  Each element must document the supported parameters and their meaning.
      */
     virtual void loadParamsFromSet(
-        const TParamSet& params, const TEvaluationContext& eval);
+        const param_set_t& params, const EvaluationContext& eval);
 
    private:
     bool m_pinned_end0,

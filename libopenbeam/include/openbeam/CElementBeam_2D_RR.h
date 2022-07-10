@@ -38,9 +38,8 @@ class CElementBeam_2D_RR : public CBaseElementBeam
      * element, for the current element state.
      */
     virtual void getLocalStiffnessMatrices(
-        openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t& outSubMats)
-        const;
+        std::vector<TStiffnessSubmatrix>& outSubMats) const;
 
-    virtual void getLocalDoFs(std::vector<TUsedDoFs>& dofs) const;
+    virtual void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const;
 };
 }  // namespace openbeam

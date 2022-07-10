@@ -29,7 +29,7 @@ using namespace std;
 using namespace openbeam;
 
 void CLoadConstTemperature::computeStressAndEquivalentLoads(
-    const CElement* el, TElementStress& stress, std::vector<array6>& loads)
+    const CElement* el, ElementStress& stress, std::vector<array6>& loads)
 {
     // Stress -------------------------------------------
     //  Axial only: N = E A alpha AT
@@ -47,7 +47,7 @@ void CLoadConstTemperature::computeStressAndEquivalentLoads(
             "Unsupported element type for load 'CLoadConstTemperature'");
 
     //  Axial:
-    const num_t N = E * A * alpha * this->incr_temp;
+    const num_t N = E * A * alpha * this->m_incr_temp;
     stress.resize(2);
 
     // S1 = [-N, 0, 0 , 0, 0, 0]
@@ -75,7 +75,7 @@ void CLoadConstTemperature::computeStressAndEquivalentLoads(
 
     const num_t L2 = square(Ax) + square(Ay) + square(Az);
     const num_t L  = std::sqrt(L2);
-    OBASSERT(L > 0)
+    ASSERT_(L > 0);
     const num_t _1_L = 1 / L;
 
     // Normalize direction vector:
@@ -94,13 +94,13 @@ void CLoadConstTemperature::computeStressAndEquivalentLoads(
 
 /** See declaration in base class */
 void CLoadConstTemperature::loadParamsFromSet(
-    const TParamSet& params, const TEvaluationContext& eval)
+    const param_set_t& params, const EvaluationContext& eval)
 {
-    for (TParamSet::const_iterator it = params.begin(); it != params.end();
+    for (param_set_t::const_iterator it = params.begin(); it != params.end();
          ++it)
     {
         if (strCmpI(it->first, "deltaT"))
-        { eval.parser_evaluate_expression(it->second, this->incr_temp); }
+        { eval.parser_evaluate_expression(it->second, this->m_incr_temp); }
         else
         {
             if (eval.warn_msgs)
@@ -122,5 +122,6 @@ void CLoadConstTemperature::meshLoad(
     // element:
     for (size_t i = 0; i < meshed_element_idxs.size(); i++)
         meshed_fem.addLoadAtBeam(
-            meshed_element_idxs[i], new CLoadConstTemperature(this->incr_temp));
+            meshed_element_idxs[i],
+            std::make_shared<CLoadConstTemperature>(m_incr_temp));
 }

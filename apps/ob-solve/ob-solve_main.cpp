@@ -21,6 +21,16 @@
  */
 
 #include <localization.h>  // Internationalization support
+
+// --- Required by <mrpt/system/CConsoleRedirector.h> in mrpt <2.5.0
+#include <mrpt/core/exceptions.h>
+
+#include <mutex>
+#include <vector>
+// ---
+#include <mrpt/system/CConsoleRedirector.h>
+//
+#include <mrpt/system/string_utils.h>
 #include <openbeam/openbeam.h>
 #include <openbeam/print_html_matrix.h>
 #include <stdio.h>  // for unlink()
@@ -53,9 +63,9 @@ void print_csv_matrix(
 
 void usedDOFs2titles(
     size_t node_id, vector<string>& titles, bool html,
-    const TUsedDoFs* edge_dofs = nullptr);
+    const used_DoFs_t* edge_dofs = nullptr);
 void listDOFs2titles(
-    const std::vector<TDoF>& dofs, vector<string>& dof_titles, bool html);
+    const std::vector<NodeDoF>& dofs, vector<string>& dof_titles, bool html);
 
 // --------------------------------------------------------------------------
 
@@ -214,7 +224,7 @@ int main_code(int argc, char** argv)
     CStructureProblem problem;
 
     // Load from file:
-    vector_string errMsg, warnMsg;
+    vector_string_t errMsg, warnMsg;
     problem.loadFromFile(fil_to_load, &errMsg, &warnMsg);
 
     if (!errMsg.empty())
@@ -236,13 +246,13 @@ int main_code(int argc, char** argv)
     }
 
     // Redirect output to file?
-    std::shared_ptr<CConsoleRedirector> console_redirect;
+    std::shared_ptr<mrpt::system::CConsoleRedirector> console_redirect;
     if (arg_output.isSet())
     {
         // By creating this object all will be handled automatically: We'll just
         // need to write to cout as normal.
         const std::string fil_redirect_output = arg_output.getValue();
-        console_redirect = std::make_shared<CConsoleRedirector>(
+        console_redirect = std::make_shared<mrpt::system::CConsoleRedirector>(
             fil_redirect_output, false, false);
     }
 
@@ -292,13 +302,13 @@ int main_code(int argc, char** argv)
     // Mesh?
     // -------------------------------------------------------------
     CStructureProblem problem_mesh;
-    TMeshOutputInfo   mesh_out_info;
-    TMeshParams       mesh_params;
+    MeshOutputInfo   mesh_out_info;
+    MeshParams       mesh_params;
 
     mesh_params.max_element_length = arg_mesh_resolution.getValue();
 
     CStructureProblem* problem_to_solve = nullptr;
-    TMeshOutputInfo*   mesh_info        = nullptr;
+    MeshOutputInfo*   mesh_info        = nullptr;
 
     if (arg_meshing.isSet())
     {
@@ -316,10 +326,10 @@ int main_code(int argc, char** argv)
     // -------------------------------------------------------------
     // Solve:
     // -------------------------------------------------------------
-    TStaticSolveProblemInfo sInfo;
+    StaticSolveProblemInfo sInfo;
     problem_to_solve->solveStatic(sInfo);
 
-    TBuildProblemInfo& info = sInfo.build_info;
+    BuildProblemInfo& info = sInfo.build_info;
 
     problem_to_solve->assembleProblem(info);
 
@@ -328,8 +338,8 @@ int main_code(int argc, char** argv)
     const size_t nB   = info.bounded_dof_indices.size();
     const size_t nTot = nF + nB;
 
-    const std::vector<TDoF>& dofs = problem_to_solve->getProblemDoFs();
-    OBASSERT(nTot == dofs.size())
+    const std::vector<NodeDoF>& dofs = problem_to_solve->getProblemDoFs();
+    ASSERT_(nTot == dofs.size());
 
     // Generate animation of the deformed state?
     std::vector<std::string> anim_svg_files;
@@ -354,7 +364,7 @@ int main_code(int argc, char** argv)
         }
 
         // Do animation ------------
-        openbeam::TDrawStructureOptions draw_options;
+        openbeam::DrawStructureOptions draw_options;
         draw_options.image_width = arg_out_images_width.getValue();
 
         draw_options.show_nodes_original  = true;
@@ -443,7 +453,7 @@ int main_code(int argc, char** argv)
     if (out_html && out_svg)
     {
 #if OPENBEAM_HAS_CAIRO
-        openbeam::TDrawStructureOptions draw_options;
+        openbeam::DrawStructureOptions draw_options;
         draw_options.image_width            = arg_out_images_width.getValue();
         draw_options.show_nodes_original    = true;
         draw_options.show_nodes_deformed    = false;
@@ -474,7 +484,7 @@ int main_code(int argc, char** argv)
 
         const string sFilDeformed =
             arg_svg_filename_prefix.getValue() + string("_deformed.svg");
-        TImageSaveOutputInfo img_out_info;
+        ImageSaveOutputInfo img_out_info;
         problem_to_solve->saveAsImageSVG(
             sFilDeformed, draw_options, &sInfo,
             !arg_draw_mesh.isSet() ? mesh_info : nullptr, &img_out_info);
@@ -563,11 +573,11 @@ int main_code(int argc, char** argv)
     // Show FULL Stiffness matrix:
     if (out_full_k || out_full_k_csv)
     {
-        TDynMatrix K_full;
+        DynMatrix K_full;
 
-        const TDynMatrix Kff = TDynMatrix(info.K_ff);
-        const TDynMatrix Kbb = TDynMatrix(info.K_bb);
-        const TDynMatrix Kbf = TDynMatrix(info.K_bf);
+        const DynMatrix Kff = DynMatrix(info.K_ff);
+        const DynMatrix Kbb = DynMatrix(info.K_bb);
+        const DynMatrix Kbf = DynMatrix(info.K_bf);
 
         K_full.setZero(nTot, nTot);
         for (size_t i1 = 0; i1 < nF; i1++)
@@ -600,7 +610,7 @@ int main_code(int argc, char** argv)
             }
         }
 
-        const TDynMatrix K_full_dense(K_full);
+        const DynMatrix K_full_dense(K_full);
 
         if (out_full_k)
         {
@@ -617,7 +627,7 @@ int main_code(int argc, char** argv)
 
                 cout << "<h3>" << _t(STR_GlobalStiffnessMatrix)
                      << "(K):</h3>\n";
-                print_html_matrix<TDynMatrix, TUsedDoFs>(
+                print_html_matrix<DynMatrix, used_DoFs_t>(
                     std::cout, K_full_dense, dof_titles, dof_titles);
             }
         }
@@ -628,7 +638,7 @@ int main_code(int argc, char** argv)
             vector<string> dof_titles;
             listDOFs2titles(dofs, dof_titles, false /*html*/);
 
-            print_csv_matrix<TDynMatrix, TUsedDoFs>(
+            print_csv_matrix<DynMatrix, used_DoFs_t>(
                 out_full_k_csv_filename, K_full_dense, dof_titles, dof_titles);
         }
 
@@ -652,11 +662,11 @@ int main_code(int argc, char** argv)
             else
                 cout << "E" << i << ":\n";
 
-            const CElement* el = problem_to_solve->getElement(i);
-            openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t subMats;
+            const auto el = problem_to_solve->getElement(i);
+            std::vector<TStiffnessSubmatrix> subMats;
             el->getGlobalStiffnessMatrices(subMats);
 
-            vector<TUsedDoFs> edge_dofs;  // In each edge
+            vector<used_DoFs_t> edge_dofs;  // In each edge
             el->getGlobalDoFs(edge_dofs);
 
             for (size_t i = 0; i < subMats.size(); i++)
@@ -665,8 +675,8 @@ int main_code(int argc, char** argv)
                 const size_t node_in  = el->conected_nodes_ids[sm.edge_in];
                 const size_t node_out = el->conected_nodes_ids[sm.edge_out];
 
-                const TUsedDoFs& edge_dofs_in  = edge_dofs[sm.edge_in];
-                const TUsedDoFs& edge_dofs_out = edge_dofs[sm.edge_out];
+                const used_DoFs_t& edge_dofs_in  = edge_dofs[sm.edge_in];
+                const used_DoFs_t& edge_dofs_out = edge_dofs[sm.edge_out];
 
                 vector<string> col_titles, row_titles;
 
@@ -683,7 +693,7 @@ int main_code(int argc, char** argv)
                         "K<sub>%u,%u</sub> = ",
                         static_cast<unsigned int>(node_in),
                         static_cast<unsigned int>(node_out));
-                    print_html_matrix<TMatrix66, TUsedDoFs>(
+                    print_html_matrix<Matrix66, used_DoFs_t>(
                         std::cout, sm.matrix, row_titles, col_titles,
                         &edge_dofs_out, &edge_dofs_in);
                 }
@@ -707,30 +717,30 @@ int main_code(int argc, char** argv)
 
             for (size_t i = 0; i < nF; i++)
             {
-                const TDoF& dof = dofs[info.free_dof_indices[i]];
+                const NodeDoF& dof = dofs[info.free_dof_indices[i]];
                 cout << "<tr><td>";
                 switch (dof.dof)
                 {
-                    case 0:
+                    case DoF_index::DX:
                         cout << "F<sub>x";
                         break;
-                    case 1:
+                    case DoF_index::DY:
                         cout << "F<sub>y";
                         break;
-                    case 2:
+                    case DoF_index::DZ:
                         cout << "F<sub>z";
                         break;
-                    case 3:
+                    case DoF_index::RX:
                         cout << "M<sub>x";
                         break;
-                    case 4:
+                    case DoF_index::RY:
                         cout << "M<sub>y";
                         break;
-                    case 5:
+                    case DoF_index::RZ:
                         cout << "M<sub>z";
                         break;
                 };
-                cout << dof.node_id;
+                cout << dof.nodeId;
                 cout << "</sub>";
                 cout << "</td><td>";
                 cout
@@ -755,9 +765,9 @@ int main_code(int argc, char** argv)
 
             for (size_t i = 0; i < nB; i++)
             {
-                const TDoF& dof = dofs[info.bounded_dof_indices[i]];
+                const NodeDoF& dof = dofs[info.bounded_dof_indices[i]];
                 cout << "<tr><td>";
-                switch (dof.dof)
+                switch (dof.dofAsInt())
                 {
                     case 0:
                         cout << "F<sub>x";
@@ -778,7 +788,7 @@ int main_code(int argc, char** argv)
                         cout << "M<sub>z";
                         break;
                 };
-                cout << dof.node_id;
+                cout << dof.nodeId;
                 cout << "</sub>";
                 cout << "</td><td>";
                 cout << format("%.2f", sInfo.F_b[i]);
@@ -798,13 +808,13 @@ int main_code(int argc, char** argv)
 
     for (size_t i = 0; i < nF; i++)
     {
-        const TDoF& dof         = dofs[info.free_dof_indices[i]];
-        U[dof.node_id][dof.dof] = sInfo.U_f[i];
+        const NodeDoF& dof                = dofs[info.free_dof_indices[i]];
+        U[dof.nodeId][dof.dofAsInt()] = sInfo.U_f[i];
     }
     for (size_t i = 0; i < nB; i++)
     {
-        const TDoF& dof         = dofs[info.bounded_dof_indices[i]];
-        U[dof.node_id][dof.dof] = info.U_b[i];
+        const NodeDoF& dof                = dofs[info.bounded_dof_indices[i]];
+        U[dof.nodeId][dof.dofAsInt()] = info.U_b[i];
     }
 
     if (arg_show_U.isSet())
@@ -859,7 +869,7 @@ int main_code(int argc, char** argv)
 
     //	if (out_html) cout << "</pre>\n";
 
-    CStructureProblem::TStressInfo stressInfo;
+    StressInfo stressInfo;
     if (calc_stress)
     { problem_to_solve->postProcCalcStress(stressInfo, sInfo); }
 
@@ -892,7 +902,7 @@ int main_code(int argc, char** argv)
             for (unsigned int face = 0;
                  face < stressInfo.element_stress[i].size(); face++)
             {
-                const TFaceStress& es = stressInfo.element_stress[i][face];
+                const FaceStress& es = stressInfo.element_stress[i][face];
                 if (!out_html)
                 {
                     cout << format(
@@ -937,7 +947,7 @@ int main_code(int argc, char** argv)
     if (arg_stress_plots.isSet() && (out_html || arg_sep_plots.isSet()) &&
         mesh_info != nullptr)
     {
-        const TMeshOutputInfo& mi = *mesh_info;
+        const MeshOutputInfo& mi = *mesh_info;
 
         // Plot sizes:
         const string sGraphStyle =
@@ -969,7 +979,7 @@ int main_code(int argc, char** argv)
                                             // build this bar
 
             const size_t nE = idxs.size();
-            OBASSERT(idxs_nodes.size() == nE + 1)
+            ASSERT_(idxs_nodes.size() == nE + 1);
 
             // N/Vy/Mz/Mx stress: add 4 graphs
             // Displacement field X,Y,RotZ,RotX: add 4 graphs
@@ -1061,17 +1071,16 @@ int main_code(int argc, char** argv)
             {
                 const size_t idx_el = idxs[k < nE ? k : nE - 1];
 
-                OBASSERT(
-                    stressInfo.element_stress[idx_el].size() ==
-                    2)  // We only have linear elements only yet!
+                // We only have linear elements only yet!
+                ASSERT_(stressInfo.element_stress[idx_el].size() == 2);
 
                 unsigned int face = k < nE ? 0 : 1;
 
                 // Stress:
-                const TFaceStress& es = stressInfo.element_stress[idx_el][face];
-                gd_N.x[k]             = x;
-                gd_N.y[k]             = 1e-3 * es.N;
-                gd_Vy.x[k]            = x;
+                const FaceStress& es = stressInfo.element_stress[idx_el][face];
+                gd_N.x[k]            = x;
+                gd_N.y[k]            = 1e-3 * es.N;
+                gd_Vy.x[k]           = x;
                 gd_Vy.y[k] =
                     -1e-3 * es.Vy;  // WARNING: The "-" is to match the sign
                                     // criterion as explained in our courses
@@ -1120,9 +1129,9 @@ int main_code(int argc, char** argv)
         // ----------------------------------------------------
         if (arg_plots_continuous_beam.isSet())
         {
-            const string  sContBeamsIDs = arg_plots_continuous_beam.getValue();
-            vector_string sLstContBeamIDs;
-            tokenize(sContBeamsIDs, ", ", sLstContBeamIDs);
+            const string sContBeamsIDs = arg_plots_continuous_beam.getValue();
+            vector_string_t sLstContBeamIDs;
+            mrpt::system::tokenize(sContBeamsIDs, ", ", sLstContBeamIDs);
 
             // N/Vy/Mz stress: add 3 graphs
             // Displacement field X,Y,RotZ: add 3 graphs
@@ -1464,7 +1473,7 @@ void print_csv_matrix(
 
 void usedDOFs2titles(
     size_t node_id, vector<string>& titles, bool html,
-    const TUsedDoFs* edge_dofs)
+    const used_DoFs_t* edge_dofs)
 {
     for (int k = 0; k < 6; k++)
     {
@@ -1499,13 +1508,13 @@ void usedDOFs2titles(
 }
 
 void listDOFs2titles(
-    const std::vector<TDoF>& dofs, vector<string>& dof_titles, bool html)
+    const std::vector<NodeDoF>& dofs, vector<string>& dof_titles, bool html)
 {
     const size_t nTot = dofs.size();
     dof_titles.resize(nTot);
     for (size_t i = 0; i < nTot; i++)
     {
-        const TDoF& dof = dofs[i];
+        const NodeDoF& dof = dofs[i];
         string&     s   = dof_titles[i];
 
         if (html)
@@ -1514,7 +1523,7 @@ void listDOFs2titles(
         else
             s = format("%u (", static_cast<unsigned int>(i));
 
-        switch (dof.dof)
+        switch (dof.dofAsInt())
         {
             case 0:
                 s += "X";
@@ -1538,8 +1547,8 @@ void listDOFs2titles(
 
         if (html)
             s += format(
-                "<sub>%u</sub>)</td> ", static_cast<unsigned int>(dof.node_id));
+                "<sub>%u</sub>)</td> ", static_cast<unsigned int>(dof.nodeId));
         else
-            s += format("_%u)", static_cast<unsigned int>(dof.node_id));
+            s += format("_%u)", static_cast<unsigned int>(dof.nodeId));
     }
 }

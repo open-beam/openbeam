@@ -20,11 +20,11 @@ class AppOpenBeam
    private:
     openbeam::CStructureProblem structure_;
 
-    openbeam::CStructureProblem       problem_mesh_;
-    openbeam::TMeshOutputInfo         mesh_out_info_;
-    openbeam::CStructureProblem*      problem_to_solve_ = nullptr;
-    openbeam::TMeshOutputInfo*        mesh_info_        = nullptr;
-    openbeam::TStaticSolveProblemInfo sInfo_;
+    openbeam::CStructureProblem      problem_mesh_;
+    openbeam::MeshOutputInfo         mesh_out_info_;
+    openbeam::CStructureProblem*     problem_to_solve_ = nullptr;
+    openbeam::MeshOutputInfo*        mesh_info_        = nullptr;
+    openbeam::StaticSolveProblemInfo sInfo_;
 };
 
 EMSCRIPTEN_BINDINGS(EMTest)

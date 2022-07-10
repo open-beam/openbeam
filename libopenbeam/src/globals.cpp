@@ -20,43 +20,15 @@
    +---------------------------------------------------------------------------+
  */
 
-#pragma once
+#include <openbeam/types.h>
 
-#include "types.h"
+mrpt::system::CTimeLogger
+    openbeam::timelog;  //!< A global timelogger for openbeam
 
-namespace openbeam
+std::string rightPad(
+    const std::string& str, const size_t total_len, bool truncate_if_larger)
 {
-/** This class implements a high-performance stopwatch.
- *  Typical resolution is about 1e-6 seconds.
- *  \note The class is named after the Spanish equivalent of "Tic-Toc" ;-)
- */
-class CTicTac
-{
-   public:
-    /** Default constructor. */
-    CTicTac();
-
-    /** Destructor. */
-    virtual ~CTicTac();
-
-    /** Starts the stopwatch
-     * \sa Tac
-     */
-    void Tic();
-
-    /** Stops the stopwatch
-     * \return Returns the ellapsed time in seconds.
-     * \sa Tic
-     */
-    double Tac();
-
-   private:
-    unsigned char largeInts[64];
-
-    // Cannot be copied:
-    CTicTac(const CTicTac& o);
-    CTicTac& operator=(const CTicTac& o);
-
-};  // End of class def.
-
-}  // namespace openbeam
+    std::string r = str;
+    if (r.size() < total_len || truncate_if_larger) r.resize(total_len, ' ');
+    return r;
+}

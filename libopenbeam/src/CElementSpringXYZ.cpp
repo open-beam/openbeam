@@ -39,8 +39,7 @@ CElementSpringXYZ::CElementSpringXYZ(
  * for the current element state.
  */
 void CElementSpringXYZ::getLocalStiffnessMatrices(
-    openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t& outSubMats)
-    const
+    std::vector<TStiffnessSubmatrix>& outSubMats) const
 {
     outSubMats.resize(3);
     TStiffnessSubmatrix& K11 = outSubMats[0];
@@ -50,7 +49,7 @@ void CElementSpringXYZ::getLocalStiffnessMatrices(
     // k11 --------------
     K11.edge_in      = 0;
     K11.edge_out     = 0;
-    K11.matrix       = TMatrix66::Zero();
+    K11.matrix       = Matrix66::Zero();
     K11.matrix(0, 0) = Kx;
     K11.matrix(1, 1) = Ky;
     K11.matrix(2, 2) = Kz;
@@ -63,26 +62,26 @@ void CElementSpringXYZ::getLocalStiffnessMatrices(
     // k12 --------------
     K12.edge_in      = 0;
     K12.edge_out     = 1;
-    K12.matrix       = TMatrix66::Zero();
+    K12.matrix       = Matrix66::Zero();
     K12.matrix(0, 0) = -Kx;
     K12.matrix(1, 1) = -Ky;
     K12.matrix(2, 2) = -Kz;
 }
 
-void CElementSpringXYZ::getLocalDoFs(std::vector<TUsedDoFs>& dofs) const
+void CElementSpringXYZ::getLocalDoFs(std::vector<used_DoFs_t>& dofs) const
 {
     dofs.resize(getNumberEdges());
 
-    TUsedDoFs sDofs = {Kx != 0, Ky != 0, Kz != 0, false, false, false};
+    used_DoFs_t sDofs = {Kx != 0, Ky != 0, Kz != 0, false, false, false};
     dofs[0] = dofs[1] = sDofs;
 }
 
 /** Parse a set of parameters by (casi insensitive) name and set the element
  * values from them. */
 void CElementSpringXYZ::loadParamsFromSet(
-    const TParamSet& params, const TEvaluationContext& eval)
+    const param_set_t& params, const EvaluationContext& eval)
 {
-    for (TParamSet::const_iterator it = params.begin(); it != params.end();
+    for (param_set_t::const_iterator it = params.begin(); it != params.end();
          ++it)
     {
         if (strCmpI(it->first, "Kx"))
@@ -100,9 +99,9 @@ void CElementSpringXYZ::loadParamsFromSet(
 
 #if OPENBEAM_HAS_QT5Svg
 void CElementSpringXYZ::drawQtSVG(
-    QSvgGenerator& svg, const TDrawStructureOptions& options,
-    const TRenderInitData& ri, const TDrawElementExtraParams& draw_el_params,
-    const TMeshOutputInfo* meshing_info) const
+    QSvgGenerator& svg, const DrawStructureOptions& options,
+    const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo* meshing_info) const
 {
 }
 #endif
@@ -111,9 +110,9 @@ void CElementSpringXYZ::drawQtSVG(
  * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
  * options */
 void CElementSpringXYZ::drawSVG(
-    void* _cairo_context, const TDrawStructureOptions& options,
-    const TRenderInitData& ri, const TDrawElementExtraParams& draw_el_params,
-    const TMeshOutputInfo* meshing_info) const
+    void* _cairo_context, const DrawStructureOptions& options,
+    const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo* meshing_info) const
 {
 #if OPENBEAM_HAS_CAIRO
     OB_TODO("Implement SVG")
@@ -122,8 +121,8 @@ void CElementSpringXYZ::drawSVG(
 
 /** Mesh this element into a set of (possibly) smaller ones */
 void CElementSpringXYZ::do_mesh(
-    const size_t my_idx, CStructureProblem& out_fem, TMeshOutputInfo& out_info,
-    const TMeshParams& params)
+    const size_t my_idx, CStructureProblem& out_fem, MeshOutputInfo& out_info,
+    const MeshParams& params)
 {
     throw std::runtime_error("TO DO");
 }

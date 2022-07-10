@@ -34,7 +34,7 @@ using namespace Eigen;
  * (free-free), K_{BB} (boundary-boundary) and K_{BF} (boundary-free) which
  * define the stiffness matrix of the problem.
  */
-void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
+void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
 {
     timelog.enter("assembleProblem");
 
@@ -45,7 +45,7 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
     const size_t nDOFs     = m_problem_DoFs.size();
     const size_t nNodes    = getNumberOfNodes();
     const size_t nElements = m_elements.size();
-    OBASSERT(nDOFs > 0)
+    ASSERT_(nDOFs > 0);
 
     // Shortcuts:
     Eigen::SparseMatrix<num_t>& K_bb = out_info.K_bb;
@@ -54,7 +54,7 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
 
     vector<size_t>& bounded_dof_indices = out_info.bounded_dof_indices;
     vector<size_t>& free_dof_indices    = out_info.free_dof_indices;
-    vector<TBuildProblemInfo::TDoFType>& dof_types = out_info.dof_types;
+    vector<BuildProblemInfo::TDoFType>& dof_types = out_info.dof_types;
 
     map<size_t, size_t>
         problem_dof2bounded_dof_indices;  // Index in "m_problem_DoFs" to index
@@ -71,7 +71,7 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
     OB_TODO("Do more efficient without find()")
     for (size_t k = 0; k < nDOFs; k++)
     {
-        TListOfConstraints::const_iterator it = m_DoF_constraints.find(k);
+        constraint_list_t::const_iterator it = m_DoF_constraints.find(k);
         if (it == m_DoF_constraints.end())
         {  // Free DOF:
             const size_t new_idx = free_dof_indices.size();
@@ -114,24 +114,25 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
     // Go thru all elements, and get their matrices:
     for (size_t e = 0; e < nElements; e++)
     {
-        CElement* el = m_elements[e];
+        auto el = m_elements[e];
 
         // Get the matrix as a set of submatrices:
-        openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t mats;
+        std::vector<TStiffnessSubmatrix> mats;
         el->getGlobalStiffnessMatrices(mats);
 
         // Place each submatrix in its place in K:
         for (size_t j = 0; j < mats.size(); j++)
         {
             // Each submatrix model the i->j stiffness:
-            const TMatrix66& K_element_org = mats[j].matrix;
+            const Matrix66& K_element_org = mats[j].matrix;
             const size_t i_node_idx = el->conected_nodes_ids[mats[j].edge_in];
             const size_t j_node_idx = el->conected_nodes_ids[mats[j].edge_out];
 
             // Apply nodal coordinates?
-            TMatrix66        K_element_nodal;
-            const TMatrix66* K_element =
-                nullptr;  // Will point to either K_element_org or K_element_nodal
+            Matrix66        K_element_nodal;
+            const Matrix66* K_element =
+                nullptr;  // Will point to either K_element_org or
+                          // K_element_nodal
 
             const TRotationTrans3D& rt_i = this->getNodePose(i_node_idx);
             const TRotationTrans3D& rt_j = this->getNodePose(j_node_idx);
@@ -185,10 +186,10 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
 
             TNodeConnections::const_iterator it_nod_i = nc_i.find(e);
             TNodeConnections::const_iterator it_nod_j = nc_j.find(e);
-            OBASSERT(nc_i.end() != it_nod_i)
-            OBASSERT(nc_j.end() != it_nod_j)
-            OBASSERT(it_nod_i->second.element_face_id == mats[j].edge_in)
-            OBASSERT(it_nod_j->second.element_face_id == mats[j].edge_out)
+            ASSERT_(nc_i.end() != it_nod_i);
+            ASSERT_(nc_j.end() != it_nod_j);
+            ASSERT_(it_nod_i->second.element_face_id == mats[j].edge_in);
+            ASSERT_(it_nod_j->second.element_face_id == mats[j].edge_out);
 
             const array<int, 6>& mat_rowidx2DoFidx =
                 m_problem_DoFs_inverse_list[i_node_idx].dof_index;
@@ -237,7 +238,7 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
 
     const index_t nDOFs_f = static_cast<index_t>(free_dof_indices.size());
     const index_t nDOFs_b = static_cast<index_t>(bounded_dof_indices.size());
-    OBASSERT(nDOFs_f + nDOFs_b == nDOFs)
+    ASSERT_(nDOFs_f + nDOFs_b == nDOFs);
 
     SparseMatrix<num_t> K_bb_aux(nDOFs_b, nDOFs_b);
     SparseMatrix<num_t> K_ff_aux(nDOFs_f, nDOFs_f);
@@ -281,10 +282,10 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
     {
         int idx = 0;
         out_info.U_b.resize(m_DoF_constraints.size());
-        for (TListOfConstraints::const_iterator it = m_DoF_constraints.begin();
+        for (constraint_list_t::const_iterator it = m_DoF_constraints.begin();
              it != m_DoF_constraints.end(); ++it)
         {
-            OBASSERT(it->first == out_info.bounded_dof_indices[idx])
+            ASSERT_(it->first == out_info.bounded_dof_indices[idx]);
             out_info.U_b[idx++] = it->second;
         }
     }
@@ -304,13 +305,13 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
         {
             const size_t dofIdx = out_info.free_dof_indices[i];
             {
-                TListOfLoads::const_iterator it =
+                load_list_t::const_iterator it =
                     m_loads_at_each_dof.find(dofIdx);
                 if (it != m_loads_at_each_dof.end())
                     out_info.F_f[i] = it->second;
             }
             {
-                TListOfLoads::const_iterator it =
+                load_list_t::const_iterator it =
                     m_loads_at_each_dof_equivs.find(dofIdx);
                 if (it != m_loads_at_each_dof_equivs.end())
                     out_info.F_f[i] += it->second;
@@ -325,13 +326,13 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
         if (rt_i.r.isIdentity()) continue;  // Nothing to do here.
 
         // Loads (Forces and moments) at "i".
-        num_t*                     Fs[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+        num_t* Fs[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
         Eigen::Matrix<num_t, 3, 1> Fi, Mi;
         Fi.setZero();
         Mi.setZero();
 
         // Bounded (translations and rotations) at "i".
-        num_t*                     Us[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+        num_t* Us[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
         Eigen::Matrix<num_t, 3, 1> Ui, URi;
         Ui.setZero();
         URi.setZero();
@@ -356,7 +357,7 @@ void CFiniteElementProblem::assembleProblem(TBuildProblemInfo& out_info)
                     map<size_t, size_t>::const_iterator it2 =
                         problem_dof2bounded_dof_indices.find(
                             dof_i.dof_index[k]);
-                    OBASSERT(it2 != problem_dof2bounded_dof_indices.end())
+                    ASSERT_(it2 != problem_dof2bounded_dof_indices.end());
                     Us[k] = &out_info.U_b[it2->second];
                 }
             }

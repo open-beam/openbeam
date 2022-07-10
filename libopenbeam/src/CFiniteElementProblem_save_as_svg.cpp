@@ -21,6 +21,7 @@
  */
 
 #include <openbeam/CFiniteElementProblem.h>
+
 #include "internals.h"
 
 using namespace std;
@@ -28,20 +29,18 @@ using namespace openbeam;
 using namespace Eigen;
 
 bool CFiniteElementProblem::saveAsImagePNG(
-    const std::string& filename, const TDrawStructureOptions& options,
-    const TStaticSolveProblemInfo* solver_info,
-    const TMeshOutputInfo*         meshing_info,
-    TImageSaveOutputInfo*          out_img_info) const
+    const std::string& filename, const DrawStructureOptions& options,
+    const StaticSolveProblemInfo* solver_info,
+    const MeshOutputInfo* meshing_info, ImageSaveOutputInfo* out_img_info) const
 {
     return saveAsImage(
         filename, false, options, solver_info, meshing_info, out_img_info);
 }
 
 bool CFiniteElementProblem::saveAsImageSVG(
-    const std::string& filename, const TDrawStructureOptions& options,
-    const TStaticSolveProblemInfo* solver_info,
-    const TMeshOutputInfo*         meshing_info,
-    TImageSaveOutputInfo*          out_img_info) const
+    const std::string& filename, const DrawStructureOptions& options,
+    const StaticSolveProblemInfo* solver_info,
+    const MeshOutputInfo* meshing_info, ImageSaveOutputInfo* out_img_info) const
 {
     return saveAsImage(
         filename, true, options, solver_info, meshing_info, out_img_info);
@@ -49,13 +48,12 @@ bool CFiniteElementProblem::saveAsImageSVG(
 
 bool CFiniteElementProblem::saveAsImage(
     const std::string& filename, const bool is_svg,
-    const TDrawStructureOptions&   options,
-    const TStaticSolveProblemInfo* solver_info,
-    const TMeshOutputInfo*         meshing_info,
-    TImageSaveOutputInfo*          out_img_info) const
+    const DrawStructureOptions&   options,
+    const StaticSolveProblemInfo* solver_info,
+    const MeshOutputInfo* meshing_info, ImageSaveOutputInfo* out_img_info) const
 {
 #if OPENBEAM_HAS_CAIRO
-    TRenderInitData ri;
+    RenderInitData ri;
 
     // get the Bounding box:
     this->getBoundingBox(
@@ -96,7 +94,7 @@ bool CFiniteElementProblem::saveAsImage(
     Cairo::RefPtr<Cairo::Surface> surface;
     if (is_svg)
         //		surface = Cairo::PdfSurface::create(filename, ri.width,
-        //ri.height);
+        // ri.height);
         surface = Cairo::SvgSurface::create(filename, ri.width, ri.height);
     else
         surface = Cairo::ImageSurface::create(
@@ -126,10 +124,10 @@ bool CFiniteElementProblem::saveAsImage(
 }
 
 bool CFiniteElementProblem::renderToCairoContext(
-    void* _cairo_context, const TRenderInitData& ri,
-    const TDrawStructureOptions&   options,
-    const TStaticSolveProblemInfo* solver_info,
-    const TMeshOutputInfo*         meshing_info) const
+    void* _cairo_context, const RenderInitData& ri,
+    const DrawStructureOptions&   options,
+    const StaticSolveProblemInfo* solver_info,
+    const MeshOutputInfo*         meshing_info) const
 {
 #if OPENBEAM_HAS_CAIRO
     const size_t nNodes = getNumberOfNodes();
@@ -143,7 +141,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 
     // "Screen constant sized" objects -------------
     const double NODE_LABEL_SIZE = options.labels_size / ri.scaleFactor;
-    const_cast<TDrawStructureOptions*>(&options)->node_radius =
+    const_cast<DrawStructureOptions*>(&options)->node_radius =
         3 / ri.scaleFactor;
     // --------------
 
@@ -170,15 +168,15 @@ bool CFiniteElementProblem::renderToCairoContext(
     // Edges original:  ==============================================
     if (options.show_elements_original)
     {
-        TDrawStructureOptions opts2 = options;
-        opts2.show_element_labels   = false;
-        opts2.show_node_labels      = false;
+        DrawStructureOptions opts2 = options;
+        opts2.show_element_labels  = false;
+        opts2.show_node_labels     = false;
         for (size_t i = 0; i < nEle; i++)
         {
-            const CElement* el = this->getElement(i);
-            OBASSERT(el != nullptr)
+            const auto el = this->getElement(i);
+            ASSERT_(el != nullptr);
 
-            TDrawElementExtraParams el_params;
+            DrawElementExtraParams el_params;
             el_params.element_index          = i;
             el_params.color_alpha            = options.elements_original_alpha;
             el_params.draw_original_position = true;
@@ -221,7 +219,7 @@ bool CFiniteElementProblem::renderToCairoContext(
     if (DEFORMED_SCALE_FACTOR == 0 &&
         (options.show_nodes_deformed || options.show_elements_deformed))
     {  // Autoscale of deformations:
-        OBASSERT(solver_info != nullptr)
+        ASSERT_(solver_info != nullptr);
         const num_t max_desired_deformation =
             options.deformed_scale_auto_max_image_ratio *
             std::max(max_x - min_x, max_y - min_y);
@@ -236,13 +234,13 @@ bool CFiniteElementProblem::renderToCairoContext(
     // Edges deformed:  ==============================================
     if (options.show_elements_deformed)
     {
-        OBASSERT(solver_info != nullptr)
+        ASSERT_(solver_info != nullptr);
         for (size_t i = 0; i < nEle; i++)
         {
-            const CElement* el = this->getElement(i);
-            OBASSERT(el != nullptr)
+            const auto el = this->getElement(i);
+            ASSERT_(el != nullptr);
 
-            TDrawElementExtraParams el_params;
+            DrawElementExtraParams el_params;
             el_params.element_index          = i;
             el_params.color_alpha            = options.elements_deformed_alpha;
             el_params.draw_original_position = false;  // Draw deformed
@@ -258,13 +256,13 @@ bool CFiniteElementProblem::renderToCairoContext(
     // Nodes deformed:  ==============================================
     if (options.show_nodes_deformed)
     {
-        OBASSERT(solver_info != nullptr)
+        ASSERT_(solver_info != nullptr);
         cr->save();  // save the state of the context
         cr->set_source_rgba(0, 0, 0, options.nodes_deformed_alpha);
 
         for (size_t i = 0; i < nNodesToDraw; i++)
         {
-            TVector3 pt;
+            Vector3 pt;
             this->getNodeDeformedPosition(
                 i, pt, *solver_info, DEFORMED_SCALE_FACTOR);
 
@@ -296,14 +294,14 @@ bool CFiniteElementProblem::renderToCairoContext(
         const double H     = SCALE * 1.8;
         const double H2    = SCALE * 0.8;
 
-        for (TListOfConstraints::const_iterator it = m_DoF_constraints.begin();
+        for (constraint_list_t::const_iterator it = m_DoF_constraints.begin();
              it != m_DoF_constraints.end(); ++it)
         {
             // Retrieve the 3D orientation of the node:
             const size_t dof_idx     = it->first;
             const num_t  const_value = it->second;
 
-            const TDoF& dof_info = m_problem_DoFs[dof_idx];
+            const NodeDoF& dof_info = m_problem_DoFs[dof_idx];
 
             // Draw constraint on "dof_info.dof" [0,5]:
 
@@ -311,39 +309,39 @@ bool CFiniteElementProblem::renderToCairoContext(
             std::vector<TPoint3D> seq_points_local;
             switch (dof_info.dof)
             {
-                case 0:  // X=0
+                case DoF_index::DX:
                     seq_points_local.push_back(TPoint3D(-R, 0, 0));
                     seq_points_local.push_back(TPoint3D(-R - H, W, 0));
                     seq_points_local.push_back(TPoint3D(-R - H, -W, 0));
                     seq_points_local.push_back(TPoint3D(-R, 0, 0));
                     break;
-                case 1:  // Y=0
+                case DoF_index::DY:
                     seq_points_local.push_back(TPoint3D(0, -R, 0));
                     seq_points_local.push_back(TPoint3D(W, -R - H, 0));
                     seq_points_local.push_back(TPoint3D(-W, -R - H, 0));
                     seq_points_local.push_back(TPoint3D(0, -R, 0));
                     break;
-                case 2:  // Z=0
+                case DoF_index::DZ:
                     seq_points_local.push_back(TPoint3D(0, 0, -R));
                     seq_points_local.push_back(TPoint3D(0, W, -R - H));
                     seq_points_local.push_back(TPoint3D(0, -W, -R - H));
                     seq_points_local.push_back(TPoint3D(0, 0, -R));
                     break;
-                case 3:  // RX=0
+                case DoF_index::RX:
                     seq_points_local.push_back(TPoint3D(-R - H, W, 0));
                     seq_points_local.push_back(TPoint3D(-R - H, -W, 0));
                     seq_points_local.push_back(TPoint3D(-R - H - H2, -W, 0));
                     seq_points_local.push_back(TPoint3D(-R - H - H2, W, 0));
                     seq_points_local.push_back(TPoint3D(-R - H, W, 0));
                     break;
-                case 4:  // RY=0
+                case DoF_index::RY:
                     seq_points_local.push_back(TPoint3D(W, -R - H, 0));
                     seq_points_local.push_back(TPoint3D(-W, -R - H, 0));
                     seq_points_local.push_back(TPoint3D(-W, -R - H - H2, 0));
                     seq_points_local.push_back(TPoint3D(W, -R - H - H2, 0));
                     seq_points_local.push_back(TPoint3D(W, -R - H, 0));
                     break;
-                case 5:  // RZ=0
+                case DoF_index::RZ:
                     seq_points_local.push_back(TPoint3D(0, W, -R - H));
                     seq_points_local.push_back(TPoint3D(0, -W, -R - H));
                     seq_points_local.push_back(TPoint3D(0, -W, -R - H - H2));
@@ -367,7 +365,7 @@ bool CFiniteElementProblem::renderToCairoContext(
                     cr->set_source_rgba(
                         0, 0, 0, options.constraints_original_alpha);
 
-                    node_pose = this->getNodePose(dof_info.node_id);
+                    node_pose = this->getNodePose(dof_info.nodeId);
                 }
                 else if (pass == 1)
                 {  // deformed:
@@ -375,10 +373,10 @@ bool CFiniteElementProblem::renderToCairoContext(
                     cr->set_source_rgba(
                         0, 0, 0, options.constraints_deformed_alpha);
 
-                    node_pose = this->getNodePose(dof_info.node_id);
-                    TVector3 pt;
+                    node_pose = this->getNodePose(dof_info.nodeId);
+                    Vector3 pt;
                     this->getNodeDeformedPosition(
-                        dof_info.node_id, pt, *solver_info,
+                        dof_info.nodeId, pt, *solver_info,
                         DEFORMED_SCALE_FACTOR);
                     for (int k = 0; k < 3; k++) node_pose.t.coords[k] = pt[k];
                 }
@@ -404,13 +402,13 @@ bool CFiniteElementProblem::renderToCairoContext(
 
         // 0) Establish scale:
         num_t max_load_force = 0, max_load_torque = 0;
-        for (TListOfLoads::const_iterator it = m_loads_at_each_dof.begin();
+        for (load_list_t::const_iterator it = m_loads_at_each_dof.begin();
              it != m_loads_at_each_dof.end(); ++it)
         {
-            const TDoF& dof_info  = m_problem_DoFs[it->first];
-            const num_t force_val = std::abs(it->second);
+            const NodeDoF& dof_info  = m_problem_DoFs[it->first];
+            const num_t    force_val = std::abs(it->second);
 
-            if (dof_info.dof < 3)
+            if (dof_info.dofAsInt() < 3)
                 max_load_force = std::max(max_load_force, force_val);
             else
                 max_load_torque = std::max(max_load_torque, force_val);
@@ -427,19 +425,19 @@ bool CFiniteElementProblem::renderToCairoContext(
 
         // 1) Forces on nodes
         // -----------------------------------
-        for (TListOfLoads::const_iterator it = m_loads_at_each_dof.begin();
+        for (load_list_t::const_iterator it = m_loads_at_each_dof.begin();
              it != m_loads_at_each_dof.end(); ++it)
         {
             const size_t dof_idx   = it->first;
             const num_t  force_val = it->second;
             if (force_val == 0) continue;  // May happen sometimes.
 
-            const TDoF& dof_info = m_problem_DoFs[dof_idx];
+            const NodeDoF& dof_info = m_problem_DoFs[dof_idx];
 
             // Scaled force dimension:
-            const double LEN =
-                std::abs(force_val) *
-                (dof_info.dof < 3 ? FORCE_SCALE_FACTOR : TORQUE_SCALE_FACTOR);
+            const double LEN = std::abs(force_val) *
+                               (dof_info.dofAsInt() < 3 ? FORCE_SCALE_FACTOR
+                                                        : TORQUE_SCALE_FACTOR);
 
             // Draw external force on "dof_info.dof" [0,5]:
 
@@ -448,7 +446,7 @@ bool CFiniteElementProblem::renderToCairoContext(
             std::vector<TPoint3D> seq_points_local;
             switch (dof_info.dof)
             {
-                case 0:  // +X
+                case DoF_index::DX:
                     seq_points_local.push_back(TPoint3D(-R, 0, 0));
                     seq_points_local.push_back(TPoint3D(-R - A, -A, 0));
                     seq_points_local.push_back(TPoint3D(-R, 0, 0));
@@ -456,7 +454,7 @@ bool CFiniteElementProblem::renderToCairoContext(
                     seq_points_local.push_back(TPoint3D(-R, 0, 0));
                     seq_points_local.push_back(TPoint3D(-R - LEN, 0, 0));
                     break;
-                case 1:  // +Y
+                case DoF_index::DY:
                     seq_points_local.push_back(TPoint3D(0, -R, 0));
                     seq_points_local.push_back(TPoint3D(0, -R - LEN, 0));
                     seq_points_local.push_back(TPoint3D(0, -R, 0));
@@ -464,14 +462,14 @@ bool CFiniteElementProblem::renderToCairoContext(
                     seq_points_local.push_back(TPoint3D(0, -R, 0));
                     seq_points_local.push_back(TPoint3D(A, -R - A, 0));
                     break;
-                case 2:  // +Z
+                case DoF_index::DZ:
                     OB_TODO("Implement Forces SVG")
                     break;
-                case 3:  // +RX
+                case DoF_index::RX:
                     break;
-                case 4:  // +RY
+                case DoF_index::RY:
                     break;
-                case 5:  // +RZ
+                case DoF_index::RZ:
                     break;
             }
 
@@ -490,21 +488,21 @@ bool CFiniteElementProblem::renderToCairoContext(
                 cr->set_line_width(FORCE_LINE_WIDTH);
                 cr->set_source_rgba(0, 0, 1, options.loads_original_alpha);
 
-                node_pose = this->getNodePose(dof_info.node_id);
+                node_pose = this->getNodePose(dof_info.nodeId);
             }
             else
             {  // deformed:
                 cr->set_line_width(FORCE_LINE_WIDTH);
                 cr->set_source_rgba(0, 0, 1, options.loads_deformed_alpha);
 
-                node_pose = this->getNodePose(dof_info.node_id);
-                TVector3 pt;
+                node_pose = this->getNodePose(dof_info.nodeId);
+                Vector3 pt;
                 this->getNodeDeformedPosition(
-                    dof_info.node_id, pt, *solver_info, DEFORMED_SCALE_FACTOR);
+                    dof_info.nodeId, pt, *solver_info, DEFORMED_SCALE_FACTOR);
                 for (int k = 0; k < 3; k++) node_pose.t.coords[k] = pt[k];
             }
 
-            const TMatrix33& node_rot = node_pose.r.getRot();
+            const Matrix33& node_rot = node_pose.r.getRot();
 
             // then rotate to the nodal coordinates (typ. coincides with global
             // coords)

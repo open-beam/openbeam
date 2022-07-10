@@ -23,14 +23,11 @@
 #pragma once
 
 // Version of the library
-#include "openbeam_version.h"
+#include <openbeam/openbeam_version.h>
 
 // Generic classes ------------------
-#include "CFiniteElementProblem.h"
-#include "CStructureProblem.h"
+#include <openbeam/CFiniteElementProblem.h>
+#include <openbeam/CStructureProblem.h>
 
 // Element library ------------------
-#include "elements.h"
-
-// Utilities ------------------
-#include "CTicTac.h"
+#include <openbeam/elements.h>

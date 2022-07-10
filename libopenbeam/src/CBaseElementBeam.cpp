@@ -26,15 +26,14 @@
 #include <openbeam/CElementBeam_2D_RA.h>
 #include <openbeam/CElementBeam_2D_RD.h>
 #include <openbeam/CElementBeam_2D_RR.h>
-#include <openbeam/CStructureProblem.h>
-
 #include <openbeam/CFiniteElementProblem.h>
-#include <openbeam/TDrawStructureOptions.h>
+#include <openbeam/CStructureProblem.h>
+#include <openbeam/DrawStructureOptions.h>
 
 #if OPENBEAM_HAS_CAIRO
-#include <cairommconfig.h>
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
+#include <cairommconfig.h>
 #endif
 
 using namespace std;
@@ -70,9 +69,9 @@ CBaseElementBeam::CBaseElementBeam(
 /** Parse a set of parameters by (casi insensitive) name and set the element
  * values from them. */
 void CBaseElementBeam::loadParamsFromSet(
-    const TParamSet& params, const TEvaluationContext& eval)
+    const param_set_t& params, const EvaluationContext& eval)
 {
-    for (TParamSet::const_iterator it = params.begin(); it != params.end();
+    for (param_set_t::const_iterator it = params.begin(); it != params.end();
          ++it)
     {
         if (strCmpI(it->first, "E"))
@@ -98,9 +97,9 @@ void CBaseElementBeam::loadParamsFromSet(
 
 #if OPENBEAM_HAS_QT5Svg
 void CBaseElementBeam::drawQtSVG(
-    QSvgGenerator& svg, const TDrawStructureOptions& options,
-    const TRenderInitData& ri, const TDrawElementExtraParams& draw_el_params,
-    const TMeshOutputInfo* meshing_info) const
+    QSvgGenerator& svg, const DrawStructureOptions& options,
+    const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo* meshing_info) const
 {
 }
 #endif
@@ -109,9 +108,9 @@ void CBaseElementBeam::drawQtSVG(
  * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
  * options */
 void CBaseElementBeam::drawSVG(
-    void* _cairo_context, const TDrawStructureOptions& options,
-    const TRenderInitData& ri, const TDrawElementExtraParams& draw_el_params,
-    const TMeshOutputInfo* meshing_info) const
+    void* _cairo_context, const DrawStructureOptions& options,
+    const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo* meshing_info) const
 {
 #if OPENBEAM_HAS_CAIRO
     Cairo::RefPtr<Cairo::Context>& cr =
@@ -126,7 +125,7 @@ void CBaseElementBeam::drawSVG(
 
     // Draw beam between: node_ids  0 ==> 1
     // Use m_pinned_endX.
-    OBASSERT(conected_nodes_ids.size() == 2)
+    ASSERT_(conected_nodes_ids.size() == 2);
 
     // Get original or deformed positions:
     const bool node0_is_to_draw =
@@ -139,12 +138,12 @@ void CBaseElementBeam::drawSVG(
     TRotationTrans3D p1 = m_parent->getNodePose(conected_nodes_ids[1]);
     if (!draw_el_params.draw_original_position)
     {  // Deformed position:
-        TVector3 pt0_deformed;
+        Vector3 pt0_deformed;
         m_parent->getNodeDeformedPosition(
             conected_nodes_ids[0], pt0_deformed, *draw_el_params.solver_info,
             draw_el_params.deformed_scale_factor);
 
-        TVector3 pt1_deformed;
+        Vector3 pt1_deformed;
         m_parent->getNodeDeformedPosition(
             conected_nodes_ids[1], pt1_deformed, *draw_el_params.solver_info,
             draw_el_params.deformed_scale_factor);
@@ -241,13 +240,13 @@ void CBaseElementBeam::drawSVG(
 
 /** Mesh this element into a set of (possibly) smaller ones */
 void CBaseElementBeam::do_mesh(
-    const size_t my_idx, CStructureProblem& out_fem, TMeshOutputInfo& out_info,
-    const TMeshParams& params)
+    const size_t my_idx, CStructureProblem& out_fem, MeshOutputInfo& out_info,
+    const MeshParams& params)
 {
     // Compute my current length by getting the poses of the two nodes at each
     // end of the beam:
-    OBASSERT_DEBUG(conected_nodes_ids.size() == 2)
-    OBASSERT_DEBUG(m_parent != nullptr)
+    ASSERTDEB_(conected_nodes_ids.size() == 2)
+    ASSERTDEB_(m_parent != nullptr)
 
     const TRotationTrans3D& node0 =
         m_parent->getNodePose(conected_nodes_ids[0]);
@@ -261,8 +260,8 @@ void CBaseElementBeam::do_mesh(
         node1.t.coords[2] - node0.t.coords[2]);
     const num_t L = v01.norm();
 
-    OBASSERT(L > 0)
-    OBASSERT(params.max_element_length > 0)
+    ASSERT_(L > 0);
+    ASSERT_(params.max_element_length > 0);
 
     // Compute # of elements:
     const size_t nElements =
@@ -274,7 +273,7 @@ void CBaseElementBeam::do_mesh(
         out_info.element2nodes.resize(my_idx + 1);
 
     std::vector<size_t>& my_nodes = out_info.element2nodes[my_idx];
-    OBASSERT_DEBUG(my_nodes.empty())
+    ASSERTDEB_(my_nodes.empty())
 
     my_nodes.reserve(nElements + 1);
     my_nodes.push_back(conected_nodes_ids[0]);
@@ -298,14 +297,14 @@ void CBaseElementBeam::do_mesh(
         out_info.element2elements.resize(my_idx + 1);
 
     std::vector<size_t>& my_elements = out_info.element2elements[my_idx];
-    OBASSERT_DEBUG(my_elements.empty())
+    ASSERTDEB_(my_elements.empty())
     my_elements.reserve(nElements);
 
     for (size_t idx_el = 0; idx_el < nElements; idx_el++)
     {
-        CBaseElementBeam* new_el;
-        const size_t      ni = my_nodes[idx_el];
-        const size_t      nj = my_nodes[idx_el + 1];
+        CBaseElementBeam::Ptr new_el;
+        const size_t          ni = my_nodes[idx_el];
+        const size_t          nj = my_nodes[idx_el + 1];
         if (idx_el == 0)
         {
             OB_TODO(
@@ -314,12 +313,13 @@ void CBaseElementBeam::do_mesh(
             // First element:
             if (dynamic_cast<CElementBeam_2D_AR*>(this) != nullptr ||
                 dynamic_cast<CElementBeam_2D_AA*>(this) != nullptr)
-                new_el = new CElementBeam_2D_AR(ni, nj);
-            //			else if (dynamic_cast<CElementBeam_2D_DR*>(this)!=nullptr)
-            //					new_el = new CElementBeam_2D_DR(ni,nj);
+                new_el = std::make_shared<CElementBeam_2D_AR>(ni, nj);
+            //			else if
+            //(dynamic_cast<CElementBeam_2D_DR*>(this)!=nullptr)
+            // new_el = new CElementBeam_2D_DR(ni,nj);
             else
             {
-                new_el = new CElementBeam_2D_RR(ni, nj);
+                new_el = std::make_shared<CElementBeam_2D_RR>(ni, nj);
             }
         }
         else if (idx_el == nElements - 1)
@@ -327,18 +327,18 @@ void CBaseElementBeam::do_mesh(
             // Last element:
             if (dynamic_cast<CElementBeam_2D_RA*>(this) != nullptr ||
                 dynamic_cast<CElementBeam_2D_AA*>(this) != nullptr)
-                new_el = new CElementBeam_2D_RA(ni, nj);
+                new_el = std::make_shared<CElementBeam_2D_RA>(ni, nj);
             else if (dynamic_cast<CElementBeam_2D_RD*>(this) != nullptr)
-                new_el = new CElementBeam_2D_RD(ni, nj);
+                new_el = std::make_shared<CElementBeam_2D_RD>(ni, nj);
             else
             {
-                new_el = new CElementBeam_2D_RR(ni, nj);
+                new_el = std::make_shared<CElementBeam_2D_RR>(ni, nj);
             }
         }
         else
         {
             // The rest of (intermediary) elements:
-            new_el = new CElementBeam_2D_RR(ni, nj);
+            new_el = std::make_shared<CElementBeam_2D_RR>(ni, nj);
         }
         // Copy params:
         new_el->copyCommonBeamParamsFrom(*this);

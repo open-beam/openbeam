@@ -22,8 +22,10 @@
 
 #pragma once
 
-#include "CElement.h"
-#include "types.h"
+#include <openbeam/CElement.h>
+#include <openbeam/types.h>
+
+#include <memory>
 
 namespace openbeam
 {
@@ -34,8 +36,11 @@ struct CLoadOnBeam
     CLoadOnBeam()          = default;
     virtual ~CLoadOnBeam() = default;
 
+    using Ptr      = std::shared_ptr<CLoadOnBeam>;
+    using ConstPtr = std::shared_ptr<const CLoadOnBeam>;
+
     virtual void computeStressAndEquivalentLoads(
-        const CElement* el, TElementStress& stress,
+        const CElement* el, ElementStress& stress,
         std::vector<array6>& loads) = 0;
 
     /** Class factory from element name, or nullptr for an unknown element:
@@ -45,14 +50,14 @@ struct CLoadOnBeam
      *		- "CONCENTRATED": CLoadConcentratedForce
      *		- "TRIANGULAR": CLoadDistributedTriangular
      */
-    static CLoadOnBeam* createLoadByName(const std::string& sName);
+    static CLoadOnBeam::Ptr createLoadByName(const std::string& sName);
 
     /** Parse a set of parameters by (casi insensitive) name and set the element
      * values from them. Each element must document the supported parameters and
      * their meaning.
      */
     virtual void loadParamsFromSet(
-        const TParamSet& params, const TEvaluationContext& eval) = 0;
+        const param_set_t& params, const EvaluationContext& eval) = 0;
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
@@ -69,15 +74,15 @@ struct CLoadOnBeam
  */
 struct CLoadConstTemperature : public CLoadOnBeam
 {
-    CLoadConstTemperature(const num_t inc_temp) : incr_temp(inc_temp) {}
+    CLoadConstTemperature(const num_t inc_temp) : m_incr_temp(inc_temp) {}
 
-    CLoadConstTemperature() : incr_temp(UNINITIALIZED_VALUE) {}
+    CLoadConstTemperature() = default;
 
     virtual void computeStressAndEquivalentLoads(
-        const CElement* el, TElementStress& stress, std::vector<array6>& loads);
+        const CElement* el, ElementStress& stress, std::vector<array6>& loads);
     /** See declaration in base class */
     virtual void loadParamsFromSet(
-        const TParamSet& params, const TEvaluationContext& eval);
+        const param_set_t& params, const EvaluationContext& eval);
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
@@ -87,7 +92,8 @@ struct CLoadConstTemperature : public CLoadOnBeam
         const size_t               original_bar_idx,
         const CStructureProblem&   original_fem) const;
 
-    num_t incr_temp;  //!< Temperature increment value (in C)
+    //!< Temperature increment value (in C)
+    num_t m_incr_temp = UNINITIALIZED_VALUE;
 };
 
 /** Distributed, uniform load over the entire length of a beam with a \a q(N/m)
@@ -110,10 +116,10 @@ struct CLoadDistributedUniform : public CLoadOnBeam
     }
 
     virtual void computeStressAndEquivalentLoads(
-        const CElement* el, TElementStress& stress, std::vector<array6>& loads);
+        const CElement* el, ElementStress& stress, std::vector<array6>& loads);
     /** See declaration in base class */
     virtual void loadParamsFromSet(
-        const TParamSet& params, const TEvaluationContext& eval);
+        const param_set_t& params, const EvaluationContext& eval);
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
@@ -152,10 +158,10 @@ struct CLoadDistributedTriangular : public CLoadOnBeam
     }
 
     virtual void computeStressAndEquivalentLoads(
-        const CElement* el, TElementStress& stress, std::vector<array6>& loads);
+        const CElement* el, ElementStress& stress, std::vector<array6>& loads);
     /** See declaration in base class */
     virtual void loadParamsFromSet(
-        const TParamSet& params, const TEvaluationContext& eval);
+        const param_set_t& params, const EvaluationContext& eval);
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
@@ -198,10 +204,10 @@ struct CLoadConcentratedForce : public CLoadOnBeam
     }
 
     virtual void computeStressAndEquivalentLoads(
-        const CElement* el, TElementStress& stress, std::vector<array6>& loads);
+        const CElement* el, ElementStress& stress, std::vector<array6>& loads);
     /** See declaration in base class */
     virtual void loadParamsFromSet(
-        const TParamSet& params, const TEvaluationContext& eval);
+        const param_set_t& params, const EvaluationContext& eval);
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */

@@ -25,9 +25,9 @@
 #include <openbeam/types.h>
 
 #if OPENBEAM_HAS_CAIRO
-#include <cairommconfig.h>
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
+#include <cairommconfig.h>
 #endif
 
 namespace openbeam
@@ -41,7 +41,7 @@ void drawLocalScaledSegments(
     CAIROCR& cr, const TRotationTrans3D& node_pose, const double scale,
     const std::vector<TPoint3D>& seq_points_local)
 {
-    const TMatrix33& node_rot = node_pose.r.getRot();
+    const Matrix33& node_rot = node_pose.r.getRot();
 
     // then rotate to the nodal coordinates (typ. coincides with global coords)
     const size_t          nPts = seq_points_local.size();

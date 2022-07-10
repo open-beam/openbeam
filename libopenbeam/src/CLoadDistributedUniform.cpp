@@ -29,10 +29,10 @@ using namespace std;
 using namespace openbeam;
 
 void CLoadDistributedUniform::computeStressAndEquivalentLoads(
-    const CElement* el, TElementStress& stress, std::vector<array6>& loads)
+    const CElement* el, ElementStress& stress, std::vector<array6>& loads)
 {
     // make sure director vector is unitary:
-    OBASSERT_DEBUG(
+    ASSERTDEB_(
         std::abs(1 - (dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2])) <
         1e-6)
 
@@ -47,7 +47,7 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
 
     const num_t L2 = square(Ax) + square(Ay) + square(Az);
     const num_t L  = std::sqrt(L2);
-    OBASSERT(L > 0)
+    ASSERT_(L > 0);
     const num_t _1_L = 1 / L;
 
     // Normalize direction vector:
@@ -60,9 +60,9 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
     //  to the beam in the direction defined by the plane "beam<->load dir".
 
     // Cross product: A x dir
-    const num_t cross_prod[3] = {Ay * dir[2] - Az * dir[1],
-                                 -Ax * dir[2] + Az * dir[0],
-                                 Ax * dir[1] - Ay * dir[0]};
+    const num_t cross_prod[3] = {
+        Ay * dir[2] - Az * dir[1], -Ax * dir[2] + Az * dir[0],
+        Ax * dir[1] - Ay * dir[0]};
 
     // Split "q" into perpendicular & tangent load densities:
     const num_t proy_long = (Ax * dir[0] + Ay * dir[1] + Az * dir[2]);
@@ -150,7 +150,7 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
     stress[1].Mz = m2;
 
     // Equivalent load -------------------------------------------
-    const TMatrix33& R =
+    const Matrix33& R =
         el->getGlobalOrientation()
             .getRot();  // Reference to the 3D rotation matrix (3x3) of the beam
 
@@ -178,9 +178,9 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
 /** Parse a set of parameters by (casi insensitive) name and set the element
  * values from them. */
 void CLoadDistributedUniform::loadParamsFromSet(
-    const TParamSet& params, const TEvaluationContext& eval)
+    const param_set_t& params, const EvaluationContext& eval)
 {
-    for (TParamSet::const_iterator it = params.begin(); it != params.end();
+    for (param_set_t::const_iterator it = params.begin(); it != params.end();
          ++it)
     {
         if (strCmpI(it->first, "Q"))
@@ -217,5 +217,6 @@ void CLoadDistributedUniform::meshLoad(
     // Distribute the load into identical distributed loads:
     for (size_t i = 0; i < meshed_element_idxs.size(); i++)
         meshed_fem.addLoadAtBeam(
-            meshed_element_idxs[i], new CLoadDistributedUniform(*this));
+            meshed_element_idxs[i],
+            std::make_shared<CLoadDistributedUniform>(*this));
 }

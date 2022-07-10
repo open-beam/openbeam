@@ -39,8 +39,7 @@ CElementBeam_2D_AA::CElementBeam_2D_AA(
  * for the current element state.
  */
 void CElementBeam_2D_AA::getLocalStiffnessMatrices(
-    openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t& outSubMats)
-    const
+    std::vector<TStiffnessSubmatrix>& outSubMats) const
 {
     outSubMats.resize(3);
     TStiffnessSubmatrix& K11 = outSubMats[0];
@@ -49,8 +48,8 @@ void CElementBeam_2D_AA::getLocalStiffnessMatrices(
 
     // Compute my current length by getting the poses of the two nodes at each
     // end of the beam:
-    OBASSERT_DEBUG(conected_nodes_ids.size() == 2)
-    OBASSERT_DEBUG(m_parent != nullptr)
+    ASSERTDEB_(conected_nodes_ids.size() == 2)
+    ASSERTDEB_(m_parent != nullptr)
 
     const TRotationTrans3D& node0 =
         m_parent->getNodePose(conected_nodes_ids[0]);
@@ -63,7 +62,7 @@ void CElementBeam_2D_AA::getLocalStiffnessMatrices(
     const num_t L = std::sqrt(L2);
     OB_TODO("Allow custom bar lengths!");
 
-    OBASSERT(L > 0)
+    ASSERT_(L > 0);
     if (E == UNINITIALIZED_VALUE)
         throw std::runtime_error(format(
             "CElementBeam_2D_AA: Uninitialized parameter E (Element in %u->%u)",
@@ -86,22 +85,23 @@ void CElementBeam_2D_AA::getLocalStiffnessMatrices(
     K12.edge_out = 1;
 
     // k11 --------------
-    K11.matrix       = TMatrix66::Zero();
+    K11.matrix       = Matrix66::Zero();
     K11.matrix(0, 0) = E * A / L;
 
     // k22 --------------
     K22.matrix = K11.matrix;
 
     // k12 --------------
-    K12.matrix       = TMatrix66::Zero();
+    K12.matrix       = Matrix66::Zero();
     K12.matrix(0, 0) = -K11.matrix(0, 0);
 }
 
-void CElementBeam_2D_AA::getLocalDoFs(std::vector<TUsedDoFs>& dofs) const
+void CElementBeam_2D_AA::getLocalDoFs(std::vector<used_DoFs_t>& dofs) const
 {
     dofs.resize(size_t(getNumberEdges()));
 
-    static const TUsedDoFs sDofsA1 = {true, false, false, false, false, false};
+    static const used_DoFs_t sDofsA1 = {true,  false, false,
+                                        false, false, false};
 
     dofs[0] = sDofsA1;
     dofs[1] = sDofsA1;

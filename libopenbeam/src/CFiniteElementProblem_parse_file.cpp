@@ -20,10 +20,11 @@
    +---------------------------------------------------------------------------+
  */
 
+#include <mrpt/io/CTextFileLinesParser.h>
+#include <mrpt/system/string_utils.h>
 #include <openbeam/CFiniteElementProblem.h>
 #include <openbeam/CStructureProblem.h>
 
-#include "CTextFileLinesParser.h"
 #include "ExpressionEvaluator.h"
 
 using namespace std;
@@ -38,8 +39,8 @@ struct TParsedParams
         return key_vals.end() != key_vals.find(key);
     }
 
-    TParamSet     key_vals;
-    vector_string rest_values;
+    param_set_t     key_vals;
+    vector_string_t rest_values;
 };
 
 struct TAuxListDofNames
@@ -62,11 +63,11 @@ const size_t listDofNamesCount = sizeof(listDofNames) / sizeof(listDofNames[0]);
 
 // Fwd decl:
 void parseParams(
-    const vector_string& tokens, TParsedParams& params, size_t first_idx = 1);
+    const vector_string_t& tokens, TParsedParams& params, size_t first_idx = 1);
 bool replace_paramsets(
-    TParamSet&                                       inout_params,
-    const std::map<std::string, TParamSet, ci_less>& user_param_sets,
-    const TEvaluationContext&                        eval_context);
+    param_set_t&                              inout_params,
+    const std::map<std::string, param_set_t>& user_param_sets,
+    const EvaluationContext&                  eval_context);
 
 #define REPORT_ERROR(_MSG)                                                    \
     if (eval_context.err_msgs)                                                \
@@ -118,9 +119,9 @@ bool replace_paramsets(
 //              loadFromStream
 // -------------------------------------------------
 bool CFiniteElementProblem::loadFromStream(
-    std::istream& is, vector_string* err_msgs, vector_string* warn_msgs)
+    std::istream& is, vector_string_t* err_msgs, vector_string_t* warn_msgs)
 {
-    CTextFileLinesParser f;
+    mrpt::io::CTextFileLinesParser f;
 
     f.enableCommentFilters(
         true,  // %
@@ -130,16 +131,17 @@ bool CFiniteElementProblem::loadFromStream(
 
     f.open(is);
 
-    return this->internal_loadFromFile(&f, err_msgs, warn_msgs);
+    return this->internal_loadFromFile(f, err_msgs, warn_msgs);
 }
 
 // -------------------------------------------------
 //              loadFromFile
 // -------------------------------------------------
 bool CFiniteElementProblem::loadFromFile(
-    const std::string& file, vector_string* err_msgs, vector_string* warn_msgs)
+    const std::string& file, vector_string_t* err_msgs,
+    vector_string_t* warn_msgs)
 {
-    CTextFileLinesParser f;
+    mrpt::io::CTextFileLinesParser f;
 
     f.enableCommentFilters(
         true,  // %
@@ -157,8 +159,11 @@ bool CFiniteElementProblem::loadFromFile(
         auto fil = std::ifstream(file);
         if (fil.is_open())
         {
+            // Parse from file:
             f.open(fil);
-
+        }
+        else
+        {
             if (err_msgs)
                 err_msgs->push_back(
                     std::string("Error opening file for reading: ") + file);
@@ -166,20 +171,17 @@ bool CFiniteElementProblem::loadFromFile(
         }
     }
 
-    return this->internal_loadFromFile(&f, err_msgs, warn_msgs);
+    return this->internal_loadFromFile(f, err_msgs, warn_msgs);
 }
 
 // -------------------------------------------------
 //              internal_loadFromFile
 // -------------------------------------------------
 bool CFiniteElementProblem::internal_loadFromFile(
-    void* f_, vector_string* err_msgs, vector_string* warn_msgs)
+    mrpt::io::CTextFileLinesParser& f, vector_string_t* err_msgs,
+    vector_string_t* warn_msgs)
 {
-    CTimeLoggerEntry tle(openbeam::timelog, "parseFile");
-
-    OBASSERT(f_ != nullptr)
-
-    CTextFileLinesParser& f = *reinterpret_cast<CTextFileLinesParser*>(f_);
+    mrpt::system::CTimeLoggerEntry tle(openbeam::timelog, "parseFile");
 
     // Clear msgs, if any:
     if (err_msgs) err_msgs->clear();
@@ -202,9 +204,9 @@ bool CFiniteElementProblem::internal_loadFromFile(
 
     // List of existing user variables declared in the script:
     // ------------------------------------------------------------
-    std::map<std::string, TParamSet, ci_less> user_param_sets;
+    std::map<std::string, param_set_t> user_param_sets;
 
-    TEvaluationContext eval_context;
+    EvaluationContext eval_context;
     eval_context.warn_msgs = warn_msgs;
     eval_context.err_msgs  = err_msgs;
 
@@ -223,8 +225,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
             eval_context.lin_num = lin_num;
             eval_context.lin     = &lin;
 
-            vector_string toks;
-            openbeam::tokenize(lin, ",\r\n", toks);
+            vector_string_t toks;
+            mrpt::system::tokenize(lin, ",\r\n", toks);
             if (toks.empty()) continue;
 
             // Check change of section:
@@ -254,8 +256,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                 }
                 else
                 {
-                    vector_string parts;
-                    tokenize(toks[1], "=", parts);
+                    vector_string_t parts;
+                    mrpt::system::tokenize(toks[1], "=", parts);
 
                     // Parts: [nam] = [VAL]
                     if (parts.size() != 2)
@@ -336,8 +338,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                             const bool has_rot_x = (toks.size() >= 8);
 
                             // ID=<id>:
-                            vector_string parts;
-                            tokenize(toks[1], "=", parts);
+                            vector_string_t parts;
+                            mrpt::system::tokenize(toks[1], "=", parts);
                             if (parts.size() != 2 || !strCmpI(parts[0], "ID"))
                             {
                                 REPORT_ERROR(
@@ -442,7 +444,7 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                 }
                                 else
                                 {
-                                    CElement* el =
+                                    auto el =
                                         CElement::createElementByName(eType);
                                     if (!el)
                                     { REPORT_ERROR("Unknown element type"); }
@@ -452,9 +454,9 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                         if (REPLACE_PARAMSETS(params.key_vals))
                                         {
                                             // Set common params to any element:
-                                            OBASSERT(
+                                            ASSERT_(
                                                 el->conected_nodes_ids.size() ==
-                                                2)
+                                                2);
                                             el->conected_nodes_ids[0] =
                                                 static_cast<size_t>(nFrom);
                                             el->conected_nodes_ids[1] =
@@ -548,7 +550,7 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                                                 globalIdxDOF =
                                                                     this->getDOFIndex(
                                                                         nodeId,
-                                                                        TDoFIndex(
+                                                                        DoF_index(
                                                                             k));
                                                             if (globalIdxDOF !=
                                                                 string::npos)
@@ -635,8 +637,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                         else
                         {
                             // ID=<id>:
-                            vector_string parts;
-                            tokenize(toks[1], "=", parts);
+                            vector_string_t parts;
+                            mrpt::system::tokenize(toks[1], "=", parts);
                             if (parts.size() != 2 || !strCmpI(parts[0], "ID"))
                             {
                                 REPORT_ERROR(
@@ -660,7 +662,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                     {
                                         const size_t ID =
                                             static_cast<size_t>(id_val);
-                                        const string sLabel = trim(toks[2]);
+                                        const string sLabel =
+                                            mrpt::system::trim(toks[2]);
                                         if (ID >= m_node_labels.size())
                                         {
                                             REPORT_ERROR(
@@ -756,7 +759,7 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                                                 globalIdxDOF =
                                                                     this->getDOFIndex(
                                                                         nodeId,
-                                                                        TDoFIndex(
+                                                                        DoF_index(
                                                                             k));
                                                             if (globalIdxDOF !=
                                                                 string::npos)
@@ -854,7 +857,7 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                         const size_t eleIdx =
                                             static_cast<size_t>(fID);
 
-                                        CLoadOnBeam* load =
+                                        auto load =
                                             CLoadOnBeam::createLoadByName(
                                                 sType);
                                         if (!load)
@@ -903,9 +906,9 @@ bool CFiniteElementProblem::internal_loadFromFile(
         const std::string sErr(e.what());
         if (sErr.empty())
         {
-            // If we catch an exception is because err_msgs=nullptr but we found an
-            // error, which was already dumped to cerr. So just return false and
-            // we're done.
+            // If we catch an exception is because err_msgs=nullptr but we found
+            // an error, which was already dumped to cerr. So just return false
+            // and we're done.
             return false;
         }
         else
@@ -923,62 +926,34 @@ bool CFiniteElementProblem::internal_loadFromFile(
 // Return false only if there was an error if there's not "err_msgs".
 //  Should only process the case of returning true and do nothing else on return
 //  false to handle the error.
-bool TEvaluationContext::parser_evaluate_expression(
+bool EvaluationContext::parser_evaluate_expression(
     const std::string& sVarVal, num_t& val) const
 {
-    OB_MESSAGE(5) << "Line: " << lin_num << " Expression: " << sVarVal
-                  << " --> ";
-
-    int ret = ExpressionEvaluator::calculate(sVarVal, val, user_vars);
-
-    if (ret == ExpressionEvaluator::eval_ok)
+    try
     {
+        OB_MESSAGE(5) << "Line: " << lin_num << " Expression: " << sVarVal
+                      << " --> ";
+
+        val = openbeam::evaluate(sVarVal, user_vars);
+
         OB_MESSAGE(5) << val << endl;
         return true;
     }
-    else
+    catch (const std::exception& e)
     {
         OB_MESSAGE(5) << "ERROR!\n";
 
-        const TEvaluationContext& eval_context =
-            *this;  // Just a trick to make the macros REPORT_ERROR below work.
-
-        // Handle possible errors:
-        switch (ret)
-        {
-            case ExpressionEvaluator::eval_unbalanced:
-                REPORT_ERROR(format(
-                    "Unbalanced expression evaluating variable value: '%s'",
-                    sVarVal.c_str()));
-                break;
-            case ExpressionEvaluator::eval_invalidoperator:
-                REPORT_ERROR(format(
-                    "Invalid operator evaluating variable value: '%s'",
-                    sVarVal.c_str()));
-                break;
-            case ExpressionEvaluator::eval_invalidoperand:
-                REPORT_ERROR(format(
-                    "Unknown variable or operand evaluating variable value: "
-                    "'%s'",
-                    sVarVal.c_str()));
-                break;
-            case ExpressionEvaluator::eval_evalerr:
-            default:
-                REPORT_ERROR(format(
-                    "Evaluation error evaluating variable value: '%s'",
-                    sVarVal.c_str()));
-                break;
-        }
-        if (!err_msgs)
-            throw std::runtime_error("");
-        else
-            return false;
+        // Just a trick to make the macros REPORT_ERROR below work.
+        const EvaluationContext& eval_context = *this;
+        REPORT_ERROR(e.what());
+        return false;
     }
 }
 
 /** Parse and classify "k1=v1,k2=v2,a,b,c"
  */
-void parseParams(const vector_string& tokens, TParsedParams& params, size_t idx)
+void parseParams(
+    const vector_string_t& tokens, TParsedParams& params, size_t idx)
 {
     const size_t N = tokens.size();
 
@@ -987,8 +962,8 @@ void parseParams(const vector_string& tokens, TParsedParams& params, size_t idx)
 
     for (; idx < N; ++idx)
     {
-        vector_string parts;
-        tokenize(tokens[idx], "=", parts);
+        vector_string_t parts;
+        mrpt::system::tokenize(tokens[idx], "=", parts);
         if (parts.size() == 2)
             params.key_vals[parts[0]] = parts[1];
         else
@@ -1003,15 +978,14 @@ void parseParams(const vector_string& tokens, TParsedParams& params, size_t idx)
  * false to handle the error.
  */
 bool replace_paramsets(
-    TParamSet&                                       inout_params,
-    const std::map<std::string, TParamSet, ci_less>& user_param_sets,
-    const TEvaluationContext&                        eval_context)
+    param_set_t&                              inout_params,
+    const std::map<std::string, param_set_t>& user_param_sets,
+    const EvaluationContext&                  eval_context)
 {
-    TParamSet::iterator it = inout_params.find("paramset");
+    param_set_t::iterator it = inout_params.find("paramset");
     if (it == inout_params.end()) return true;  // No paramset, go on.
 
-    std::map<std::string, TParamSet, ci_less>::const_iterator itPar =
-        user_param_sets.find(it->second);
+    auto itPar = user_param_sets.find(it->second);
     if (itPar == user_param_sets.end())
     {
         REPORT_ERROR("Usage of undefined PARAMSET id.");

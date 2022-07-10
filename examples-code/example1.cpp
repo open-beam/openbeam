@@ -44,14 +44,14 @@ int main_code()
     problem.setNodePose(4, TRotationTrans3D(16, -5, 0, 0, 0, 0));
 
     // Elements:
-    const size_t beam0 = problem.insertElement(new CElementBeam_2D_RR(0, 1));
-    const size_t beam1 = problem.insertElement(new CElementBeam_2D_RR(1, 2));
-    const size_t beam2 = problem.insertElement(new CElementBeam_2D_AA(0, 2));
-    const size_t beam3 = problem.insertElement(new CElementBeam_2D_RA(2, 3));
+    const size_t beam0 = problem.createElement<CElementBeam_2D_RR>(0, 1);
+    const size_t beam1 = problem.createElement<CElementBeam_2D_RR>(1, 2);
+    const size_t beam2 = problem.createElement<CElementBeam_2D_AA>(0, 2);
+    const size_t beam3 = problem.createElement<CElementBeam_2D_RA>(2, 3);
 
-    const size_t spring1 = problem.insertElement(new CElementSpring(3, 4));
+    const size_t spring1 = problem.createElement<CElementSpring>(3, 4);
 
-    TParamSet ps;
+    param_set_t ps;
     ps["K"]  = "1960000";
     ps["E"]  = "2.1e11";
     ps["A"]  = "2.120E-03";
@@ -65,35 +65,36 @@ int main_code()
     problem.updateAll();
 
     // DOF Restrictions:
-    problem.insertConstraint(problem.getDOFIndex(0, DX));
-    problem.insertConstraint(problem.getDOFIndex(0, DY));
-    problem.insertConstraint(problem.getDOFIndex(0, RZ));
+    problem.insertConstraint(problem.getDOFIndex(0, DoF_index::DX));
+    problem.insertConstraint(problem.getDOFIndex(0, DoF_index::DY));
+    problem.insertConstraint(problem.getDOFIndex(0, DoF_index::RZ));
 
-    problem.insertConstraint(problem.getDOFIndex(3, DY));
+    problem.insertConstraint(problem.getDOFIndex(3, DoF_index::DY));
 
-    problem.insertConstraint(problem.getDOFIndex(4, DX));
+    problem.insertConstraint(problem.getDOFIndex(4, DoF_index::DX));
 
     // External loads:
-    problem.addLoadAtDOF(problem.getDOFIndex(3, DX), -2 * 9810);
+    problem.addLoadAtDOF(problem.getDOFIndex(3, DoF_index::DX), -2 * 9810);
 
-    problem.addLoadAtBeam(beam0, new CLoadConstTemperature(0));
-    problem.addLoadAtBeam(beam1, new CLoadConstTemperature(0));
-    problem.addLoadAtBeam(beam3, new CLoadConstTemperature(0));
+    problem.createLoadAtBeam<CLoadConstTemperature>(beam0, 0);
+    problem.createLoadAtBeam<CLoadConstTemperature>(beam1, 0);
+    problem.createLoadAtBeam<CLoadConstTemperature>(beam3, 0);
 
-    problem.addLoadAtBeam(
-        beam0, new CLoadDistributedUniform(9810 * 0, 0, -1, 0));
-    problem.addLoadAtBeam(
-        beam1, new CLoadDistributedUniform(9810 * 0, 0, -1, 0));
-    problem.addLoadAtBeam(
-        beam3, new CLoadDistributedUniform(9810 * 0, 0, -1, 0));
+    problem.createLoadAtBeam<CLoadDistributedUniform>(
+        beam0, 9810 * 0, 0, -1, 0);
+    problem.createLoadAtBeam<CLoadDistributedUniform>(
+        beam1, 9810 * 0, 0, -1, 0);
+    problem.createLoadAtBeam<CLoadDistributedUniform>(
+        beam3, 9810 * 0, 0, -1, 0);
 
     // show all element global matrices:
     if (0)
     {
         for (size_t i = 0; i < problem.getNumberOfElements(); i++)
         {
-            const CElement* e = problem.getElement(i);
-            openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t mats;
+            const auto e = problem.getElement(i);
+
+            std::vector<TStiffnessSubmatrix> mats;
             e->getGlobalStiffnessMatrices(mats);
 
             cout << "ELEMENT " << i
@@ -153,51 +154,51 @@ int main_code()
 #endif
 
     {
-        TBuildProblemInfo info;
+        BuildProblemInfo info;
 
         problem.assembleProblem(info);
         // cout << "Kbb:\n" << TDynMatrix(info.K_bb) << endl;
-        cout << "Kff:\n" << TDynMatrix(info.K_ff) << endl;
+        cout << "Kff:\n" << DynMatrix(info.K_ff) << endl;
         // cout << "Kbf:\n" << TDynMatrix(info.K_bf) << endl;
         // cout << "Constrains (U_b):\n" << info.U_b << endl;
 
         cout << "Loads (F_f):\n" << info.F_f << endl;
 
-        CStructureProblem::TStaticSolverOptions opts;
+        StaticSolverOptions opts;
         // opts.algorithm = ssLLT;
         // opts.nonLinearIterative = true;
 
-        TStaticSolveProblemInfo sInfo;
+        StaticSolveProblemInfo sInfo;
         problem.solveStatic(sInfo, opts);
 
-        const std::vector<TDoF>& dofs = problem.getProblemDoFs();
+        const std::vector<NodeDoF>& dofs = problem.getProblemDoFs();
 
         cout << "\nRESULTS:\n------------------------\n";
         cout << "Displacements (U_f):\n";
         size_t nF = sInfo.build_info.free_dof_indices.size();
         for (size_t i = 0; i < nF; i++)
         {
-            const TDoF& dof = dofs[sInfo.build_info.free_dof_indices[i]];
+            const NodeDoF& dof = dofs[sInfo.build_info.free_dof_indices[i]];
 
-            cout << "U" << dof.node_id + 1;
+            cout << "U" << dof.nodeId + 1;
             switch (dof.dof)
             {
-                case 0:
+                case DoF_index::DX:
                     cout << "x ";
                     break;
-                case 1:
+                case DoF_index::DY:
                     cout << "y ";
                     break;
-                case 2:
+                case DoF_index::DZ:
                     cout << "z ";
                     break;
-                case 3:
+                case DoF_index::RX:
                     cout << "Rx";
                     break;
-                case 4:
+                case DoF_index::RY:
                     cout << "Ry";
                     break;
-                case 5:
+                case DoF_index::RZ:
                     cout << "Rz";
                     break;
             };

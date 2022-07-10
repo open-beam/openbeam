@@ -22,8 +22,11 @@
 
 #pragma once
 
-#include "TDrawStructureOptions.h"
-#include "types.h"
+#include <openbeam/DrawStructureOptions.h>
+#include <openbeam/types.h>
+
+#include <memory>
+
 #if OPENBEAM_HAS_QT5Svg
 #include <QtSvg>
 #endif
@@ -31,26 +34,38 @@
 namespace openbeam
 {
 class CFiniteElementProblem;
-struct TMeshParams;
-struct TMeshOutputInfo;
+struct MeshParams;
+struct MeshOutputInfo;
 class CStructureProblem;
 
 struct TStiffnessSubmatrix
 {
-    size_t    edge_in, edge_out;
-    TMatrix66 matrix;
-
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    size_t   edge_in, edge_out;
+    Matrix66 matrix;
 };
 
-typedef array<bool, 6>
-    TUsedDoFs;  //!< True/false for each DoF: x y z yaw pitch roll
+/// True/false for each DoF: x y z yaw pitch roll
+using used_DoFs_t = std::array<bool, 6>;
 
 /** Virtual base for any finite element.
  */
 class CElement
 {
    public:
+    using Ptr      = std::shared_ptr<CElement>;
+    using ConstPtr = std::shared_ptr<const CElement>;
+
+    /** Class factory from element name, or nullptr for an unknown element:
+     *  Element names:
+     *		- "BEAM2D_AA": CElementBeam_2D_AA
+     *		- "BEAM2D_AR": CElementBeam_2D_AR
+     *		- "BEAM2D_RA": CElementBeam_2D_RA
+     *		- "BEAM2D_RR": CElementBeam_2D_RR
+     *		- "SPRING_1D": CElementSpring
+     *		- "SPRING_TORSION": CElementTorsionSpring
+     */
+    static Ptr createElementByName(const std::string& sName);
+
     /** The list of connected nodes at each "port" or "face"
      * It's set to the correct size at constructions automatically.
      */
@@ -67,23 +82,21 @@ class CElement
      * is the corresponding transpose).
      */
     virtual void getLocalStiffnessMatrices(
-        openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t& outSubMats)
-        const = 0;
+        std::vector<TStiffnessSubmatrix>& outSubMats) const = 0;
 
     /** Must return which DoFs are used in the returned Stiffness matrices */
-    virtual void getLocalDoFs(std::vector<TUsedDoFs>& dofs) const = 0;
+    virtual void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const = 0;
 
     /** Return the local DoFs transformed with the current element pose in \a
      * m_global_orientation */
-    void getGlobalDoFs(std::vector<TUsedDoFs>& dofs) const;
+    void getGlobalDoFs(std::vector<used_DoFs_t>& dofs) const;
 
     /** This method first calls getLocalStiffnessMatrices then rotates each
      * matrix according to the current element orientation Can be redefined in
      * derived classes for efficiency
      */
     virtual void getGlobalStiffnessMatrices(
-        openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t& outSubMats)
-        const;
+        std::vector<TStiffnessSubmatrix>& outSubMats) const;
 
     inline void setGlobalOrientation(const TRotation3D& new_orientation)
     {
@@ -115,12 +128,12 @@ class CElement
      * their meaning.
      */
     virtual void loadParamsFromSet(
-        const TParamSet& params, const TEvaluationContext& eval) = 0;
+        const param_set_t& params, const EvaluationContext& eval) = 0;
 
     /** \overload */
-    void loadParamsFromSet(const TParamSet& params)
+    void loadParamsFromSet(const param_set_t& params)
     {
-        TEvaluationContext def;
+        EvaluationContext def;
         loadParamsFromSet(params, def);
     }
 
@@ -131,33 +144,20 @@ class CElement
      * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
      * options */
     virtual void drawSVG(
-        void* _cairo_context, const TDrawStructureOptions& options,
-        const TRenderInitData&         ri,
-        const TDrawElementExtraParams& draw_el_params,
-        const TMeshOutputInfo*         meshing_info) const = 0;
+        void* _cairo_context, const DrawStructureOptions& options,
+        const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo* meshing_info) const = 0;
 #if OPENBEAM_HAS_QT5Svg
     virtual void drawQtSVG(
-        QSvgGenerator& svg, const TDrawStructureOptions& options,
-        const TRenderInitData&         ri,
-        const TDrawElementExtraParams& draw_el_params,
-        const TMeshOutputInfo*         meshing_info) const = 0;
+        QSvgGenerator& svg, const DrawStructureOptions& options,
+        const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo* meshing_info) const = 0;
 #endif
-
-    /** Class factory from element name, or nullptr for an unknown element:
-     *  Element names:
-     *		- "BEAM2D_AA": CElementBeam_2D_AA
-     *		- "BEAM2D_AR": CElementBeam_2D_AR
-     *		- "BEAM2D_RA": CElementBeam_2D_RA
-     *		- "BEAM2D_RR": CElementBeam_2D_RR
-     *		- "SPRING_1D": CElementSpring
-     *		- "SPRING_TORSION": CElementTorsionSpring
-     */
-    static CElement* createElementByName(const std::string& sName);
 
     /** Mesh this element into a set of (possibly) smaller ones */
     virtual void do_mesh(
         const size_t my_idx, CStructureProblem& out_fem,
-        TMeshOutputInfo& out_info, const TMeshParams& params) = 0;
+        MeshOutputInfo& out_info, const MeshParams& params) = 0;
 
    protected:
     CElement(unsigned char nEdges);
@@ -169,11 +169,10 @@ class CElement
     const unsigned char    m_nEdges;
     CFiniteElementProblem* m_parent;
 
-    num_t m_design_rotation_around_linear_axis;  //!< For linear elements, the
-                                                 //!< rotation around +X(local)
-                                                 //!< when
+    /// For linear elements, the rotation around +X(local)
+    num_t m_design_rotation_around_linear_axis;
 
-    TRotation3D
-        m_global_orientation;  //!< Orientation of the element wrt global coords
+    /// Orientation of the element wrt global coords
+    TRotation3D m_global_orientation;
 };
 }  // namespace openbeam

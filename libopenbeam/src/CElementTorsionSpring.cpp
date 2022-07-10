@@ -41,8 +41,7 @@ CElementTorsionSpring::CElementTorsionSpring(
  * for the current element state.
  */
 void CElementTorsionSpring::getLocalStiffnessMatrices(
-    openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t& outSubMats)
-    const
+    std::vector<TStiffnessSubmatrix>& outSubMats) const
 {
     outSubMats.resize(3);
     TStiffnessSubmatrix& K11 = outSubMats[0];
@@ -59,7 +58,7 @@ void CElementTorsionSpring::getLocalStiffnessMatrices(
     // k11 --------------
     K11.edge_in      = 0;
     K11.edge_out     = 0;
-    K11.matrix       = TMatrix66::Zero();
+    K11.matrix       = Matrix66::Zero();
     K11.matrix(5, 5) = K;
 
     // k22 --------------
@@ -70,24 +69,24 @@ void CElementTorsionSpring::getLocalStiffnessMatrices(
     // k12 --------------
     K12.edge_in      = 0;
     K12.edge_out     = 1;
-    K12.matrix       = TMatrix66::Zero();
+    K12.matrix       = Matrix66::Zero();
     K12.matrix(5, 5) = -K;
 }
 
-void CElementTorsionSpring::getLocalDoFs(std::vector<TUsedDoFs>& dofs) const
+void CElementTorsionSpring::getLocalDoFs(std::vector<used_DoFs_t>& dofs) const
 {
     dofs.resize(getNumberEdges());
 
-    static const TUsedDoFs sDofs = {false, false, false, false, false, true};
+    static const used_DoFs_t sDofs = {false, false, false, false, false, true};
     dofs[0] = dofs[1] = sDofs;
 }
 
 /** Parse a set of parameters by (casi insensitive) name and set the element
  * values from them. */
 void CElementTorsionSpring::loadParamsFromSet(
-    const TParamSet& params, const TEvaluationContext& eval)
+    const param_set_t& params, const EvaluationContext& eval)
 {
-    for (TParamSet::const_iterator it = params.begin(); it != params.end();
+    for (param_set_t::const_iterator it = params.begin(); it != params.end();
          ++it)
     {
         if (strCmpI(it->first, "K"))
@@ -97,9 +96,9 @@ void CElementTorsionSpring::loadParamsFromSet(
 
 #if OPENBEAM_HAS_QT5Svg
 void CElementTorsionSpring::drawQtSVG(
-    QSvgGenerator& svg, const TDrawStructureOptions& options,
-    const TRenderInitData& ri, const TDrawElementExtraParams& draw_el_params,
-    const TMeshOutputInfo* meshing_info) const
+    QSvgGenerator& svg, const DrawStructureOptions& options,
+    const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo* meshing_info) const
 {
 }
 #endif
@@ -108,9 +107,9 @@ void CElementTorsionSpring::drawQtSVG(
  * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
  * options */
 void CElementTorsionSpring::drawSVG(
-    void* _cairo_context, const TDrawStructureOptions& options,
-    const TRenderInitData& ri, const TDrawElementExtraParams& draw_el_params,
-    const TMeshOutputInfo* meshing_info) const
+    void* _cairo_context, const DrawStructureOptions& options,
+    const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo* meshing_info) const
 {
 #if OPENBEAM_HAS_CAIRO
     OB_TODO("Implement SVG")
@@ -119,8 +118,8 @@ void CElementTorsionSpring::drawSVG(
 
 /** Mesh this element into a set of (possibly) smaller ones */
 void CElementTorsionSpring::do_mesh(
-    const size_t my_idx, CStructureProblem& out_fem, TMeshOutputInfo& out_info,
-    const TMeshParams& params)
+    const size_t my_idx, CStructureProblem& out_fem, MeshOutputInfo& out_info,
+    const MeshParams& params)
 {
     throw std::runtime_error("TO DO");
 }

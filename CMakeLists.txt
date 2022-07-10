@@ -106,16 +106,16 @@ endif()
 # pangommcairo
 
 # Save vars (for some reason they are overwriten by another pkg_check_modules() call):
-set(MY_CAIRO_VERSION  ${CAIRO_VERSION})
-set(MY_CAIRO_LIBRARIES  ${CAIRO_LIBRARIES})
-set(MY_CAIRO_INCLUDE_DIR  ${CAIRO_INCLUDE_DIR})
-set(MY_CAIRO_CFLAGS  ${CAIRO_CFLAGS})
+set(MY_CAIRO_VERSION  ${Cairo_VERSION})
+set(MY_CAIRO_LIBRARIES  ${Cairo_LIBRARIES})
+set(MY_CAIRO_INCLUDE_DIRS  ${Cairo_INCLUDE_DIRS})
+set(MY_CAIRO_CFLAGS  ${Cairo_CFLAGS})
 
 # "cairomm" svg lib
 if(NOT WIN32)
 	include(FindPkgConfig)
 	pkg_check_modules(CAIROMM cairomm-svg-1.0)
-endif(NOT WIN32)
+endif()
 
 
 if(CAIRO_FOUND AND CAIROMM_FOUND)
@@ -124,16 +124,16 @@ if(CAIRO_FOUND AND CAIROMM_FOUND)
 
         if($ENV{VERBOSE})
                 message(STATUS "   CAIRO_LIBRARIES = ${MY_CAIRO_LIBRARIES}")
-                message(STATUS "   CAIRO_INCLUDE_DIR = ${MY_CAIRO_INCLUDE_DIR}")
+                message(STATUS "   CAIRO_INCLUDE_DIR = ${MY_CAIRO_INCLUDE_DIRS}")
                 message(STATUS "   CAIRO_CFLAGS = ${MY_CAIRO_CFLAGS}")
 
                 message(STATUS "   CAIROMM_LIBRARIES = ${CAIROMM_LIBRARIES}")
-                message(STATUS "   CAIROMM_INCLUDE_DIR = ${CAIROMM_INCLUDE_DIR}")
+                message(STATUS "   CAIROMM_INCLUDE_DIRS = ${CAIROMM_INCLUDE_DIRS}")
                 message(STATUS "   CAIROMM_CFLAGS = ${CAIROMM_CFLAGS}")
-        endif($ENV{VERBOSE})
+        endif()
 
-        include_directories(${MY_CAIRO_INCLUDE_DIR})
-        include_directories(${CAIROMM_INCLUDE_DIR})
+        include_directories(${MY_CAIRO_INCLUDE_DIRS})
+        include_directories(${CAIROMM_INCLUDE_DIRS})
 
 	add_definitions(${MY_CAIRO_CFLAGS})
 	add_definitions(${CAIROMM_CFLAGS})

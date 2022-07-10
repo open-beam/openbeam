@@ -37,7 +37,7 @@ void openbeam::internal::computeOrientationFromTwoPoints(
         t2.coords[2] - t1.coords[2]);
     const num_t len = p12.norm();
 
-    TMatrix33 R;
+    Matrix33 R;
     if (len > 0)
     {
         // Normal axis:

@@ -32,14 +32,14 @@ using namespace std;
 using namespace openbeam;
 using namespace Eigen;
 
-TMeshParams::TMeshParams() : max_element_length(50e-3) {}
+MeshParams::MeshParams() : max_element_length(50e-3) {}
 
 void CStructureProblem::mesh(
-    CStructureProblem& out_fem, TMeshOutputInfo& out_info,
-    const TMeshParams& params)
+    CStructureProblem& out_fem, MeshOutputInfo& out_info,
+    const MeshParams& params)
 {
     out_fem.clear();
-    out_info = TMeshOutputInfo();
+    out_info = MeshOutputInfo();
 
     // ------------------------------
     // (1) NODES: Original ones
@@ -68,9 +68,10 @@ void CStructureProblem::mesh(
     // ------------------------------
     // Map key are indices in \a m_problem_DoFs.
     //	  *  Map values are displacement in that DoF wrt the current node pose.
-    //Units are SI (meters or radians). 	TListOfConstraints  m_DoF_constraints;
+    // Units are SI (meters or radians). 	TListOfConstraints
+    // m_DoF_constraints;
     this->updateListDoFs();
-    for (TListOfConstraints::const_iterator itC =
+    for (constraint_list_t::const_iterator itC =
              this->m_DoF_constraints.begin();
          itC != this->m_DoF_constraints.end(); ++itC)
     {
@@ -78,15 +79,15 @@ void CStructureProblem::mesh(
         const size_t dof_idx          = itC->first;
         const num_t  constraint_value = itC->second;
 
-        OBASSERT_DEBUG(dof_idx < m_problem_DoFs.size())
+        ASSERTDEB_(dof_idx < m_problem_DoFs.size())
 
-        const TDoF&  dof              = m_problem_DoFs[dof_idx];
-        const size_t original_node_id = dof.node_id;
+        const NodeDoF&  dof              = m_problem_DoFs[dof_idx];
+        const size_t original_node_id = dof.nodeId;
 
         // Insert into the new (meshed) FEM problem:
         const size_t globalIdxDOF = out_fem.getDOFIndex(
-            original_node_id, TDoFIndex(dof.dof) /* 0:dx,1:dy,... */);
-        OBASSERT(globalIdxDOF != string::npos)
+            original_node_id, DoF_index(dof.dof) /* 0:dx,1:dy,... */);
+        ASSERT_(globalIdxDOF != string::npos);
 
         out_fem.insertConstraint(globalIdxDOF, constraint_value);
     }
@@ -97,22 +98,22 @@ void CStructureProblem::mesh(
     // Since the original nodes are initially copied in the new FEM problem,
     // we can just copy the forces with the same node IDs:
     // out_fem.m_loads_at_each_dof = this->m_loads_at_each_dof;
-    for (TListOfLoads::const_iterator it = m_loads_at_each_dof.begin();
+    for (load_list_t::const_iterator it = m_loads_at_each_dof.begin();
          it != m_loads_at_each_dof.end(); ++it)
     {
         // Get the existing load:
         const size_t dof_idx    = it->first;
         const num_t  load_value = it->second;
 
-        OBASSERT_DEBUG(dof_idx < m_problem_DoFs.size())
+        ASSERTDEB_(dof_idx < m_problem_DoFs.size())
 
-        const TDoF&  dof              = m_problem_DoFs[dof_idx];
-        const size_t original_node_id = dof.node_id;
+        const NodeDoF&  dof              = m_problem_DoFs[dof_idx];
+        const size_t original_node_id = dof.nodeId;
 
         // Insert into the new (meshed) FEM problem:
         const size_t globalIdxDOF = out_fem.getDOFIndex(
-            original_node_id, TDoFIndex(dof.dof) /* 0:dx,1:dy,... */);
-        OBASSERT(globalIdxDOF != string::npos)
+            original_node_id, DoF_index(dof.dof) /* 0:dx,1:dy,... */);
+        ASSERT_(globalIdxDOF != string::npos);
 
         out_fem.setLoadAtDOF(globalIdxDOF, load_value);
     }
@@ -120,12 +121,10 @@ void CStructureProblem::mesh(
     // ------------------------------
     // (4) LOADS: at elements
     // ------------------------------
-    for (std::multimap<size_t, CLoadOnBeam*>::const_iterator itLoad =
-             m_loads_on_beams.begin();
-         itLoad != m_loads_on_beams.end(); ++itLoad)
+    for (const auto& barLoadPair : m_loads_on_beams)
     {
-        const size_t       org_bar_idx = itLoad->first;
-        const CLoadOnBeam* load        = itLoad->second;
+        const size_t org_bar_idx = barLoadPair.first;
+        const auto&  load        = barLoadPair.second;
 
         load->meshLoad(
             out_fem, out_info.element2elements[org_bar_idx], org_bar_idx,

@@ -22,35 +22,24 @@
 
 #pragma once
 
-#include "CElement.h"
-#include "CTimeLogger.h"
-#include "TDrawStructureOptions.h"
-#include "types.h"
+#include <mrpt/io/CTextFileLinesParser.h>
+#include <mrpt/system/CTimeLogger.h>
+#include <openbeam/CElement.h>
+#include <openbeam/DrawStructureOptions.h>
+#include <openbeam/types.h>
 
+#include <Eigen/Sparse>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 
-#define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
-#include <Eigen/Sparse>
-
 namespace openbeam
 {
-struct TRenderInitData;  // Fwd. decl. (defined in
+struct RenderInitData;  // Fwd. decl. (defined in
                          // CFiniteElementProblem::saveAsImage)
 
-struct TDoF
-{
-    inline TDoF(size_t _node_id, unsigned char _dof)
-        : node_id(_node_id), dof(_dof)
-    {
-    }
-
-    size_t        node_id;
-    unsigned char dof;  //!< In the range [0-5]
-};
-
 /** 0-based indices for DOFs */
-enum TDoFIndex
+enum class DoF_index : uint8_t
 {
     DX = 0,
     DY,
@@ -60,14 +49,28 @@ enum TDoFIndex
     RZ
 };
 
-enum TStaticSolverAlgorithm
+struct NodeDoF
 {
-    ssLLT = 0,
-    ssSVD
+    NodeDoF(size_t _node_id, DoF_index _dof) : nodeId(_node_id), dof(_dof) {}
+    NodeDoF(size_t _node_id, uint8_t _dof)
+        : nodeId(_node_id), dof(static_cast<DoF_index>(_dof))
+    {
+    }
+
+    size_t    nodeId;
+    DoF_index dof;  //!< In the range [0-5]
+
+    uint8_t dofAsInt() const { return static_cast<uint8_t>(dof); }
+};
+
+enum class StaticSolverAlgorithm : uint8_t
+{
+    LLT = 0,
+    SVD
 };
 
 /** Extra output information from \a assembleProblem() */
-struct TBuildProblemInfo
+struct BuildProblemInfo
 {
     struct TDoFType
     {
@@ -85,41 +88,42 @@ struct TBuildProblemInfo
     std::vector<size_t>   bounded_dof_indices;
     std::vector<TDoFType> dof_types;
 
-    Eigen::Matrix<num_t, Eigen::Dynamic, 1>
-        U_b;  //!< A vector of length = "bounded_dof_indices.size()" with all
-              //!< the constrains, each value for one DoF, in the order as they
-              //!< appear in \a bounded_dof_indices
-    Eigen::Matrix<num_t, Eigen::Dynamic, 1>
-        F_f;  //!< A vector of length = "free_dof_indices.size()" with the
-              //!< overall load at each free DOF, in the order as they appear in
-              //!< \a free_dof_indices
+    /// A vector of length = "bounded_dof_indices.size()" with all the
+    /// constrains, each value for one DoF, in the order as they appear in \a
+    /// bounded_dof_indices
+    Eigen::Matrix<num_t, Eigen::Dynamic, 1> U_b;
+
+    /// A vector of length = "free_dof_indices.size()" with the overall load at
+    /// each free DOF, in the order as they appear in \a free_dof_indices
+    Eigen::Matrix<num_t, Eigen::Dynamic, 1> F_f;
 };
 
 /** Output information from \a solveStatic() */
-struct TStaticSolveProblemInfo
+struct StaticSolveProblemInfo
 {
-    TBuildProblemInfo
-        build_info;  //!< Information from the assembly of the problem
-    Eigen::Matrix<num_t, Eigen::Dynamic, 1>
-        F_b;  //!< A vector of length = "build_info.bounded_dof_indices.size()"
-              //!< with all the reaction forces, DOFs in the same order than \a
-              //!< bounded_dof_indices
-    Eigen::Matrix<num_t, Eigen::Dynamic, 1>
-        U_f;  //!< A vector of length = "build_info.free_dof_indices.size()"
-              //!< with the displacement of free DOFs, in the same order than \a
-              //!< free_dof_indices
+    /// Information from the assembly of the problem
+    BuildProblemInfo build_info;
 
-    Eigen::Matrix<num_t, Eigen::Dynamic, 1>
-        F;  //!< The full F vector (bounded+free DOFs)
-    Eigen::Matrix<num_t, Eigen::Dynamic, 1>
-        U;  //!< The full U vector (bounded+free DOFs)
+    /// A vector of length = "build_info.bounded_dof_indices.size()" with all
+    /// the reaction forces, DOFs in the same order than \a bounded_dof_indices
+    Eigen::Matrix<num_t, Eigen::Dynamic, 1> F_b;
+
+    /// A vector of length = "build_info.free_dof_indices.size()" with the
+    /// displacement of free DOFs, in the same order than \a free_dof_indices
+    Eigen::Matrix<num_t, Eigen::Dynamic, 1> U_f;
+
+    /// The full F vector (bounded+free DOFs)
+    Eigen::Matrix<num_t, Eigen::Dynamic, 1> F;
+
+    /// The full U vector (bounded+free DOFs)
+    Eigen::Matrix<num_t, Eigen::Dynamic, 1> U;
 };
 
 /** Options and parameters for CStructureProblem::mesh()
  */
-struct TMeshParams
+struct MeshParams
 {
-    TMeshParams();
+    MeshParams();
 
     double max_element_length;  //!< In meters (m)
 };
@@ -127,26 +131,48 @@ struct TMeshParams
 /** Results from CStructureProblem::mesh() after meshing a structure into a FEM
  * with smaller elements.
  */
-struct TMeshOutputInfo
+struct MeshOutputInfo
 {
-    TMeshOutputInfo() : num_original_nodes(0) {}
+    MeshOutputInfo() = default;
 
-    size_t num_original_nodes;  //!< The first N nodes in the FEM correspond to
-                                //!< the original nodes in the structure before
-                                //!< meshing. This variable holds that "N".
-    std::deque<std::vector<size_t>>
-        element2nodes;  //!< List of all intermediary nodes (incl the original
-                        //!< ones) at which element [i] is connected.
-    std::deque<std::vector<size_t>>
-        element2elements;  //!< List of smaller element IDs resulting from
-                           //!< meshing the element [i]
+    /// The first N nodes in the FEM correspond to the original nodes in the
+    /// structure before meshing. This variable holds that "N".
+    size_t num_original_nodes = 0;
+
+    /// List of all intermediary nodes (incl the original ones) at which element
+    /// [i] is connected.
+    std::deque<std::vector<size_t>> element2nodes;
+
+    /// List of smaller element IDs resulting from meshing the element [i]
+    std::deque<std::vector<size_t>> element2elements;
 };
 
-struct TImageSaveOutputInfo
+struct ImageSaveOutputInfo
 {
-    unsigned int img_width, img_height;
+    ImageSaveOutputInfo() = default;
 
-    TImageSaveOutputInfo() : img_width(0), img_height(0) {}
+    unsigned int img_width = 0, img_height = 0;
+};
+
+/** The options of the static solver \a solveStatic() */
+struct StaticSolverOptions
+{
+    StaticSolverOptions() = default;
+
+    StaticSolverAlgorithm algorithm{StaticSolverAlgorithm::LLT};
+    bool                  nonLinearIterative = false;
+};
+
+struct StressInfo
+{
+    StressInfo() {}
+
+    /** The i'th entry is another vector with the stress of all the faces of
+     * the i'th element. Typically for 1D elements (beams, springs) each
+     * entry will only contain two stress values, one for each end of the
+     * element.
+     */
+    std::vector<ElementStress> element_stress;
 };
 
 /** A complete problem of finite elements.
@@ -162,10 +188,10 @@ struct TImageSaveOutputInfo
 class CFiniteElementProblem
 {
    public:
-    typedef std::map<size_t, num_t> TListOfConstraints;
-    typedef std::map<size_t, num_t> TListOfLoads;
+    using constraint_list_t = std::map<size_t, num_t>;
+    using load_list_t       = std::map<size_t, num_t>;
 
-    CFiniteElementProblem();
+    CFiniteElementProblem() = default;
     virtual ~CFiniteElementProblem();
 
     // ----------------------------------------------------------------------------
@@ -185,8 +211,8 @@ class CFiniteElementProblem
      *  \return true on Success
      */
     bool loadFromStream(
-        std::istream& is, vector_string* errMsg = nullptr,
-        vector_string* warnMsg = nullptr);
+        std::istream& is, vector_string_t* errMsg = nullptr,
+        vector_string_t* warnMsg = nullptr);
 
     /** Discard the current problem and loads it by parsing the given text file.
      *  The expected format of the file is described in XXXX.
@@ -198,51 +224,59 @@ class CFiniteElementProblem
      *  \return true on Success
      */
     bool loadFromFile(
-        const std::string& file, vector_string* errMsg = nullptr,
-        vector_string* warnMsg = nullptr);
+        const std::string& file, vector_string_t* errMsg = nullptr,
+        vector_string_t* warnMsg = nullptr);
 
     /** Saves a representation of the problem to a SVG file.
      * \param options Many parameters and switches to control what will be drawn
      * and hiden. \return true on success
      */
     bool saveAsImageSVG(
-        const std::string& file, const TDrawStructureOptions& options,
-        const TStaticSolveProblemInfo* solver_info  = nullptr,
-        const TMeshOutputInfo*         meshing_info = nullptr,
-        TImageSaveOutputInfo*          out_img_info = nullptr) const;
+        const std::string& file, const DrawStructureOptions& options,
+        const StaticSolveProblemInfo* solver_info  = nullptr,
+        const MeshOutputInfo*         meshing_info = nullptr,
+        ImageSaveOutputInfo*          out_img_info = nullptr) const;
     bool saveAsImagePNG(
-        const std::string& file, const TDrawStructureOptions& options,
-        const TStaticSolveProblemInfo* solver_info  = nullptr,
-        const TMeshOutputInfo*         meshing_info = nullptr,
-        TImageSaveOutputInfo*          out_img_info = nullptr) const;
+        const std::string& file, const DrawStructureOptions& options,
+        const StaticSolveProblemInfo* solver_info  = nullptr,
+        const MeshOutputInfo*         meshing_info = nullptr,
+        ImageSaveOutputInfo*          out_img_info = nullptr) const;
     bool saveAsImage(
         const std::string& file, const bool is_svg,
-        const TDrawStructureOptions&   options,
-        const TStaticSolveProblemInfo* solver_info  = nullptr,
-        const TMeshOutputInfo*         meshing_info = nullptr,
-        TImageSaveOutputInfo*          out_img_info = nullptr) const;
+        const DrawStructureOptions&  options,
+        const StaticSolveProblemInfo* solver_info  = nullptr,
+        const MeshOutputInfo*         meshing_info = nullptr,
+        ImageSaveOutputInfo*          out_img_info = nullptr) const;
 
     bool renderToCairoContext(
-        void* _cairo_context, const TRenderInitData& ri,
-        const TDrawStructureOptions&   options,
-        const TStaticSolveProblemInfo* solver_info,
-        const TMeshOutputInfo*         meshing_info) const;
+        void* _cairo_context, const RenderInitData& ri,
+        const DrawStructureOptions&  options,
+        const StaticSolveProblemInfo* solver_info,
+        const MeshOutputInfo*         meshing_info) const;
 
     /**    @} */
     // ----------------------------------------------------------------------------
     /** @name Problem elements
         @{ */
 
-    /** Insert a new element in the problem (this objects owns the memory, will
-     * delete the element object when not needed anymore). \return The element
-     * index */
-    size_t insertElement(CElement* el);
+    /** Insert a new element in the problem
+     *  \return The element index */
+    size_t insertElement(CElement::Ptr el);
+
+    /** Insert a new element in the problem
+     *  \return The element index */
+    template <typename ElementClass, typename... _Args>
+    size_t createElement(_Args&&... __args)
+    {
+        return insertElement(
+            std::make_shared<ElementClass>(std::forward<_Args>(__args)...));
+    }
 
     /** Return a constant pointer to the i'th element in the problem. */
-    const CElement* getElement(size_t i) const;
+    CElement::ConstPtr getElement(size_t i) const;
 
     /** Return a pointer to the i'th element in the problem. */
-    CElement* getElement(size_t i);
+    const CElement::Ptr& getElement(size_t i);
 
     /** Get the number of elements in the problem */
     size_t getNumberOfElements() const { return m_elements.size(); }
@@ -257,7 +291,7 @@ class CFiniteElementProblem
      */
     void insertConstraint(const size_t dof_index, const num_t value = 0);
 
-    const TListOfConstraints& getAllConstraints() const
+    const constraint_list_t& getAllConstraints() const
     {
         return m_DoF_constraints;
     }
@@ -270,7 +304,7 @@ class CFiniteElementProblem
      * existing values if any.  \sa setLoadAtDOF */
     void addLoadAtDOF(const size_t dof_index, const num_t f);
 
-    const TListOfLoads& getOverallLoadsOnDOFs() const
+    const load_list_t& getOverallLoadsOnDOFs() const
     {
         return m_loads_at_each_dof;
     }
@@ -301,35 +335,35 @@ class CFiniteElementProblem
      * coordinates) serves as a local frame for constraints. */
     TRotationTrans3D& getNodePose(size_t i)
     {
-        OBASSERT_DEBUG(i < m_node_poses.size());
+        ASSERTDEB_(i < m_node_poses.size());
         return m_node_poses[i];
     }
     /** The 3D location of a node; its orientation (if different than global
      * coordinates) serves as a local frame for constraints. */
     const TRotationTrans3D& getNodePose(size_t i) const
     {
-        OBASSERT_DEBUG(i < m_node_poses.size());
+        ASSERTDEB_(i < m_node_poses.size());
         return m_node_poses[i];
     }
 
     /** Returns the 3D location of the final deformed state after solving the
      * problem */
     void getNodeDeformedPosition(
-        size_t i, TVector3& out_final_point,
-        const TStaticSolveProblemInfo& solver_info,
-        const num_t                    exageration_factor = 1) const;
+        size_t i, Vector3& out_final_point,
+        const StaticSolveProblemInfo& solver_info,
+        const num_t                   exageration_factor = 1) const;
 
     /** Returns the maximum absolute value translation in any X,Y,Z directions
      * for a static problem solution */
     num_t getMaximumDeformedDisplacement(
-        const TStaticSolveProblemInfo& solver_info) const;
+        const StaticSolveProblemInfo& solver_info) const;
 
     /** Computes the bounding box of all existing nodes */
     void getBoundingBox(
         num_t& min_x, num_t& max_x, num_t& min_y, num_t& max_y,
-        bool                           deformed              = false,
-        const TStaticSolveProblemInfo* solver_info           = nullptr,
-        num_t                          deformed_scale_factor = 1.0) const;
+        bool                          deformed              = false,
+        const StaticSolveProblemInfo* solver_info           = nullptr,
+        num_t                         deformed_scale_factor = 1.0) const;
 
     /** @} */
     // ----------------------------------------------------------------------------
@@ -339,7 +373,7 @@ class CFiniteElementProblem
 
     /** Return the list of all DoF in the problem . \sa
      * getProblemDoFsDescription */
-    const std::vector<TDoF>& getProblemDoFs()
+    const std::vector<NodeDoF>& getProblemDoFs()
     {
         updateListDoFs();
         return m_problem_DoFs;
@@ -360,7 +394,7 @@ class CFiniteElementProblem
      * buildAll(). Returns string::npos if the DOF is NOT considered in the
      * problem.
      */
-    size_t getDOFIndex(const size_t nNode, const TDoFIndex n) const;
+    size_t getDOFIndex(const size_t nNode, const DoF_index n) const;
 
     /** @} */
     // ----------------------------------------------------------------------------
@@ -374,27 +408,6 @@ class CFiniteElementProblem
      */
     virtual void updateAll();
 
-    /** The options of the static solver \a solveStatic() */
-    struct TStaticSolverOptions
-    {
-        TStaticSolverOptions() : algorithm(ssLLT), nonLinearIterative(false) {}
-
-        TStaticSolverAlgorithm algorithm;
-        bool                   nonLinearIterative;
-    };
-
-    struct TStressInfo
-    {
-        TStressInfo() {}
-
-        /** The i'th entry is another vector with the stress of all the faces of
-         * the i'th element. Typically for 1D elements (beams, springs) each
-         * entry will only contain two stress values, one for each end of the
-         * element.
-         */
-        std::vector<TElementStress> element_stress;
-    };
-
     /** For any partitioning of the DoFs into fixed (restricted, boundary
      * conditions) and the rest (the free variables \a free_dof_indices), where
      * DoF indices refer to \a m_problem_DoFs, computes three sparse matrices:
@@ -403,7 +416,7 @@ class CFiniteElementProblem
      * constrained DoF's are automatically determined from \a m_DoF_constraints
      * \sa solveStatic
      */
-    void assembleProblem(TBuildProblemInfo& out_info);
+    void assembleProblem(BuildProblemInfo& out_info);
 
     /** Solve the static FE problem, returning the resulting displacements and
      * reaction forces.
@@ -413,8 +426,8 @@ class CFiniteElementProblem
      * \sa assembleProblem, postProcCalcStress
      */
     void solveStatic(
-        TStaticSolveProblemInfo&    out_info,
-        const TStaticSolverOptions& opts = TStaticSolverOptions());
+        StaticSolveProblemInfo&    out_info,
+        const StaticSolverOptions& opts = StaticSolverOptions());
 
     /** After solving the problem with \a solveStatic, you can optionally call
      * this post-processing method to evaluate the stress of all the elements.
@@ -422,7 +435,7 @@ class CFiniteElementProblem
      * \sa solveStatic
      */
     void postProcCalcStress(
-        TStressInfo& out_stress, const TStaticSolveProblemInfo& solver_info);
+        StressInfo& out_stress, const StaticSolveProblemInfo& solver_info);
 
     std::string getNodeLabel(
         const size_t idx) const;  //!< "N%i" or custom label
@@ -433,33 +446,33 @@ class CFiniteElementProblem
     /** @name Main data
         @{ */
 
-    openbeam::aligned_containers<TRotationTrans3D>::deque_t m_node_poses;
-    std::vector<std::string>
-                          m_node_labels;  //!< empty: default, custom label otherwise
-    std::deque<CElement*> m_elements;
+    std::deque<TRotationTrans3D> m_node_poses;
+    /// empty: default, custom label otherwise
+    std::vector<std::string>  m_node_labels;
+    std::deque<CElement::Ptr> m_elements;
 
     /** List of constrainsts for each "fixed/constrained" DoF.
      *  Map key are indices in \a m_problem_DoFs.
      *  Map values are displacement in that DoF wrt the current node pose. Units
      * are SI (meters or radians). \sa getProblemDoFs
      */
-    TListOfConstraints m_DoF_constraints;
+    constraint_list_t m_DoF_constraints;
 
     /**  The vector of overall external loads (F_L) - Map keys are indices of \a
      * m_problem_DoFs  */
-    TListOfLoads m_loads_at_each_dof;
+    load_list_t m_loads_at_each_dof;
 
     /**  The vector of overall loads (F_L') on each DoF due to distributed
      * forces - Map keys are indices of \a m_problem_DoFs Updated by \a
      * assembleProblem() via \a internalComputeStressAndEquivalentLoads()
      */
-    TListOfLoads m_loads_at_each_dof_equivs;
+    load_list_t m_loads_at_each_dof_equivs;
 
     /**  The extra stress to add up to each element as computed by \a
      * internalComputeStressAndEquivalentLoads map: element index -> vector for
      * each "port" -> vector of 6 stresses values.
      */
-    std::map<size_t, TElementStress> m_extra_stress_for_each_element;
+    std::map<size_t, ElementStress> m_extra_stress_for_each_element;
 
     /** @} */
 
@@ -470,7 +483,8 @@ class CFiniteElementProblem
 
     /** Internal common implementation of loadFrom*() methods() */
     bool internal_loadFromFile(
-        void* f, vector_string* err_msgs, vector_string* warn_msgs);
+        mrpt::io::CTextFileLinesParser& f, vector_string_t* err_msgs,
+        vector_string_t* warn_msgs);
 
     /** From the list of elements and their properties and connections, build
      * the list of DoFs relevant to the problem.
@@ -486,21 +500,18 @@ class CFiniteElementProblem
     /** Used in \a m_problem_DoFs_inverse_list  */
     struct TProblemDOFIndicesForNode
     {
-        array<int, 6>
-            dof_index;  //!< Index of that DOF into \a m_problem_DoFs, or -1 if
-                        //!< DOF not considered in the problem.
-        TProblemDOFIndicesForNode()
-        {
-            static array<int, 6> def = {-1, -1, -1, -1, -1, -1};
-            dof_index                = def;
-        }
+        TProblemDOFIndicesForNode() = default;
+
+        /// Index of that DOF into \a m_problem_DoFs, or -1 if DOF not
+        /// considered in the problem.
+        std::array<int, 6> dof_index = {-1, -1, -1, -1, -1, -1};
     };
 
     /** The list of DoFs variables of my problem.
      *  Built by \a updateListDoFs()
      *  \sa m_problem_DoFs_inverse_list, m_problem_DoF_type
      */
-    std::vector<TDoF> m_problem_DoFs;
+    std::vector<NodeDoF> m_problem_DoFs;
 
     /** Built together with m_problem_DoFs by \a updateListDoFs , holds the
      * mapping from node index -> 6 numbers, with the index of that global DOF
@@ -511,7 +522,7 @@ class CFiniteElementProblem
     struct TNodeElementConnection
     {
         unsigned char element_face_id;  //!< To which face in that element
-        TUsedDoFs     dofs;  //!< DoFs used by that face in that element
+        used_DoFs_t   dofs;  //!< DoFs used by that face in that element
     };
 
     typedef std::map<size_t, TNodeElementConnection>

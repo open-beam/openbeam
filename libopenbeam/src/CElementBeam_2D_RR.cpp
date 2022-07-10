@@ -39,8 +39,7 @@ CElementBeam_2D_RR::CElementBeam_2D_RR(
  * for the current element state.
  */
 void CElementBeam_2D_RR::getLocalStiffnessMatrices(
-    openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t& outSubMats)
-    const
+    std::vector<TStiffnessSubmatrix>& outSubMats) const
 {
     outSubMats.resize(3);
     TStiffnessSubmatrix& K11 = outSubMats[0];
@@ -49,8 +48,8 @@ void CElementBeam_2D_RR::getLocalStiffnessMatrices(
 
     // Compute my current length by getting the poses of the two nodes at each
     // end of the beam:
-    OBASSERT_DEBUG(conected_nodes_ids.size() == 2)
-    OBASSERT_DEBUG(m_parent != nullptr)
+    ASSERTDEB_(conected_nodes_ids.size() == 2)
+    ASSERTDEB_(m_parent != nullptr)
 
     const TRotationTrans3D& node0 =
         m_parent->getNodePose(conected_nodes_ids[0]);
@@ -63,7 +62,7 @@ void CElementBeam_2D_RR::getLocalStiffnessMatrices(
     const num_t L  = std::sqrt(L2);
     const num_t L3 = L2 * L;
 
-    OBASSERT(L > 0)
+    ASSERT_(L > 0);
     if (E == UNINITIALIZED_VALUE)
         throw std::runtime_error(format(
             "CElementBeam_2D_RR: Uninitialized parameter E (Element in %u->%u)",
@@ -103,7 +102,7 @@ void CElementBeam_2D_RR::getLocalStiffnessMatrices(
     K12.edge_out = 1;
 
     // k11 --------------
-    K11.matrix       = TMatrix66::Zero();
+    K11.matrix       = Matrix66::Zero();
     K11.matrix(0, 0) = E * A / L;
     K11.matrix(1, 1) = 12 * E * Iz / L3;
     K11.matrix(1, 5) = K11.matrix(5, 1) = 6 * E * Iz / L2;
@@ -111,7 +110,7 @@ void CElementBeam_2D_RR::getLocalStiffnessMatrices(
     K11.matrix(5, 5)                    = 4 * E * Iz / L;
 
     // k22 --------------
-    K22.matrix       = TMatrix66::Zero();
+    K22.matrix       = Matrix66::Zero();
     K22.matrix(0, 0) = K11.matrix(0, 0);
     K22.matrix(1, 1) = K11.matrix(1, 1);
     K22.matrix(1, 5) = K22.matrix(5, 1) = -K11.matrix(5, 1);
@@ -119,7 +118,7 @@ void CElementBeam_2D_RR::getLocalStiffnessMatrices(
     K22.matrix(5, 5)                    = K11.matrix(5, 5);
 
     // k12 --------------
-    K12.matrix       = TMatrix66::Zero();
+    K12.matrix       = Matrix66::Zero();
     K12.matrix(0, 0) = -K11.matrix(0, 0);  // E*A/L;
     K12.matrix(1, 1) = -K11.matrix(1, 1);
     K12.matrix(1, 5) = K11.matrix(1, 5);
@@ -128,12 +127,12 @@ void CElementBeam_2D_RR::getLocalStiffnessMatrices(
     K12.matrix(5, 5) = 0.5 * K11.matrix(5, 5);
 }
 
-void CElementBeam_2D_RR::getLocalDoFs(std::vector<TUsedDoFs>& dofs) const
+void CElementBeam_2D_RR::getLocalDoFs(std::vector<used_DoFs_t>& dofs) const
 {
     dofs.resize(size_t(getNumberEdges()));
 
     OB_TODO("Create a separate element type for torsional shafts!")
-    static const TUsedDoFs sDofsR = {true, true, false, false, false, true};
+    static const used_DoFs_t sDofsR = {true, true, false, false, false, true};
     // static const TUsedDoFs sDofsR = {true, true, false, true, false, true};
 
     dofs[0] = sDofsR;

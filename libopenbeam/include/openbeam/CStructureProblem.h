@@ -45,7 +45,17 @@ class CStructureProblem : public CFiniteElementProblem
      * and not deleted by the user (it'll be done automatically by this class).
      * \sa CFiniteElementProblem, CFiniteElementProblem::addLoadAtDOF
      */
-    void addLoadAtBeam(const size_t element_index, CLoadOnBeam* load);
+    void addLoadAtBeam(const size_t element_index, CLoadOnBeam::Ptr load);
+
+    /** Insert a new element in the problem
+     *  \return The element index */
+    template <typename LoadClass, typename... _Args>
+    void createLoadAtBeam(const size_t element_index, _Args&&... __args)
+    {
+        addLoadAtBeam(
+            element_index,
+            std::make_shared<LoadClass>(std::forward<_Args>(__args)...));
+    }
 
     // ----------------------------------------------------------------------------
     /** @name Structure solving
@@ -57,8 +67,8 @@ class CStructureProblem : public CFiniteElementProblem
     /** Mesh the structure into a set of small elements.
      */
     void mesh(
-        CStructureProblem& out_fem, TMeshOutputInfo& out_info,
-        const TMeshParams& params);
+        CStructureProblem& out_fem, MeshOutputInfo& out_info,
+        const MeshParams& params);
 
     /** @} */
     // ----------------------------------------------------------------------------
@@ -66,7 +76,7 @@ class CStructureProblem : public CFiniteElementProblem
    private:
     /** @name Structure data
         @{ */
-    std::multimap<size_t, CLoadOnBeam*> m_loads_on_beams;
+    std::multimap<size_t, CLoadOnBeam::Ptr> m_loads_on_beams;
 
     /** @} */
 

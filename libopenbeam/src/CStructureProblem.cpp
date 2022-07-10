@@ -35,8 +35,7 @@ CStructureProblem::~CStructureProblem() { clear(); }
 void CStructureProblem::clear()
 {
     CFiniteElementProblem::clear();  // Call my base class clear()
-
-    free_assoc_container(m_loads_on_beams);
+    m_loads_on_beams.clear();
 }
 
 // Update all internal lists after changing the structure.
@@ -49,10 +48,9 @@ void CStructureProblem::updateAll()
 }
 
 void CStructureProblem::addLoadAtBeam(
-    const size_t element_index, CLoadOnBeam* load)
+    const size_t element_index, CLoadOnBeam::Ptr load)
 {
-    m_loads_on_beams.insert(
-        std::multimap<size_t, CLoadOnBeam*>::value_type(element_index, load));
+    m_loads_on_beams.insert({element_index, load});
 }
 
 /** Process loads on elements and populate the \a m_loads_at_each_dof_equivs and
@@ -63,21 +61,19 @@ void CStructureProblem::internalComputeStressAndEquivalentLoads()
     m_loads_at_each_dof_equivs.clear();  // Clear previous results
     m_extra_stress_for_each_element.clear();
 
-    for (std::multimap<size_t, CLoadOnBeam*>::const_iterator it =
-             m_loads_on_beams.begin();
-         it != m_loads_on_beams.end(); ++it)
+    for (const auto& elIdxLoadPair : m_loads_on_beams)
     {
-        CElement*    el = this->getElement(it->first);
-        CLoadOnBeam* l  = it->second;
+        auto             el = this->getElement(elIdxLoadPair.first);
+        CLoadOnBeam::Ptr l  = elIdxLoadPair.second;
 
-        TElementStress      stress;
+        ElementStress       stress;
         std::vector<array6> loads;
 
-        l->computeStressAndEquivalentLoads(el, stress, loads);
+        l->computeStressAndEquivalentLoads(el.get(), stress, loads);
 
         // Remember: std::map<size_t,num_t> m_loads_at_each_dof_equivs
         //              map: DoF index in the problem -> load value
-        OBASSERT(el->conected_nodes_ids.size() == loads.size())
+        ASSERT_(el->conected_nodes_ids.size() == loads.size());
 
         // For each element edge (two in a typical beam):
         for (size_t p = 0; p < loads.size(); p++)
@@ -93,7 +89,7 @@ void CStructureProblem::internalComputeStressAndEquivalentLoads()
                 {
                     // Just in case: a load should NOT exists in a DOF which
                     // hasn't been included in the problem:
-                    OBASSERT_DEBUG(std::abs(loads[p][d]) < 1e-9)
+                    ASSERTDEB_(std::abs(loads[p][d]) < 1e-9)
                 }
             }
         }
@@ -102,7 +98,7 @@ void CStructureProblem::internalComputeStressAndEquivalentLoads()
         // m_extra_stress_for_each_element;
         //              map: element index -> vector for each "port" -> vector
         //              of 6 stresses values.
-        TElementStress& v = m_extra_stress_for_each_element[it->first];
+        ElementStress& v = m_extra_stress_for_each_element[elIdxLoadPair.first];
         if (v.size() != stress.size())
         {
             // First time, just copy:

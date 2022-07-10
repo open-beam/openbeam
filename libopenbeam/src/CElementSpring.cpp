@@ -23,6 +23,7 @@
 #include <openbeam/CElementSpring.h>
 #include <openbeam/CFiniteElementProblem.h>
 #include <openbeam/CStructureProblem.h>
+
 #include "internals.h"
 
 using namespace std;
@@ -40,8 +41,7 @@ CElementSpring::CElementSpring(
  * for the current element state.
  */
 void CElementSpring::getLocalStiffnessMatrices(
-    openbeam::aligned_containers<TStiffnessSubmatrix>::vector_t& outSubMats)
-    const
+    std::vector<TStiffnessSubmatrix>& outSubMats) const
 {
     outSubMats.resize(3);
     TStiffnessSubmatrix& K11 = outSubMats[0];
@@ -57,7 +57,7 @@ void CElementSpring::getLocalStiffnessMatrices(
     // k11 --------------
     K11.edge_in      = 0;
     K11.edge_out     = 0;
-    K11.matrix       = TMatrix66::Zero();
+    K11.matrix       = Matrix66::Zero();
     K11.matrix(0, 0) = K;
 
     // k22 --------------
@@ -68,24 +68,24 @@ void CElementSpring::getLocalStiffnessMatrices(
     // k12 --------------
     K12.edge_in      = 0;
     K12.edge_out     = 1;
-    K12.matrix       = TMatrix66::Zero();
+    K12.matrix       = Matrix66::Zero();
     K12.matrix(0, 0) = -K;
 }
 
-void CElementSpring::getLocalDoFs(std::vector<TUsedDoFs>& dofs) const
+void CElementSpring::getLocalDoFs(std::vector<used_DoFs_t>& dofs) const
 {
     dofs.resize(getNumberEdges());
 
-    static const TUsedDoFs sDofs = {true, false, false, false, false, false};
+    static const used_DoFs_t sDofs = {true, false, false, false, false, false};
     dofs[0] = dofs[1] = sDofs;
 }
 
 /** Parse a set of parameters by (casi insensitive) name and set the element
  * values from them. */
 void CElementSpring::loadParamsFromSet(
-    const TParamSet& params, const TEvaluationContext& eval)
+    const param_set_t& params, const EvaluationContext& eval)
 {
-    for (TParamSet::const_iterator it = params.begin(); it != params.end();
+    for (param_set_t::const_iterator it = params.begin(); it != params.end();
          ++it)
     {
         if (strCmpI(it->first, "K"))
@@ -95,9 +95,9 @@ void CElementSpring::loadParamsFromSet(
 
 #if OPENBEAM_HAS_QT5Svg
 void CElementSpring::drawQtSVG(
-    QSvgGenerator& svg, const TDrawStructureOptions& options,
-    const TRenderInitData& ri, const TDrawElementExtraParams& draw_el_params,
-    const TMeshOutputInfo* meshing_info) const
+    QSvgGenerator& svg, const DrawStructureOptions& options,
+    const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo* meshing_info) const
 {
 }
 #endif
@@ -106,9 +106,9 @@ void CElementSpring::drawQtSVG(
  * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
  * options */
 void CElementSpring::drawSVG(
-    void* _cairo_context, const TDrawStructureOptions& options,
-    const TRenderInitData& ri, const TDrawElementExtraParams& draw_el_params,
-    const TMeshOutputInfo* meshing_info) const
+    void* _cairo_context, const DrawStructureOptions& options,
+    const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo* meshing_info) const
 {
 #if OPENBEAM_HAS_CAIRO
     Cairo::RefPtr<Cairo::Context>& cr =
@@ -118,19 +118,19 @@ void CElementSpring::drawSVG(
     const double LAT        = 0.08;  // down-scaled, lateral size of spring
 
     // Draw beam between: node_ids  0 ==> 1
-    OBASSERT(conected_nodes_ids.size() == 2)
+    ASSERT_(conected_nodes_ids.size() == 2);
 
     // Get original or deformed positions:
     TRotationTrans3D p0 = m_parent->getNodePose(conected_nodes_ids[0]);
     TRotationTrans3D p1 = m_parent->getNodePose(conected_nodes_ids[1]);
     if (!draw_el_params.draw_original_position)
     {  // Deformed position:
-        TVector3 pt0_deformed;
+        Vector3 pt0_deformed;
         m_parent->getNodeDeformedPosition(
             conected_nodes_ids[0], pt0_deformed, *draw_el_params.solver_info,
             draw_el_params.deformed_scale_factor);
 
-        TVector3 pt1_deformed;
+        Vector3 pt1_deformed;
         m_parent->getNodeDeformedPosition(
             conected_nodes_ids[1], pt1_deformed, *draw_el_params.solver_info,
             draw_el_params.deformed_scale_factor);
@@ -200,8 +200,8 @@ void CElementSpring::drawSVG(
 
 /** Mesh this element into a set of (possibly) smaller ones */
 void CElementSpring::do_mesh(
-    const size_t my_idx, CStructureProblem& out_fem, TMeshOutputInfo& out_info,
-    const TMeshParams& params)
+    const size_t my_idx, CStructureProblem& out_fem, MeshOutputInfo& out_info,
+    const MeshParams& params)
 {
     throw std::runtime_error("TO DO");
 }
