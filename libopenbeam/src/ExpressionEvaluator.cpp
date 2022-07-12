@@ -22,12 +22,22 @@
 
 #include "ExpressionEvaluator.h"
 
+#include <mrpt/core/format.h>
 #include <mrpt/expr/CRuntimeCompiledExpression.h>
 
 double openbeam::evaluate(
-    const std::string& expr, const std::map<std::string, double>& userSymbols)
+    const std::string& expr, const std::map<std::string, double>& userSymbols,
+    int lineNumber)
 {
-    mrpt::expr::CRuntimeCompiledExpression rce;
-    rce.compile(expr, userSymbols, expr);
-    return rce.eval();
+    try
+    {
+        mrpt::expr::CRuntimeCompiledExpression rce;
+        rce.compile(expr, userSymbols, expr);
+        return rce.eval();
+    }
+    catch (const std::exception& e)
+    {
+        throw std::runtime_error(
+            mrpt::format("[Line: %i] %s", lineNumber + 1, e.what()));
+    }
 }

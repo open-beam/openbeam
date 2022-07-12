@@ -84,14 +84,9 @@ void CElementTorsionSpring::getLocalDoFs(std::vector<used_DoFs_t>& dofs) const
 /** Parse a set of parameters by (casi insensitive) name and set the element
  * values from them. */
 void CElementTorsionSpring::loadParamsFromSet(
-    const param_set_t& params, const EvaluationContext& eval)
+    const mrpt::containers::yaml& p, const EvaluationContext& ctx)
 {
-    for (param_set_t::const_iterator it = params.begin(); it != params.end();
-         ++it)
-    {
-        if (strCmpI(it->first, "K"))
-        { eval.parser_evaluate_expression(it->second, this->K); }
-    }
+    if (p.has("K")) this->K = ctx.evaluate(p["K"]);
 }
 
 #if OPENBEAM_HAS_QT5Svg

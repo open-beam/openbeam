@@ -24,6 +24,7 @@
 
 #include <openbeam/config.h>
 //
+#include <mrpt/containers/yaml.h>
 #include <mrpt/core/exceptions.h>  // ASSERT_(), etc.
 #include <mrpt/core/format.h>  // mrpt::format()
 #include <mrpt/system/CTimeLogger.h>
@@ -70,10 +71,7 @@ using Matrix33  = Eigen::Matrix<num_t, 3, 3>;
 using Vector6   = Eigen::Matrix<num_t, 6, 1>;
 using Vector3   = Eigen::Matrix<num_t, 3, 1>;
 
-//!< A set of parameters, indexed by name (case insensitive)
-using param_set_t      = std::map<std::string, std::string>;
-using map_string2num_t = std::map<std::string, num_t>;
-using vector_string_t  = std::vector<std::string>;
+using vector_string_t = std::vector<std::string>;
 
 /** Stress tensor for a 3D element */
 struct FaceStress
@@ -120,17 +118,21 @@ struct EvaluationContext
 {
     EvaluationContext() = default;
 
-    /** Return false only if there was an error if there's not "errMsg".
-     * Should only process the case of returning true and do nothing else on
-     * return false to handle the error. */
-    bool parser_evaluate_expression(
-        const std::string& sVarVal, num_t& val) const;
+    /** Throws on error, after saving the error message to err_msgs and/or to
+     * std::cerr */
+    num_t evaluate(const std::string& sVarVal) const;
 
-    map_string2num_t user_vars;
+    /// for use with `evaluate(p["K"])`
+    num_t evaluate(const mrpt::containers::yaml& proxy) const
+    {
+        return evaluate(proxy.node().as<std::string>());
+    }
+
+    std::map<std::string, double> parameters;
+
     vector_string_t* err_msgs  = nullptr;
     vector_string_t* warn_msgs = nullptr;
     unsigned int     lin_num   = 0;
-    std::string*     lin       = nullptr;
 };
 
 struct TRotation3D

@@ -128,13 +128,13 @@ class CElement
      * their meaning.
      */
     virtual void loadParamsFromSet(
-        const param_set_t& params, const EvaluationContext& eval) = 0;
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx) = 0;
 
     /** \overload */
-    void loadParamsFromSet(const param_set_t& params)
+    void loadParamsFromSet(const mrpt::containers::yaml& p)
     {
         EvaluationContext def;
-        loadParamsFromSet(params, def);
+        loadParamsFromSet(p, def);
     }
 
     /** Get the parent FEM problem object */

@@ -41,14 +41,7 @@ using namespace openbeam;
 
 CBaseElementBeam::CBaseElementBeam(
     const bool pinned_end0, const bool pinned_end1)
-    : CElement(2),
-      E(UNINITIALIZED_VALUE),
-      A(UNINITIALIZED_VALUE),
-      Iz(UNINITIALIZED_VALUE),
-      G(1),
-      J(1),
-      m_pinned_end0(pinned_end0),
-      m_pinned_end1(pinned_end1)
+    : CElement(2), m_pinned_end0(pinned_end0), m_pinned_end1(pinned_end1)
 {
 }
 
@@ -56,11 +49,6 @@ CBaseElementBeam::CBaseElementBeam(
     const size_t from_node_id, const size_t to_node_id, const bool pinned_end0,
     const bool pinned_end1)
     : CElement(2, from_node_id, to_node_id),
-      E(UNINITIALIZED_VALUE),
-      A(UNINITIALIZED_VALUE),
-      Iz(UNINITIALIZED_VALUE),
-      G(UNINITIALIZED_VALUE),
-      J(UNINITIALIZED_VALUE),
       m_pinned_end0(pinned_end0),
       m_pinned_end1(pinned_end1)
 {
@@ -69,30 +57,13 @@ CBaseElementBeam::CBaseElementBeam(
 /** Parse a set of parameters by (casi insensitive) name and set the element
  * values from them. */
 void CBaseElementBeam::loadParamsFromSet(
-    const param_set_t& params, const EvaluationContext& eval)
+    const mrpt::containers::yaml& p, const EvaluationContext& ctx)
 {
-    for (param_set_t::const_iterator it = params.begin(); it != params.end();
-         ++it)
-    {
-        if (strCmpI(it->first, "E"))
-        { eval.parser_evaluate_expression(it->second, this->E); }
-        else if (strCmpI(it->first, "A"))
-        {
-            eval.parser_evaluate_expression(it->second, this->A);
-        }
-        else if (strCmpI(it->first, "Iz"))
-        {
-            eval.parser_evaluate_expression(it->second, this->Iz);
-        }
-        else if (strCmpI(it->first, "G"))
-        {
-            eval.parser_evaluate_expression(it->second, this->G);
-        }
-        else if (strCmpI(it->first, "J"))
-        {
-            eval.parser_evaluate_expression(it->second, this->J);
-        }
-    }
+    if (p.has("E")) this->E = ctx.evaluate(p["E"]);
+    if (p.has("A")) this->A = ctx.evaluate(p["A"]);
+    if (p.has("Iz")) this->Iz = ctx.evaluate(p["Iz"]);
+    if (p.has("G")) this->G = ctx.evaluate(p["G"]);
+    if (p.has("J")) this->J = ctx.evaluate(p["J"]);
 }
 
 #if OPENBEAM_HAS_QT5Svg

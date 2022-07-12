@@ -51,7 +51,7 @@ class CElementTorsionSpring : public CElement
      *  Each element must document the supported parameters and their meaning.
      */
     virtual void loadParamsFromSet(
-        const param_set_t& params, const EvaluationContext& eval);
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx);
 
     /** Draws the element to a SVG Cairo context (a pointer to a
      * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed

@@ -181,37 +181,14 @@ void CLoadDistributedTriangular::computeStressAndEquivalentLoads(
 /** Parse a set of parameters by (casi insensitive) name and set the element
  * values from them. */
 void CLoadDistributedTriangular::loadParamsFromSet(
-    const param_set_t& params, const EvaluationContext& eval)
+    const mrpt::containers::yaml& p, const EvaluationContext& ctx)
 {
-    for (param_set_t::const_iterator it = params.begin(); it != params.end();
-         ++it)
-    {
-        if (strCmpI(it->first, "q_ini"))
-        { eval.parser_evaluate_expression(it->second, this->q_ini); }
-        else if (strCmpI(it->first, "q_end"))
-        {
-            eval.parser_evaluate_expression(it->second, this->q_end);
-        }
-        else if (strCmpI(it->first, "DX"))
-        {
-            eval.parser_evaluate_expression(it->second, this->dir[0]);
-        }
-        else if (strCmpI(it->first, "DY"))
-        {
-            eval.parser_evaluate_expression(it->second, this->dir[1]);
-        }
-        else if (strCmpI(it->first, "DZ"))
-        {
-            eval.parser_evaluate_expression(it->second, this->dir[2]);
-        }
-        else
-        {
-            if (eval.warn_msgs)
-                eval.warn_msgs->push_back(format(
-                    "*Warning* Ignoring unknown parameter %s",
-                    it->first.c_str()));
-        }
-    }
+    q_ini = ctx.evaluate(p["q_ini"]);
+    q_end = ctx.evaluate(p["q_end"]);
+
+    dir[0] = ctx.evaluate(p["DX"]);
+    dir[1] = ctx.evaluate(p["DY"]);
+    if (p.has("DZ")) dir[2] = ctx.evaluate(p["DZ"]);
 }
 
 /** Decompose the distributed load as needed into the set of elements in which

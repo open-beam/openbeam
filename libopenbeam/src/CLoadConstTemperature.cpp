@@ -94,21 +94,9 @@ void CLoadConstTemperature::computeStressAndEquivalentLoads(
 
 /** See declaration in base class */
 void CLoadConstTemperature::loadParamsFromSet(
-    const param_set_t& params, const EvaluationContext& eval)
+    const mrpt::containers::yaml& p, const EvaluationContext& ctx)
 {
-    for (param_set_t::const_iterator it = params.begin(); it != params.end();
-         ++it)
-    {
-        if (strCmpI(it->first, "deltaT"))
-        { eval.parser_evaluate_expression(it->second, this->m_incr_temp); }
-        else
-        {
-            if (eval.warn_msgs)
-                eval.warn_msgs->push_back(format(
-                    "*Warning* Ignoring unknown parameter %s",
-                    it->first.c_str()));
-        }
-    }
+    m_incr_temp = ctx.evaluate(p["deltaT"]);
 }
 
 /** Decompose the distributed load as needed into the set of elements in which

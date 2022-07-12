@@ -22,7 +22,8 @@
 
 #pragma once
 
-#include <mrpt/io/CTextFileLinesParser.h>
+#include <mrpt/containers/yaml.h>
+#include <mrpt/core/optional_ref.h>
 #include <mrpt/system/CTimeLogger.h>
 #include <openbeam/CElement.h>
 #include <openbeam/DrawStructureOptions.h>
@@ -36,7 +37,7 @@
 namespace openbeam
 {
 struct RenderInitData;  // Fwd. decl. (defined in
-                         // CFiniteElementProblem::saveAsImage)
+                        // CFiniteElementProblem::saveAsImage)
 
 /** 0-based indices for DOFs */
 enum class DoF_index : uint8_t
@@ -211,8 +212,9 @@ class CFiniteElementProblem
      *  \return true on Success
      */
     bool loadFromStream(
-        std::istream& is, vector_string_t* errMsg = nullptr,
-        vector_string_t* warnMsg = nullptr);
+        std::istream&                              is,
+        const mrpt::optional_ref<vector_string_t>& errMsg  = std::nullopt,
+        const mrpt::optional_ref<vector_string_t>& warnMsg = std::nullopt);
 
     /** Discard the current problem and loads it by parsing the given text file.
      *  The expected format of the file is described in XXXX.
@@ -224,8 +226,9 @@ class CFiniteElementProblem
      *  \return true on Success
      */
     bool loadFromFile(
-        const std::string& file, vector_string_t* errMsg = nullptr,
-        vector_string_t* warnMsg = nullptr);
+        const std::string&                         file,
+        const mrpt::optional_ref<vector_string_t>& errMsg  = std::nullopt,
+        const mrpt::optional_ref<vector_string_t>& warnMsg = std::nullopt);
 
     /** Saves a representation of the problem to a SVG file.
      * \param options Many parameters and switches to control what will be drawn
@@ -243,14 +246,14 @@ class CFiniteElementProblem
         ImageSaveOutputInfo*          out_img_info = nullptr) const;
     bool saveAsImage(
         const std::string& file, const bool is_svg,
-        const DrawStructureOptions&  options,
+        const DrawStructureOptions&   options,
         const StaticSolveProblemInfo* solver_info  = nullptr,
         const MeshOutputInfo*         meshing_info = nullptr,
         ImageSaveOutputInfo*          out_img_info = nullptr) const;
 
     bool renderToCairoContext(
         void* _cairo_context, const RenderInitData& ri,
-        const DrawStructureOptions&  options,
+        const DrawStructureOptions&   options,
         const StaticSolveProblemInfo* solver_info,
         const MeshOutputInfo*         meshing_info) const;
 
@@ -482,9 +485,13 @@ class CFiniteElementProblem
     virtual void internalComputeStressAndEquivalentLoads() {}
 
     /** Internal common implementation of loadFrom*() methods() */
-    bool internal_loadFromFile(
-        mrpt::io::CTextFileLinesParser& f, vector_string_t* err_msgs,
-        vector_string_t* warn_msgs);
+    bool internal_loadFromYaml(
+        const mrpt::containers::yaml&              f,
+        const mrpt::optional_ref<vector_string_t>& errMsg,
+        const mrpt::optional_ref<vector_string_t>& warnMsg);
+
+    void internal_parser1_Parameters(
+        const mrpt::containers::yaml& f, EvaluationContext& ctx) const;
 
     /** From the list of elements and their properties and connections, build
      * the list of DoFs relevant to the problem.

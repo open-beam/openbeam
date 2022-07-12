@@ -31,6 +31,7 @@ using namespace std;
 using namespace openbeam;
 using namespace Eigen;
 
+#if 0
 /** Used to parse "k1=v1,k2=v2,a,b,c" with \a parseParams() */
 struct TParsedParams
 {
@@ -39,9 +40,10 @@ struct TParsedParams
         return key_vals.end() != key_vals.find(key);
     }
 
-    param_set_t     key_vals;
-    vector_string_t rest_values;
+    mrpt::containers::yaml key_vals;
+    vector_string_t        rest_values;
 };
+#endif
 
 struct TAuxListDofNames
 {
@@ -62,29 +64,25 @@ const TAuxListDofNames listDofNames[] = {
 const size_t listDofNamesCount = sizeof(listDofNames) / sizeof(listDofNames[0]);
 
 // Fwd decl:
+#if 0
 void parseParams(
     const vector_string_t& tokens, TParsedParams& params, size_t first_idx = 1);
 bool replace_paramsets(
-    param_set_t&                              inout_params,
-    const std::map<std::string, param_set_t>& user_param_sets,
-    const EvaluationContext&                  eval_context);
+    mrpt::containers::yaml&                              inout_params,
+    const std::map<std::string, mrpt::containers::yaml>& user_param_sets,
+    const EvaluationContext&                             eval_context);
+#endif
 
 #define REPORT_ERROR(_MSG)                                                    \
     if (eval_context.err_msgs)                                                \
     {                                                                         \
         eval_context.err_msgs->push_back(openbeam::format(                    \
             "Line %u: %s", eval_context.lin_num, std::string(_MSG).c_str())); \
-        eval_context.err_msgs->push_back(openbeam::format(                    \
-            "Line %u:  --> '%s'", eval_context.lin_num,                       \
-            eval_context.lin->c_str()));                                      \
     }                                                                         \
     else                                                                      \
     {                                                                         \
         std::cerr << openbeam::format(                                        \
             "Line %u: %s", eval_context.lin_num, std::string(_MSG).c_str());  \
-        std::cerr << openbeam::format(                                        \
-            "Line %u:  --> '%s'", eval_context.lin_num,                       \
-            eval_context.lin->c_str());                                       \
         return false;                                                         \
     }
 
@@ -94,23 +92,17 @@ bool replace_paramsets(
         eval_context.warn_msgs->push_back(openbeam::format( \
             "Line %u: (Warning) %s", eval_context.lin_num,  \
             std::string(_MSG).c_str()));                    \
-        eval_context.warn_msgs->push_back(openbeam::format( \
-            "Line %u:  --> '%s'", eval_context.lin_num,     \
-            eval_context.lin->c_str()));                    \
     }                                                       \
     else                                                    \
     {                                                       \
         std::cerr << openbeam::format(                      \
             "Line %u: (Warning) %s", eval_context.lin_num,  \
             std::string(_MSG).c_str());                     \
-        std::cerr << openbeam::format(                      \
-            "Line %u:  --> '%s'", eval_context.lin_num,     \
-            eval_context.lin->c_str());                     \
         return false;                                       \
     }
 
 #define EVALUATE_EXPRESSION(_IN_EXPR, _OUT_VAL) \
-    eval_context.parser_evaluate_expression(_IN_EXPR, _OUT_VAL)
+    eval_context.evaluate(_IN_EXPR, _OUT_VAL)
 
 #define REPLACE_PARAMSETS(_PARAMS) \
     replace_paramsets(_PARAMS, user_param_sets, eval_context)
@@ -119,75 +111,66 @@ bool replace_paramsets(
 //              loadFromStream
 // -------------------------------------------------
 bool CFiniteElementProblem::loadFromStream(
-    std::istream& is, vector_string_t* err_msgs, vector_string_t* warn_msgs)
+    std::istream& is, const mrpt::optional_ref<vector_string_t>& errMsg,
+    const mrpt::optional_ref<vector_string_t>& warnMsg)
 {
-    mrpt::io::CTextFileLinesParser f;
-
-    f.enableCommentFilters(
-        true,  // %
-        true,  // //
-        true  // #
-    );
-
-    f.open(is);
-
-    return this->internal_loadFromFile(f, err_msgs, warn_msgs);
+    try
+    {
+        auto f = mrpt::containers::yaml::FromStream(is);
+        return internal_loadFromYaml(f, errMsg, warnMsg);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what();
+        if (errMsg) errMsg.value().get().push_back(e.what());
+        return false;
+    }
 }
 
 // -------------------------------------------------
 //              loadFromFile
 // -------------------------------------------------
 bool CFiniteElementProblem::loadFromFile(
-    const std::string& file, vector_string_t* err_msgs,
-    vector_string_t* warn_msgs)
+    const std::string& file, const mrpt::optional_ref<vector_string_t>& errMsg,
+    const mrpt::optional_ref<vector_string_t>& warnMsg)
 {
-    mrpt::io::CTextFileLinesParser f;
-
-    f.enableCommentFilters(
-        true,  // %
-        true,  // //
-        true  // #
-    );
-
-    std::ifstream fil;
-
-    if (file == "-")
+    try
     {
-        // File "-" means: console input
-        f.open(std::cin);
-    }
-    else
-    {
-        fil.open(file);
-        if (fil.is_open())
+        mrpt::containers::yaml f;
+
+        if (file == "-")
         {
-            // Parse from file:
-            f.open(fil);
+            // File "-" means: console input
+            f.loadFromStream(std::cin);
         }
         else
         {
-            if (err_msgs)
-                err_msgs->push_back(
-                    std::string("Error opening file for reading: ") + file);
-            return false;
+            f.loadFromFile(file);
         }
-    }
 
-    return this->internal_loadFromFile(f, err_msgs, warn_msgs);
+        return internal_loadFromYaml(f, errMsg, warnMsg);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what();
+        if (errMsg) errMsg.value().get().push_back(e.what());
+        return false;
+    }
 }
 
 // -------------------------------------------------
-//              internal_loadFromFile
+//              internal_loadFromYaml
 // -------------------------------------------------
-bool CFiniteElementProblem::internal_loadFromFile(
-    mrpt::io::CTextFileLinesParser& f, vector_string_t* err_msgs,
-    vector_string_t* warn_msgs)
+bool CFiniteElementProblem::internal_loadFromYaml(
+    const mrpt::containers::yaml&              f,
+    const mrpt::optional_ref<vector_string_t>& err_msgs,
+    const mrpt::optional_ref<vector_string_t>& warn_msgs)
 {
     mrpt::system::CTimeLoggerEntry tle(openbeam::timelog, "parseFile");
 
     // Clear msgs, if any:
-    if (err_msgs) err_msgs->clear();
-    if (warn_msgs) warn_msgs->clear();
+    if (err_msgs) err_msgs->get().clear();
+    if (warn_msgs) warn_msgs->get().clear();
 
     // Warning switches:
     const bool warn_unused_constraints = true;
@@ -206,18 +189,25 @@ bool CFiniteElementProblem::internal_loadFromFile(
 
     // List of existing user variables declared in the script:
     // ------------------------------------------------------------
-    std::map<std::string, param_set_t> user_param_sets;
+    std::map<std::string, mrpt::containers::yaml> user_param_sets;
 
-    EvaluationContext eval_context;
-    eval_context.warn_msgs = warn_msgs;
-    eval_context.err_msgs  = err_msgs;
+    EvaluationContext ctx;
+    ctx.warn_msgs = warn_msgs ? &warn_msgs->get() : nullptr;
+    ctx.err_msgs  = err_msgs ? &err_msgs->get() : nullptr;
 
-    TSection curSec = sNone;
-    string   lin;
-    bool     needToRecomputeDOFs = true;
+    bool needToRecomputeDOFs = true;
 
     try
     {
+        ASSERTMSG_(
+            f.isMap(), "YAML file root element must be a map/dictionary");
+
+        // ---------------------------
+        // Parameters
+        // ---------------------------
+        internal_parser1_Parameters(f, ctx);
+
+#if 0
         while (f.getNextLine(lin))
         {
             const unsigned int lin_num =
@@ -323,13 +313,16 @@ bool CFiniteElementProblem::internal_loadFromFile(
                 {
                     if (strCmpI(toks[0], "NODE"))
                     {
-                        // Syntax: NODE, ID=<id>, <X>, <Y> [, <Z> , [<ROT_Z>,
+                        // Syntax: NODE, ID=<id>, <X>, <Y> [, <Z> ,
+                        // [<ROT_Z>,
                         // [<ROT_Y>, [<ROT_X>] ] ] ]
                         if (toks.size() < 4 || toks.size() > 8)
                         {
                             REPORT_ERROR(
-                                "Expected syntax 'NODE, ID=<id>, <X>, <Y>  [, "
-                                "<Z> , [<ROT_Z>, [<ROT_Y>, [<ROT_X>] ] ] ]' "
+                                "Expected syntax 'NODE, ID=<id>, <X>, <Y>  "
+                                "[, "
+                                "<Z> , [<ROT_Z>, [<ROT_Y>, [<ROT_X>] ] ] "
+                                "]' "
                                 "[tokenization]");
                         }
                         else
@@ -345,8 +338,10 @@ bool CFiniteElementProblem::internal_loadFromFile(
                             if (parts.size() != 2 || !strCmpI(parts[0], "ID"))
                             {
                                 REPORT_ERROR(
-                                    "Expected syntax 'NODE, ID=<id>, <X>, <Y>  "
-                                    "[, <Z> , [<ROT_Z>, [<ROT_Y>, [<ROT_X>] ] "
+                                    "Expected syntax 'NODE, ID=<id>, <X>, "
+                                    "<Y>  "
+                                    "[, <Z> , [<ROT_Z>, [<ROT_Y>, "
+                                    "[<ROT_X>] ] "
                                     "] ]' [problem around the ID]");
                             }
                             else
@@ -358,9 +353,11 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                     if (id_val != floor(id_val) || id_val < 0)
                                     {
                                         REPORT_ERROR(
-                                            "Expected syntax 'NODE, ID=<id>, "
+                                            "Expected syntax 'NODE, "
+                                            "ID=<id>, "
                                             "<X>, <Y>  [, <Z> , [<ROT_Z>, "
-                                            "[<ROT_Y>, [<ROT_X>] ] ] ]' [id "
+                                            "[<ROT_Y>, [<ROT_X>] ] ] ]' "
+                                            "[id "
                                             "must be a possitive integer]");
                                     }
                                     else
@@ -384,8 +381,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                             (!has_rot_x || EVALUATE_EXPRESSION(
                                                                toks[7], rot_X)))
                                         {
-                                            // We have all the data, do insert
-                                            // the new node:
+                                            // We have all the data, do
+                                            // insert the new node:
                                             const size_t nOldNodes =
                                                 this->getNumberOfNodes();
                                             OB_TODO("Check unused IDs")
@@ -414,7 +411,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                     }  // end NODE
                     else if (strCmpI(toks[0], "ELEMENT"))
                     {
-                        // Syntax: ELEMENT, type=<TYPE>, from=<FROM>, to=<TO>,
+                        // Syntax: ELEMENT, type=<TYPE>, from=<FROM>,
+                        // to=<TO>,
                         // [,id=ID], [...]
                         TParsedParams params;
                         parseParams(toks, params);
@@ -424,7 +422,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                         {
                             REPORT_ERROR(
                                 "Missing mandatory fields: ELEMENT, "
-                                "type=<TYPE>, from=<FROM>, to=<TO>, [,id=ID], "
+                                "type=<TYPE>, from=<FROM>, to=<TO>, "
+                                "[,id=ID], "
                                 "[...]");
                         }
                         else
@@ -441,7 +440,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                     nTo >= nNodes)
                                 {
                                     REPORT_ERROR(
-                                        "'from' and 'to' IDs must be valid IDs "
+                                        "'from' and 'to' IDs must be valid "
+                                        "IDs "
                                         "of existing nodes");
                                 }
                                 else
@@ -455,7 +455,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                         // Expand possible PARAMSETs:
                                         if (REPLACE_PARAMSETS(params.key_vals))
                                         {
-                                            // Set common params to any element:
+                                            // Set common params to any
+                                            // element:
                                             ASSERT_(
                                                 el->conected_nodes_ids.size() ==
                                                 2);
@@ -463,7 +464,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                                 static_cast<size_t>(nFrom);
                                             el->conected_nodes_ids[1] =
                                                 static_cast<size_t>(nTo);
-                                            // And process the rest of params:
+                                            // And process the rest of
+                                            // params:
                                             el->loadParamsFromSet(
                                                 params.key_vals, eval_context);
                                             this->insertElement(el);
@@ -504,7 +506,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                         fNodeId < 0)
                                     {
                                         REPORT_ERROR(
-                                            "Node ID must be a non-negative "
+                                            "Node ID must be a "
+                                            "non-negative "
                                             "integer");
                                     }
                                     else
@@ -521,13 +524,14 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                             const size_t nodeId =
                                                 static_cast<size_t>(fNodeId);
 
-                                            // Before adding constrains, we must
-                                            // analyze the list of DoFs in the
-                                            // problem:
+                                            // Before adding constrains, we
+                                            // must analyze the list of DoFs
+                                            // in the problem:
                                             if (needToRecomputeDOFs)
                                             {
                                                 OB_MESSAGE(4)
-                                                    << "Recomputing list of "
+                                                    << "Recomputing list "
+                                                       "of "
                                                        "DoFs before "
                                                        "introducing new "
                                                        "constraints.\n";
@@ -617,7 +621,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                             if (!found)
                                             {
                                                 REPORT_ERROR(
-                                                    "Field 'dof=...' has an "
+                                                    "Field 'dof=...' has "
+                                                    "an "
                                                     "invalid value in "
                                                     "CONSTRAINT");
                                             }
@@ -633,7 +638,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                         if (toks.size() != 3)
                         {
                             REPORT_ERROR(
-                                "Expected syntax 'NODELABEL, ID=<id>, <LABEL>' "
+                                "Expected syntax 'NODELABEL, ID=<id>, "
+                                "<LABEL>' "
                                 "[tokenization]");
                         }
                         else
@@ -657,7 +663,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                     {
                                         REPORT_ERROR(
                                             "Expected syntax 'NODELABEL, "
-                                            "ID=<id>, <LABEL>' [id must be a "
+                                            "ID=<id>, <LABEL>' [id must be "
+                                            "a "
                                             "possitive integer]");
                                     }
                                     else
@@ -721,7 +728,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                         fNodeId < 0)
                                     {
                                         REPORT_ERROR(
-                                            "Node ID must be a non-negative "
+                                            "Node ID must be a "
+                                            "non-negative "
                                             "integer");
                                     }
                                     else
@@ -735,9 +743,9 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                                 params.rest_values[0],
                                                 load_val))
                                         {
-                                            // Before adding constrains, we must
-                                            // analyze the list of DoFs in the
-                                            // problem:
+                                            // Before adding constrains, we
+                                            // must analyze the list of DoFs
+                                            // in the problem:
                                             if (needToRecomputeDOFs)
                                             {
                                                 updateElementsOrientation();
@@ -774,22 +782,44 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                                             {
                                                                 REPORT_WARNING(
                                                                     format(
-                                                                        "Load "
-                                                                        "ignore"
+                                                                        "Lo"
+                                                                        "ad"
+                                                                        " "
+                                                                        "ig"
+                                                                        "no"
+                                                                        "re"
                                                                         "d "
-                                                                        "since "
-                                                                        "the "
-                                                                        "DoF "
-                                                                        "%i is "
-                                                                        "not "
-                                                                        "consid"
-                                                                        "ered "
-                                                                        "in "
-                                                                        "the "
-                                                                        "proble"
+                                                                        "si"
+                                                                        "nc"
+                                                                        "e "
+                                                                        "th"
+                                                                        "e "
+                                                                        "Do"
+                                                                        "F "
+                                                                        "%i"
+                                                                        " i"
+                                                                        "s "
+                                                                        "no"
+                                                                        "t "
+                                                                        "co"
+                                                                        "ns"
+                                                                        "id"
+                                                                        "er"
+                                                                        "ed"
+                                                                        " "
+                                                                        "in"
+                                                                        " "
+                                                                        "th"
+                                                                        "e "
+                                                                        "pr"
+                                                                        "ob"
+                                                                        "le"
                                                                         "m "
-                                                                        "geomet"
-                                                                        "ry.",
+                                                                        "ge"
+                                                                        "om"
+                                                                        "et"
+                                                                        "ry"
+                                                                        ".",
                                                                         k));
                                                             }
                                                         }
@@ -801,7 +831,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                             if (!found)
                                             {
                                                 REPORT_ERROR(
-                                                    "Field 'dof=...' has an "
+                                                    "Field 'dof=...' has "
+                                                    "an "
                                                     "invalid value in "
                                                     "CONSTRAINT");
                                             }
@@ -870,7 +901,8 @@ bool CFiniteElementProblem::internal_loadFromFile(
                                             if (REPLACE_PARAMSETS(
                                                     params.key_vals))
                                             {
-                                                // Process the rest of params:
+                                                // Process the rest of
+                                                // params:
                                                 load->loadParamsFromSet(
                                                     params.key_vals,
                                                     eval_context);
@@ -895,15 +927,16 @@ bool CFiniteElementProblem::internal_loadFromFile(
             };
 
         };  // end while read line from file
+#endif
 
         // Return OK only if no error messages were emmitted:
         if (err_msgs)
-            return err_msgs->empty();
+            return err_msgs->get().empty();
         else
             // Otherwise, if we're here it's because all was OK:
             return true;
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         const std::string sErr(e.what());
         if (sErr.empty())
@@ -916,7 +949,7 @@ bool CFiniteElementProblem::internal_loadFromFile(
         else
         {
             if (err_msgs)
-                err_msgs->push_back(sErr);
+                err_msgs->get().push_back(sErr);
             else
                 std::cerr << sErr << std::endl;
 
@@ -925,33 +958,18 @@ bool CFiniteElementProblem::internal_loadFromFile(
     }
 }
 
-// Return false only if there was an error if there's not "err_msgs".
-//  Should only process the case of returning true and do nothing else on return
-//  false to handle the error.
-bool EvaluationContext::parser_evaluate_expression(
-    const std::string& sVarVal, num_t& val) const
+num_t EvaluationContext::evaluate(const std::string& sVarVal) const
 {
-    try
-    {
-        OB_MESSAGE(5) << "Line: " << lin_num << " Expression: " << sVarVal
-                      << " --> ";
+    OB_MESSAGE(5) << "Line: " << lin_num << " Expression: " << sVarVal
+                  << " --> ";
 
-        val = openbeam::evaluate(sVarVal, user_vars);
+    num_t val = openbeam::evaluate(sVarVal, parameters, lin_num);
 
-        OB_MESSAGE(5) << val << endl;
-        return true;
-    }
-    catch (const std::exception& e)
-    {
-        OB_MESSAGE(5) << "ERROR!\n";
-
-        // Just a trick to make the macros REPORT_ERROR below work.
-        const EvaluationContext& eval_context = *this;
-        REPORT_ERROR(e.what());
-        return false;
-    }
+    OB_MESSAGE(5) << val << endl;
+    return val;
 }
 
+#if 0
 /** Parse and classify "k1=v1,k2=v2,a,b,c"
  */
 void parseParams(
@@ -980,11 +998,11 @@ void parseParams(
  * false to handle the error.
  */
 bool replace_paramsets(
-    param_set_t&                              inout_params,
-    const std::map<std::string, param_set_t>& user_param_sets,
-    const EvaluationContext&                  eval_context)
+    mrpt::containers::yaml&                              inout_params,
+    const std::map<std::string, mrpt::containers::yaml>& user_param_sets,
+    const EvaluationContext&                             eval_context)
 {
-    param_set_t::iterator it = inout_params.find("paramset");
+    mrpt::containers::yaml::iterator it = inout_params.find("paramset");
     if (it == inout_params.end()) return true;  // No paramset, go on.
 
     auto itPar = user_param_sets.find(it->second);
@@ -1002,5 +1020,42 @@ bool replace_paramsets(
         inout_params.erase(it);
         inout_params.insert(itPar->second.begin(), itPar->second.end());
         return true;
+    }
+}
+#endif
+
+void CFiniteElementProblem::internal_parser1_Parameters(
+    const mrpt::containers::yaml& f, EvaluationContext& ctx) const
+{
+    try
+    {
+        if (!f.has("parameters")) return;  // none.
+
+        auto p = f["parameters"];
+        ASSERT_(p.isMap());
+
+        for (const auto& kv : p.asMap())
+        {
+            const auto name   = kv.first.as<std::string>();
+            const auto k      = kv.first.as<std::string>();
+            const auto valStr = kv.second.as<std::string>();
+
+            if (ctx.parameters.count(k) != 0)
+                throw std::runtime_error(mrpt::format(
+                    "[Line: %i] parameter with name '%s' was already defined.",
+                    kv.first.marks.line + 1, k.c_str()));
+
+            ctx.lin_num       = kv.second.marks.line;
+            ctx.parameters[k] = ctx.evaluate(valStr);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        if (ctx.err_msgs)
+            ctx.err_msgs->push_back(e.what());
+        else
+            std::cerr << e.what();
+        throw std::runtime_error(
+            "Errors found in 'parameters' section, aborting.");
     }
 }

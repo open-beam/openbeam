@@ -79,22 +79,11 @@ void CElementSpringXYZ::getLocalDoFs(std::vector<used_DoFs_t>& dofs) const
 /** Parse a set of parameters by (casi insensitive) name and set the element
  * values from them. */
 void CElementSpringXYZ::loadParamsFromSet(
-    const param_set_t& params, const EvaluationContext& eval)
+    const mrpt::containers::yaml& p, const EvaluationContext& ctx)
 {
-    for (param_set_t::const_iterator it = params.begin(); it != params.end();
-         ++it)
-    {
-        if (strCmpI(it->first, "Kx"))
-        { eval.parser_evaluate_expression(it->second, this->Kx); }
-        else if (strCmpI(it->first, "Ky"))
-        {
-            eval.parser_evaluate_expression(it->second, this->Ky);
-        }
-        else if (strCmpI(it->first, "Kz"))
-        {
-            eval.parser_evaluate_expression(it->second, this->Kz);
-        }
-    }
+    if (p.has("Kx")) this->Kx = ctx.evaluate(p["Kx"]);
+    if (p.has("Ky")) this->Ky = ctx.evaluate(p["Ky"]);
+    if (p.has("Kz")) this->Kz = ctx.evaluate(p["Kz"]);
 }
 
 #if OPENBEAM_HAS_QT5Svg

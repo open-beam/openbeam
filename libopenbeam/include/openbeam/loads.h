@@ -57,7 +57,7 @@ struct CLoadOnBeam
      * their meaning.
      */
     virtual void loadParamsFromSet(
-        const param_set_t& params, const EvaluationContext& eval) = 0;
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx) = 0;
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
@@ -82,7 +82,7 @@ struct CLoadConstTemperature : public CLoadOnBeam
         const CElement* el, ElementStress& stress, std::vector<array6>& loads);
     /** See declaration in base class */
     virtual void loadParamsFromSet(
-        const param_set_t& params, const EvaluationContext& eval);
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx);
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
@@ -119,7 +119,7 @@ struct CLoadDistributedUniform : public CLoadOnBeam
         const CElement* el, ElementStress& stress, std::vector<array6>& loads);
     /** See declaration in base class */
     virtual void loadParamsFromSet(
-        const param_set_t& params, const EvaluationContext& eval);
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx);
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
@@ -161,7 +161,7 @@ struct CLoadDistributedTriangular : public CLoadOnBeam
         const CElement* el, ElementStress& stress, std::vector<array6>& loads);
     /** See declaration in base class */
     virtual void loadParamsFromSet(
-        const param_set_t& params, const EvaluationContext& eval);
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx);
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
@@ -171,9 +171,9 @@ struct CLoadDistributedTriangular : public CLoadOnBeam
         const size_t               original_bar_idx,
         const CStructureProblem&   original_fem) const;
 
-    num_t q_ini,
-        q_end;  //!< Load density at the start and end points of the beam (N/m)
-    num_t dir[3];  //!< Director vector, in GLOBAL coordinates.
+    /// Load density at the start and end points of the beam (N/m)
+    num_t q_ini, q_end;
+    num_t dir[3] = {0, 0, 0};  //!< Director vector, in GLOBAL coordinates.
 };
 
 /** Concentrated force applied at any point along the beam, in an arbitrary
@@ -207,7 +207,7 @@ struct CLoadConcentratedForce : public CLoadOnBeam
         const CElement* el, ElementStress& stress, std::vector<array6>& loads);
     /** See declaration in base class */
     virtual void loadParamsFromSet(
-        const param_set_t& params, const EvaluationContext& eval);
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx);
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
