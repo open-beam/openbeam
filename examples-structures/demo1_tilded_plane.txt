@@ -1,13 +1,13 @@
 # -------------------------------------------------------
 # Example of a FE problem for the OpenBeam library
 #  
-#  By Jose Luis Blanco Claraco (2011)
+#  2011-2022, (C) Jose Luis Blanco Claraco
 #
 #  Exactly like "demo1.txt" but with the boundary 
 #   conditions in node id=1 rotated 30 degrees 
 #   (i.e. the node can slides over a tilded plane)
 #
-#          http://open-beam.sourceforge.net/
+#          https://github.com/open-beam/openbeam
 # -------------------------------------------------------
 
 VAR, P = 1000  // Newtons

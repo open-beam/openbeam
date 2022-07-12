@@ -1,12 +1,12 @@
 # -------------------------------------------------------
 # Example of a FE problem for the OpenBeam library
 #  
-#  By Jose Luis Blanco Claraco (2011)
+#  2011-2022, (C) Jose Luis Blanco Claraco
 #
 #  Problem in section 5.1 from course textbook in 
 #   University of Malaga.
 #
-#          http://open-beam.sourceforge.net/
+#          https://github.com/open-beam/openbeam
 # -------------------------------------------------------
 
 VAR, P = 1000  // Newtons

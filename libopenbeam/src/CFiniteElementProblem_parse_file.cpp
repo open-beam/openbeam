@@ -149,6 +149,8 @@ bool CFiniteElementProblem::loadFromFile(
         true  // #
     );
 
+    std::ifstream fil;
+
     if (file == "-")
     {
         // File "-" means: console input
@@ -156,7 +158,7 @@ bool CFiniteElementProblem::loadFromFile(
     }
     else
     {
-        auto fil = std::ifstream(file);
+        fil.open(file);
         if (fil.is_open())
         {
             // Parse from file:
