@@ -207,6 +207,11 @@ bool CFiniteElementProblem::internal_loadFromYaml(
         // ---------------------------
         internal_parser1_Parameters(f, ctx);
 
+        // ---------------------------
+        // Beam sections
+        // ---------------------------
+        internal_parser2_BeamSections(f, ctx);
+
 #if 0
         while (f.getNextLine(lin))
         {
@@ -960,12 +965,12 @@ bool CFiniteElementProblem::internal_loadFromYaml(
 
 num_t EvaluationContext::evaluate(const std::string& sVarVal) const
 {
-    OB_MESSAGE(5) << "Line: " << lin_num << " Expression: " << sVarVal
-                  << " --> ";
+    OB_MESSAGE(5) << "[evaluate] Line: " << lin_num
+                  << " Expression: " << sVarVal << "..." << std::endl;
 
     num_t val = openbeam::evaluate(sVarVal, parameters, lin_num);
 
-    OB_MESSAGE(5) << val << endl;
+    OB_MESSAGE(5) << " ==> " << val << std::endl;
     return val;
 }
 
@@ -1047,6 +1052,8 @@ void CFiniteElementProblem::internal_parser1_Parameters(
 
             ctx.lin_num       = kv.second.marks.line;
             ctx.parameters[k] = ctx.evaluate(valStr);
+            OB_MESSAGE(4) << "[parser1] Defined new parameter: " << k << "="
+                          << ctx.parameters[k] << std::endl;
         }
     }
     catch (const std::exception& e)
@@ -1057,5 +1064,61 @@ void CFiniteElementProblem::internal_parser1_Parameters(
             std::cerr << e.what();
         throw std::runtime_error(
             "Errors found in 'parameters' section, aborting.");
+    }
+}
+
+void CFiniteElementProblem::internal_parser2_BeamSections(
+    const mrpt::containers::yaml& f, EvaluationContext& ctx) const
+{
+    try
+    {
+        if (!f.has("beam_sections"))
+            throw std::runtime_error(
+                "Cannot find mandatory 'beam_sections' section in YAML file");
+
+        auto p = f["beam_sections"];
+        ASSERT_(p.isSequence());
+
+        for (const auto& e : p.asSequence())
+        {
+            if (!e.isMap())
+                throw std::runtime_error(
+                    "Each entry in the 'beam_sections' section must be a "
+                    "map/dictionary");
+
+            const auto& ne = e.asMap();
+
+            const auto sectionName = ne.at("name").as<std::string>();
+
+            auto& bsp = ctx.beamSectionParameters[sectionName];
+
+            for (const auto& kv : ne)
+            {
+                const auto k = kv.first.as<std::string>();
+                if (k == "name") continue;
+
+                if (bsp.count(k) != 0)
+                    throw std::runtime_error(mrpt::format(
+                        "[Line: %i] beam parameter with name '%s' was already "
+                        "defined.",
+                        kv.first.marks.line + 1, k.c_str()));
+
+                const double val = ctx.evaluate(kv.second.as<std::string>());
+                bsp[k]           = val;
+            }
+
+            OB_MESSAGE(4) << "[parser2] Defined new beamSection named '"
+                          << sectionName << "' with " << bsp.size()
+                          << " properties." << std::endl;
+        }
+    }
+    catch (const std::exception& e)
+    {
+        if (ctx.err_msgs)
+            ctx.err_msgs->push_back(e.what());
+        else
+            std::cerr << e.what();
+        throw std::runtime_error(
+            "Errors found in 'beam_sections' section, aborting.");
     }
 }

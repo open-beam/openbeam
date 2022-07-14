@@ -114,6 +114,7 @@ struct FaceStress
 //!< One entry per element "face".
 using ElementStress = std::vector<FaceStress>;
 
+// TODO: Move to its own header and put a forward decl here.
 struct EvaluationContext
 {
     EvaluationContext() = default;
@@ -129,6 +130,8 @@ struct EvaluationContext
     }
 
     std::map<std::string, double> parameters;
+
+    std::map<std::string, std::map<std::string, double>> beamSectionParameters;
 
     vector_string_t* err_msgs  = nullptr;
     vector_string_t* warn_msgs = nullptr;

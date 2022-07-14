@@ -493,6 +493,9 @@ class CFiniteElementProblem
     void internal_parser1_Parameters(
         const mrpt::containers::yaml& f, EvaluationContext& ctx) const;
 
+    void internal_parser2_BeamSections(
+        const mrpt::containers::yaml& f, EvaluationContext& ctx) const;
+
     /** From the list of elements and their properties and connections, build
      * the list of DoFs relevant to the problem.
      */

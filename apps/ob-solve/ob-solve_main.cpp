@@ -225,7 +225,7 @@ int main_code(int argc, char** argv)
 
     // Load from file:
     vector_string_t errMsg, warnMsg;
-    problem.loadFromFile(fil_to_load, &errMsg, &warnMsg);
+    problem.loadFromFile(fil_to_load, errMsg, warnMsg);
 
     if (!errMsg.empty())
     {
@@ -302,13 +302,13 @@ int main_code(int argc, char** argv)
     // Mesh?
     // -------------------------------------------------------------
     CStructureProblem problem_mesh;
-    MeshOutputInfo   mesh_out_info;
-    MeshParams       mesh_params;
+    MeshOutputInfo    mesh_out_info;
+    MeshParams        mesh_params;
 
     mesh_params.max_element_length = arg_mesh_resolution.getValue();
 
     CStructureProblem* problem_to_solve = nullptr;
-    MeshOutputInfo*   mesh_info        = nullptr;
+    MeshOutputInfo*    mesh_info        = nullptr;
 
     if (arg_meshing.isSet())
     {
@@ -808,12 +808,12 @@ int main_code(int argc, char** argv)
 
     for (size_t i = 0; i < nF; i++)
     {
-        const NodeDoF& dof                = dofs[info.free_dof_indices[i]];
+        const NodeDoF& dof            = dofs[info.free_dof_indices[i]];
         U[dof.nodeId][dof.dofAsInt()] = sInfo.U_f[i];
     }
     for (size_t i = 0; i < nB; i++)
     {
-        const NodeDoF& dof                = dofs[info.bounded_dof_indices[i]];
+        const NodeDoF& dof            = dofs[info.bounded_dof_indices[i]];
         U[dof.nodeId][dof.dofAsInt()] = info.U_b[i];
     }
 
@@ -1515,7 +1515,7 @@ void listDOFs2titles(
     for (size_t i = 0; i < nTot; i++)
     {
         const NodeDoF& dof = dofs[i];
-        string&     s   = dof_titles[i];
+        string&        s   = dof_titles[i];
 
         if (html)
             s = format(
