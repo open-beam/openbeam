@@ -21,7 +21,7 @@ std::string AppOpenBeam::LoadStructureDefinition(const std::string& def)
     openbeam::vector_string_t errMsg, warnMsg;
 
     std::stringstream ss(def);
-    structure_.loadFromStream(ss, &errMsg, &warnMsg);
+    structure_.loadFromStream(ss, errMsg, warnMsg);
 
     // Return errors:
     for (const auto& m : errMsg)
