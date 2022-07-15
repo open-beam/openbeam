@@ -98,30 +98,38 @@ void CFiniteElementProblem::addLoadAtDOF(const size_t dof_index, const num_t f)
 
 void CFiniteElementProblem::setNumberOfNodes(size_t N)
 {
+    m_node_defined.resize(N);
     m_node_poses.resize(N);
     m_node_labels.resize(N);
 }
 
 void CFiniteElementProblem::setNodePose(size_t idx, const TRotationTrans3D& p)
 {
-    m_node_poses.at(idx) = p;
+    m_node_poses.at(idx)        = p;
+    m_node_defined.at(idx).used = true;
 }
 
 void CFiniteElementProblem::setNodePose(
     size_t idx, const num_t x, const num_t y, const num_t z)
 {
-    ASSERT_(idx < m_node_poses.size());
-
-    TRotationTrans3D& P = m_node_poses[idx];
+    TRotationTrans3D& P = m_node_poses.at(idx);
     P.t.coords[0]       = x;
     P.t.coords[1]       = y;
     P.t.coords[2]       = z;
+
+    m_node_defined.at(idx).used = true;
 }
 
 size_t CFiniteElementProblem::insertNode(const TRotationTrans3D& p)
 {
     const size_t idx = m_node_poses.size();
     m_node_poses.push_back(p);
+
+    if (m_node_defined.size() < idx + 1) m_node_defined.resize(idx + 1);
+    if (m_node_labels.size() < idx + 1) m_node_labels.resize(idx + 1);
+
+    m_node_defined.at(idx).used = true;
+
     return idx;
 }
 

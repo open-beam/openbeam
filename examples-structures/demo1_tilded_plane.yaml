@@ -29,7 +29,7 @@ beam_sections:
 # -------------------------------------------------
 nodes:
 - {id: 0, coords: [0   ,  0], label: A}
-- {id: 1, coords: [0.5 ,  0], label: B}
+- {id: 1, coords: [0.5 ,  0], rot_z: 30, label: B}  # tilted plane
 - {id: 2, coords: [0   ,  1], label: C}
 
 elements:
@@ -48,7 +48,4 @@ constraints:
 # ----------------------------------------------
 node_loads:
 - {node: 2, dof: DX, value: +P}
-
-#element_loads:
-#- {element: 0, type: TEMPERATURE, deltaT: 20}
 

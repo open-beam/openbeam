@@ -43,7 +43,7 @@
  */
 #define OB_MESSAGE(VERBOSE_LEVEL)                       \
     if (openbeam::getVerbosityLevel() >= VERBOSE_LEVEL) \
-    std::cout << "[" << __CURRENT_FUNCTION_NAME__ << "] "
+    std::cout << "[" << __func__ << "] "
 
 #define OB_TODO(x__) MRPT_TODO(x__)
 
@@ -131,11 +131,14 @@ struct EvaluationContext
 
     std::map<std::string, double> parameters;
 
-    std::map<std::string, std::map<std::string, double>> beamSectionParameters;
+    std::map<std::string, mrpt::containers::yaml> beamSectionParameters;
 
     vector_string_t* err_msgs  = nullptr;
     vector_string_t* warn_msgs = nullptr;
     unsigned int     lin_num   = 0;
+
+    // Warning switches:
+    const bool warn_unused_constraints = true;
 };
 
 struct TRotation3D

@@ -76,6 +76,8 @@ class CElement
      * returned by \a getLocalStiffnessMatrices  */
     unsigned char getNumberEdges() const { return m_nEdges; }
 
+    virtual std::string asString() const { return ""; }
+
     /** Return the stiffness submatrices (for element local coordinates) between
      * each pair of edges in this element, for the current element state. From
      * all (in,out) edge pairs, only return those with in<=out (the other half

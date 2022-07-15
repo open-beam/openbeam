@@ -80,6 +80,7 @@ void CElementBeam_2D_RR::getLocalStiffnessMatrices(
             static_cast<unsigned int>(this->conected_nodes_ids[0]),
             static_cast<unsigned int>(this->conected_nodes_ids[1])));
 
+    OB_TODO("Split into new element types for torsion, etc.");
     if (G == UNINITIALIZED_VALUE)
         throw std::runtime_error(format(
             "CElementBeam_2D_RR: Uninitialized parameter G (Element in %u->%u)",

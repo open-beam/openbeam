@@ -10,8 +10,12 @@ file(REMOVE_RECURSE "${WEB_OUTPUT_DIR}/*")
 file(MAKE_DIRECTORY ${WEB_OUTPUT_DIR})
 
 # Copy static files:
-file(INSTALL 
+file(INSTALL
     ${OPENBEAM_SOURCE_DIR}/web-frontend/
+    DESTINATION ${WEB_OUTPUT_DIR}
+)
+file(INSTALL
+    ${OPENBEAM_SOURCE_DIR}/examples-structures
     DESTINATION ${WEB_OUTPUT_DIR}
 )
 

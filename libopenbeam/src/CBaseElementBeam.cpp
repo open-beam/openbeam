@@ -66,6 +66,20 @@ void CBaseElementBeam::loadParamsFromSet(
     if (p.has("J")) this->J = ctx.evaluate(p["J"]);
 }
 
+std::string CBaseElementBeam::asString() const
+{
+    using namespace std::string_literals;
+
+    std::string ret;
+    if (E != UNINITIALIZED_VALUE) ret += "E="s + mrpt::format("%g ", E);
+    if (A != UNINITIALIZED_VALUE) ret += "A="s + mrpt::format("%g ", A);
+    if (Iz != UNINITIALIZED_VALUE) ret += "Iz="s + mrpt::format("%g ", Iz);
+    if (G != UNINITIALIZED_VALUE) ret += "G="s + mrpt::format("%g ", G);
+    if (J != UNINITIALIZED_VALUE) ret += "J="s + mrpt::format("%g ", J);
+
+    return ret;
+}
+
 #if OPENBEAM_HAS_QT5Svg
 void CBaseElementBeam::drawQtSVG(
     QSvgGenerator& svg, const DrawStructureOptions& options,

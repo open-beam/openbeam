@@ -20,6 +20,8 @@
    +---------------------------------------------------------------------------+
  */
 
+#include <mrpt/containers/printf_vector.h>
+#include <mrpt/core/round.h>
 #include <mrpt/io/CTextFileLinesParser.h>
 #include <mrpt/system/string_utils.h>
 #include <openbeam/CFiniteElementProblem.h>
@@ -73,32 +75,29 @@ bool replace_paramsets(
     const EvaluationContext&                             eval_context);
 #endif
 
-#define REPORT_ERROR(_MSG)                                                    \
-    if (eval_context.err_msgs)                                                \
-    {                                                                         \
-        eval_context.err_msgs->push_back(openbeam::format(                    \
-            "Line %u: %s", eval_context.lin_num, std::string(_MSG).c_str())); \
-    }                                                                         \
-    else                                                                      \
-    {                                                                         \
-        std::cerr << openbeam::format(                                        \
-            "Line %u: %s", eval_context.lin_num, std::string(_MSG).c_str());  \
-        return false;                                                         \
+#define REPORT_ERROR(_MSG)                                           \
+    if (ctx.err_msgs)                                                \
+    {                                                                \
+        ctx.err_msgs->push_back(openbeam::format(                    \
+            "Line %u: %s", ctx.lin_num, std::string(_MSG).c_str())); \
+    }                                                                \
+    else                                                             \
+    {                                                                \
+        std::cerr << openbeam::format(                               \
+            "Line %u: %s", ctx.lin_num, std::string(_MSG).c_str());  \
+        return false;                                                \
     }
 
-#define REPORT_WARNING(_MSG)                                \
-    if (eval_context.warn_msgs)                             \
-    {                                                       \
-        eval_context.warn_msgs->push_back(openbeam::format( \
-            "Line %u: (Warning) %s", eval_context.lin_num,  \
-            std::string(_MSG).c_str()));                    \
-    }                                                       \
-    else                                                    \
-    {                                                       \
-        std::cerr << openbeam::format(                      \
-            "Line %u: (Warning) %s", eval_context.lin_num,  \
-            std::string(_MSG).c_str());                     \
-        return false;                                       \
+#define REPORT_WARNING(_MSG)                                                   \
+    if (ctx.warn_msgs)                                                         \
+    {                                                                          \
+        ctx.warn_msgs->push_back(openbeam::format(                             \
+            "Line %u: (Warning) %s", ctx.lin_num, std::string(_MSG).c_str())); \
+    }                                                                          \
+    else                                                                       \
+    {                                                                          \
+        std::cerr << openbeam::format(                                         \
+            "Line %u: (Warning) %s", ctx.lin_num, std::string(_MSG).c_str());  \
     }
 
 #define EVALUATE_EXPRESSION(_IN_EXPR, _OUT_VAL) \
@@ -172,9 +171,6 @@ bool CFiniteElementProblem::internal_loadFromYaml(
     if (err_msgs) err_msgs->get().clear();
     if (warn_msgs) warn_msgs->get().clear();
 
-    // Warning switches:
-    const bool warn_unused_constraints = true;
-
     // Clear previous contents:
     this->clear();
 
@@ -195,8 +191,6 @@ bool CFiniteElementProblem::internal_loadFromYaml(
     ctx.warn_msgs = warn_msgs ? &warn_msgs->get() : nullptr;
     ctx.err_msgs  = err_msgs ? &err_msgs->get() : nullptr;
 
-    bool needToRecomputeDOFs = true;
-
     try
     {
         ASSERTMSG_(
@@ -212,727 +206,26 @@ bool CFiniteElementProblem::internal_loadFromYaml(
         // ---------------------------
         internal_parser2_BeamSections(f, ctx);
 
-#if 0
-        while (f.getNextLine(lin))
-        {
-            const unsigned int lin_num =
-                static_cast<unsigned int>(f.getCurrentLineNumber());
+        // ----------------------------------------
+        // Geometry: nodes, elements, constraints
+        // ----------------------------------------
+        internal_parser3_nodes(f, ctx);
+        internal_parser4_elements(f, ctx);
 
-            // Complete evaluation context:
-            eval_context.lin_num = lin_num;
-            eval_context.lin     = &lin;
+        // Before adding constrains, we must analyze the list of DoFs in the
+        // problem:
+        OB_MESSAGE(4)
+            << "Computing list of DoFs before introducing constraints.\n";
+        updateElementsOrientation();
+        updateListDoFs();
 
-            vector_string_t toks;
-            mrpt::system::tokenize(lin, ",\r\n", toks);
-            if (toks.empty()) continue;
+        internal_parser5_constraints(f, ctx);
 
-            // Check change of section:
-            if (strCmpI("[GEOMETRY]", toks[0]))
-            {
-                curSec = sGeometry;
-                continue;  // Done with this line
-            }
-            else if (strCmpI("[LOADS]", toks[0]))
-            {
-                curSec = sLoads;
-                continue;  // Done with this line
-            }
-
-            // process line commands that may appear at any point in files:
-            // -------------------------------------------------------------
-            if (strCmpI(toks[0], "VAR"))
-            {
-                // The sintax must be:
-                //  VAR , <NAME> = <VALUE>
-
-                if (toks.size() != 2)
-                {
-                    REPORT_ERROR(
-                        "Expected syntax 'VAR,<NAME>=<VALUE>' [',' "
-                        "tokenization]");
-                }
-                else
-                {
-                    vector_string_t parts;
-                    mrpt::system::tokenize(toks[1], "=", parts);
-
-                    // Parts: [nam] = [VAL]
-                    if (parts.size() != 2)
-                    {
-                        REPORT_ERROR(
-                            "Expected syntax 'VAR,<NAME>=<VALUE>' ['=' "
-                            "tokenization]");
-                    }
-                    else
-                    {
-                        const string sVarName = parts[0];
-                        const string sVarVal  = parts[1];
-                        // Run the evaluator:
-                        num_t val;
-                        if (EVALUATE_EXPRESSION(sVarVal, val))
-                        {
-                            // Declare a new variable:
-                            eval_context.user_vars[sVarName] = val;
-                            continue;  // Done with this line
-                        }
-                    }
-                }
-
-            }  // end "VAR"
-            else if (strCmpI(toks[0], "PARAMSET"))
-            {
-                // Syntax: PARAMSET,id=<ID>, <NAM1>=<VAL1> [,<NAM2>=<VAL2>
-                // [,...] ]
-                TParsedParams params;
-                parseParams(toks, params);
-
-                if (!params.hasKey("id"))
-                {
-                    REPORT_ERROR(
-                        "Missing mandatory field 'id'. Expected: "
-                        "'PARAMSET,id=<ID>, <NAM1>=<VAL1> [,<NAM2>=<VAL2> "
-                        "[,...] ]'");
-                }
-                else
-                {
-                    // Expand possible PARAMSETs (recursive PARAMSETs...)
-                    if (REPLACE_PARAMSETS(params.key_vals))
-                    {
-                        const std::string sId = params.key_vals["id"];
-                        params.key_vals.erase("id");
-
-                        // Add new param set:
-                        user_param_sets[sId] = params.key_vals;
-                        continue;  // Done with this line
-                    }
-                }
-
-            }  // end "PARAMSET"
-
-            // process the line depending on the current section:
-            // ----------------------------------------------------------
-            switch (curSec)
-            {
-                // =========  GEOMETRY ============
-                case sGeometry:
-                {
-                    if (strCmpI(toks[0], "NODE"))
-                    {
-                        // Syntax: NODE, ID=<id>, <X>, <Y> [, <Z> ,
-                        // [<ROT_Z>,
-                        // [<ROT_Y>, [<ROT_X>] ] ] ]
-                        if (toks.size() < 4 || toks.size() > 8)
-                        {
-                            REPORT_ERROR(
-                                "Expected syntax 'NODE, ID=<id>, <X>, <Y>  "
-                                "[, "
-                                "<Z> , [<ROT_Z>, [<ROT_Y>, [<ROT_X>] ] ] "
-                                "]' "
-                                "[tokenization]");
-                        }
-                        else
-                        {
-                            const bool has_z     = (toks.size() >= 5);
-                            const bool has_rot_z = (toks.size() >= 6);
-                            const bool has_rot_y = (toks.size() >= 7);
-                            const bool has_rot_x = (toks.size() >= 8);
-
-                            // ID=<id>:
-                            vector_string_t parts;
-                            mrpt::system::tokenize(toks[1], "=", parts);
-                            if (parts.size() != 2 || !strCmpI(parts[0], "ID"))
-                            {
-                                REPORT_ERROR(
-                                    "Expected syntax 'NODE, ID=<id>, <X>, "
-                                    "<Y>  "
-                                    "[, <Z> , [<ROT_Z>, [<ROT_Y>, "
-                                    "[<ROT_X>] ] "
-                                    "] ]' [problem around the ID]");
-                            }
-                            else
-                            {
-                                const string sIDVal = parts[1];
-                                num_t        id_val;
-                                if (EVALUATE_EXPRESSION(sIDVal, id_val))
-                                {
-                                    if (id_val != floor(id_val) || id_val < 0)
-                                    {
-                                        REPORT_ERROR(
-                                            "Expected syntax 'NODE, "
-                                            "ID=<id>, "
-                                            "<X>, <Y>  [, <Z> , [<ROT_Z>, "
-                                            "[<ROT_Y>, [<ROT_X>] ] ] ]' "
-                                            "[id "
-                                            "must be a possitive integer]");
-                                    }
-                                    else
-                                    {
-                                        const size_t ID =
-                                            static_cast<size_t>(id_val);
-
-                                        num_t X = 0, Y = 0, Z = 0;
-                                        num_t rot_X = 0, rot_Y = 0, rot_Z = 0;
-
-                                        if (EVALUATE_EXPRESSION(toks[2], X) &&
-                                            EVALUATE_EXPRESSION(toks[3], Y) &&
-                                            (!has_z ||
-                                             EVALUATE_EXPRESSION(toks[4], Z)) &&
-                                            (!has_rot_z ||
-                                             EVALUATE_EXPRESSION(
-                                                 toks[5], rot_Z)) &&
-                                            (!has_rot_y ||
-                                             EVALUATE_EXPRESSION(
-                                                 toks[6], rot_Y)) &&
-                                            (!has_rot_x || EVALUATE_EXPRESSION(
-                                                               toks[7], rot_X)))
-                                        {
-                                            // We have all the data, do
-                                            // insert the new node:
-                                            const size_t nOldNodes =
-                                                this->getNumberOfNodes();
-                                            OB_TODO("Check unused IDs")
-                                            if (nOldNodes >= ID)
-                                                this->setNumberOfNodes(ID + 1);
-
-                                            // Set node pose:
-                                            TRotationTrans3D node_pose(
-                                                X, Y, Z, DEG2RAD(rot_X),
-                                                DEG2RAD(rot_Y), DEG2RAD(rot_Z));
-                                            this->setNodePose(ID, node_pose);
-
-                                            needToRecomputeDOFs = true;
-
-                                            OB_MESSAGE(3)
-                                                << "Adding node #" << ID
-                                                << " at (" << X << "," << Y
-                                                << "," << Z << "," << rot_X
-                                                << "," << rot_Y << "," << rot_Z
-                                                << ")\n";
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }  // end NODE
-                    else if (strCmpI(toks[0], "ELEMENT"))
-                    {
-                        // Syntax: ELEMENT, type=<TYPE>, from=<FROM>,
-                        // to=<TO>,
-                        // [,id=ID], [...]
-                        TParsedParams params;
-                        parseParams(toks, params);
-
-                        if (!params.hasKey("type") || !params.hasKey("from") ||
-                            !params.hasKey("to"))
-                        {
-                            REPORT_ERROR(
-                                "Missing mandatory fields: ELEMENT, "
-                                "type=<TYPE>, from=<FROM>, to=<TO>, "
-                                "[,id=ID], "
-                                "[...]");
-                        }
-                        else
-                        {
-                            const std::string& eType = params.key_vals["type"];
-
-                            num_t nFrom = 0, nTo = 0;
-                            if (EVALUATE_EXPRESSION(
-                                    params.key_vals["from"], nFrom) &&
-                                EVALUATE_EXPRESSION(params.key_vals["to"], nTo))
-                            {
-                                const size_t nNodes = this->getNumberOfNodes();
-                                if (nFrom < 0 || nTo < 0 || nFrom >= nNodes ||
-                                    nTo >= nNodes)
-                                {
-                                    REPORT_ERROR(
-                                        "'from' and 'to' IDs must be valid "
-                                        "IDs "
-                                        "of existing nodes");
-                                }
-                                else
-                                {
-                                    auto el =
-                                        CElement::createElementByName(eType);
-                                    if (!el)
-                                    { REPORT_ERROR("Unknown element type"); }
-                                    else
-                                    {
-                                        // Expand possible PARAMSETs:
-                                        if (REPLACE_PARAMSETS(params.key_vals))
-                                        {
-                                            // Set common params to any
-                                            // element:
-                                            ASSERT_(
-                                                el->conected_nodes_ids.size() ==
-                                                2);
-                                            el->conected_nodes_ids[0] =
-                                                static_cast<size_t>(nFrom);
-                                            el->conected_nodes_ids[1] =
-                                                static_cast<size_t>(nTo);
-                                            // And process the rest of
-                                            // params:
-                                            el->loadParamsFromSet(
-                                                params.key_vals, eval_context);
-                                            this->insertElement(el);
-
-                                            needToRecomputeDOFs = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }  // end ELEMENT
-                    else if (strCmpI(toks[0], "CONSTRAINT"))
-                    {
-                        // Syntax: CONSTRAINT, node=<ID>, dof=<DOF> [,
-                        // val=<VAL>]
-                        TParsedParams params;
-                        parseParams(toks, params);
-
-                        if (REPLACE_PARAMSETS(params.key_vals))
-                        {
-                            if (!params.hasKey("node") || !params.hasKey("dof"))
-                            {
-                                REPORT_ERROR(
-                                    "Missing mandatory fields: CONSTRAINT, "
-                                    "node=<ID>, dof=<DOF> [, val=<VAL>]");
-                            }
-                            else
-                            {
-                                const std::string& sNode =
-                                    params.key_vals["node"];
-                                const std::string& sDof =
-                                    params.key_vals["dof"];
-
-                                num_t fNodeId;
-                                if (EVALUATE_EXPRESSION(sNode, fNodeId))
-                                {
-                                    if (fNodeId != floor(fNodeId) ||
-                                        fNodeId < 0)
-                                    {
-                                        REPORT_ERROR(
-                                            "Node ID must be a "
-                                            "non-negative "
-                                            "integer");
-                                    }
-                                    else
-                                    {
-                                        // Get the value of the constrained
-                                        // displacement (by default=0):
-                                        num_t constr_val = 0;
-
-                                        if (!params.hasKey("val") ||
-                                            EVALUATE_EXPRESSION(
-                                                params.key_vals["val"],
-                                                constr_val))
-                                        {
-                                            const size_t nodeId =
-                                                static_cast<size_t>(fNodeId);
-
-                                            // Before adding constrains, we
-                                            // must analyze the list of DoFs
-                                            // in the problem:
-                                            if (needToRecomputeDOFs)
-                                            {
-                                                OB_MESSAGE(4)
-                                                    << "Recomputing list "
-                                                       "of "
-                                                       "DoFs before "
-                                                       "introducing new "
-                                                       "constraints.\n";
-                                                updateElementsOrientation();
-                                                updateListDoFs();
-                                                needToRecomputeDOFs = false;
-                                            }
-
-                                            bool found = false;
-                                            for (size_t i = 0;
-                                                 i < listDofNamesCount; i++)
-                                            {
-                                                if (strCmpI(
-                                                        listDofNames[i].name,
-                                                        sDof))
-                                                {
-                                                    for (int k = 0; k < 6; k++)
-                                                        if (listDofNames[i]
-                                                                .dofs[k])
-                                                        {
-                                                            const size_t
-                                                                globalIdxDOF =
-                                                                    this->getDOFIndex(
-                                                                        nodeId,
-                                                                        DoF_index(
-                                                                            k));
-                                                            if (globalIdxDOF !=
-                                                                string::npos)
-                                                            {
-                                                                this->insertConstraint(
-                                                                    globalIdxDOF,
-                                                                    constr_val);
-                                                            }
-                                                            else
-                                                            {
-                                                                if (warn_unused_constraints)
-                                                                    REPORT_WARNING(
-                                                                        format(
-                                                                            "Co"
-                                                                            "ns"
-                                                                            "tr"
-                                                                            "ai"
-                                                                            "nt"
-                                                                            " i"
-                                                                            "gn"
-                                                                            "or"
-                                                                            "ed"
-                                                                            " s"
-                                                                            "in"
-                                                                            "ce"
-                                                                            " t"
-                                                                            "he"
-                                                                            " D"
-                                                                            "oF"
-                                                                            " %"
-                                                                            "i "
-                                                                            "is"
-                                                                            " n"
-                                                                            "ot"
-                                                                            " c"
-                                                                            "on"
-                                                                            "si"
-                                                                            "de"
-                                                                            "re"
-                                                                            "d "
-                                                                            "in"
-                                                                            " t"
-                                                                            "he"
-                                                                            " p"
-                                                                            "ro"
-                                                                            "bl"
-                                                                            "em"
-                                                                            " g"
-                                                                            "eo"
-                                                                            "me"
-                                                                            "tr"
-                                                                            "y"
-                                                                            ".",
-                                                                            k))
-                                                            }
-                                                        }
-                                                    found = true;
-                                                    break;
-                                                }
-                                            }
-
-                                            if (!found)
-                                            {
-                                                REPORT_ERROR(
-                                                    "Field 'dof=...' has "
-                                                    "an "
-                                                    "invalid value in "
-                                                    "CONSTRAINT");
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }  // end CONSTRAINT
-                    else if (strCmpI(toks[0], "NODELABEL"))
-                    {
-                        // Syntax: NODELABEL, ID=<id>, <LABEL>
-                        if (toks.size() != 3)
-                        {
-                            REPORT_ERROR(
-                                "Expected syntax 'NODELABEL, ID=<id>, "
-                                "<LABEL>' "
-                                "[tokenization]");
-                        }
-                        else
-                        {
-                            // ID=<id>:
-                            vector_string_t parts;
-                            mrpt::system::tokenize(toks[1], "=", parts);
-                            if (parts.size() != 2 || !strCmpI(parts[0], "ID"))
-                            {
-                                REPORT_ERROR(
-                                    "Expected syntax 'NODELABEL, ID=<id>, "
-                                    "<LABEL>' [problem around the ID]");
-                            }
-                            else
-                            {
-                                const string sIDVal = parts[1];
-                                num_t        id_val;
-                                if (EVALUATE_EXPRESSION(sIDVal, id_val))
-                                {
-                                    if (id_val != floor(id_val) || id_val < 0)
-                                    {
-                                        REPORT_ERROR(
-                                            "Expected syntax 'NODELABEL, "
-                                            "ID=<id>, <LABEL>' [id must be "
-                                            "a "
-                                            "possitive integer]");
-                                    }
-                                    else
-                                    {
-                                        const size_t ID =
-                                            static_cast<size_t>(id_val);
-                                        const string sLabel =
-                                            mrpt::system::trim(toks[2]);
-                                        if (ID >= m_node_labels.size())
-                                        {
-                                            REPORT_ERROR(
-                                                "'NODELABEL: ID was not "
-                                                "defined first!");
-                                        }
-                                        else
-                                        {
-                                            m_node_labels[ID] = sLabel;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {  // Unknown command for this section!
-                        REPORT_ERROR("Unknown command for section [GEOMETRY]");
-                    }
-                }
-                break;
-
-                // =========  LOADS ============
-                case sLoads:
-                {
-                    if (strCmpI(toks[0], "LOAD"))
-                    {
-                        // Syntax: LOAD, node=<ID>, dof=<DOF>, <VALUE>
-                        TParsedParams params;
-                        parseParams(toks, params);
-
-                        if (REPLACE_PARAMSETS(params.key_vals))
-                        {
-                            if (!params.hasKey("node") ||
-                                !params.hasKey("dof") ||
-                                params.rest_values.size() != 1)
-                            {
-                                REPORT_ERROR(
-                                    "Wrong syntax. Expected is: LOAD, "
-                                    "node=<ID>, dof=<DOF>, <VALUE>");
-                            }
-                            else
-                            {
-                                const std::string& sNode =
-                                    params.key_vals["node"];
-                                const std::string& sDof =
-                                    params.key_vals["dof"];
-
-                                num_t fNodeId;
-                                if (EVALUATE_EXPRESSION(sNode, fNodeId))
-                                {
-                                    if (fNodeId != floor(fNodeId) ||
-                                        fNodeId < 0)
-                                    {
-                                        REPORT_ERROR(
-                                            "Node ID must be a "
-                                            "non-negative "
-                                            "integer");
-                                    }
-                                    else
-                                    {
-                                        const size_t nodeId =
-                                            static_cast<size_t>(fNodeId);
-
-                                        num_t load_val = 0;
-
-                                        if (EVALUATE_EXPRESSION(
-                                                params.rest_values[0],
-                                                load_val))
-                                        {
-                                            // Before adding constrains, we
-                                            // must analyze the list of DoFs
-                                            // in the problem:
-                                            if (needToRecomputeDOFs)
-                                            {
-                                                updateElementsOrientation();
-                                                updateListDoFs();
-                                                needToRecomputeDOFs = false;
-                                            }
-
-                                            bool found = false;
-                                            for (size_t i = 0;
-                                                 i < listDofNamesCount; i++)
-                                            {
-                                                if (strCmpI(
-                                                        listDofNames[i].name,
-                                                        sDof))
-                                                {
-                                                    for (int k = 0; k < 6; k++)
-                                                        if (listDofNames[i]
-                                                                .dofs[k])
-                                                        {
-                                                            const size_t
-                                                                globalIdxDOF =
-                                                                    this->getDOFIndex(
-                                                                        nodeId,
-                                                                        DoF_index(
-                                                                            k));
-                                                            if (globalIdxDOF !=
-                                                                string::npos)
-                                                            {
-                                                                this->addLoadAtDOF(
-                                                                    globalIdxDOF,
-                                                                    load_val);
-                                                            }
-                                                            else
-                                                            {
-                                                                REPORT_WARNING(
-                                                                    format(
-                                                                        "Lo"
-                                                                        "ad"
-                                                                        " "
-                                                                        "ig"
-                                                                        "no"
-                                                                        "re"
-                                                                        "d "
-                                                                        "si"
-                                                                        "nc"
-                                                                        "e "
-                                                                        "th"
-                                                                        "e "
-                                                                        "Do"
-                                                                        "F "
-                                                                        "%i"
-                                                                        " i"
-                                                                        "s "
-                                                                        "no"
-                                                                        "t "
-                                                                        "co"
-                                                                        "ns"
-                                                                        "id"
-                                                                        "er"
-                                                                        "ed"
-                                                                        " "
-                                                                        "in"
-                                                                        " "
-                                                                        "th"
-                                                                        "e "
-                                                                        "pr"
-                                                                        "ob"
-                                                                        "le"
-                                                                        "m "
-                                                                        "ge"
-                                                                        "om"
-                                                                        "et"
-                                                                        "ry"
-                                                                        ".",
-                                                                        k));
-                                                            }
-                                                        }
-                                                    found = true;
-                                                    break;
-                                                }
-                                            }
-
-                                            if (!found)
-                                            {
-                                                REPORT_ERROR(
-                                                    "Field 'dof=...' has "
-                                                    "an "
-                                                    "invalid value in "
-                                                    "CONSTRAINT");
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }  // end "LOAD"
-                    else if (strCmpI(toks[0], "ELOAD"))
-                    {
-                        CStructureProblem* myObj =
-                            dynamic_cast<CStructureProblem*>(this);
-                        if (!myObj)
-                        {
-                            REPORT_ERROR(
-                                "ELOAD command only applicable to "
-                                "openbeam::CStructureProblem objects.")
-                        }
-                        else
-                        {
-                            // Syntax: ELOAD, element=<ID>, type=<TYPE>,
-                            // <P1>=<K1>, <P2>=<K2>,...
-                            TParsedParams params;
-                            parseParams(toks, params);
-
-                            if (!params.hasKey("type") ||
-                                !params.hasKey("element"))
-                            {
-                                REPORT_ERROR(
-                                    "Missing mandatory fields: ELOAD, "
-                                    "element=<ID>, type=<TYPE>, [...]");
-                            }
-                            else
-                            {
-                                const std::string sType =
-                                    params.key_vals["type"];
-                                const std::string sID =
-                                    params.key_vals["element"];
-                                params.key_vals.erase("type");
-                                params.key_vals.erase("element");
-
-                                num_t fID;
-
-                                if (EVALUATE_EXPRESSION(sID, fID))
-                                {
-                                    if (fID < 0 || fID != floor(fID))
-                                    {
-                                        REPORT_ERROR(
-                                            "Element ID not a valid ID of "
-                                            "existing element.");
-                                    }
-                                    else
-                                    {
-                                        const size_t eleIdx =
-                                            static_cast<size_t>(fID);
-
-                                        auto load =
-                                            CLoadOnBeam::createLoadByName(
-                                                sType);
-                                        if (!load)
-                                        { REPORT_ERROR("Unknown load type"); }
-                                        else
-                                        {
-                                            // Expand possible PARAMSETs:
-                                            if (REPLACE_PARAMSETS(
-                                                    params.key_vals))
-                                            {
-                                                // Process the rest of
-                                                // params:
-                                                load->loadParamsFromSet(
-                                                    params.key_vals,
-                                                    eval_context);
-                                                // And add:
-                                                myObj->addLoadAtBeam(
-                                                    eleIdx, load);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }  // end ELOAD
-                    else
-                    {  // Unknown command for this section!
-                        REPORT_ERROR("Unknown command for section [LOAD]");
-                    }
-                }
-
-                default:
-                    break;
-            };
-
-        };  // end while read line from file
-#endif
+        // ----------------------------------------
+        // Loads: on nodes, on elements
+        // ----------------------------------------
+        internal_parser6_node_loads(f, ctx);
+        internal_parser7_element_loads(f, ctx);
 
         // Return OK only if no error messages were emmitted:
         if (err_msgs)
@@ -946,9 +239,9 @@ bool CFiniteElementProblem::internal_loadFromYaml(
         const std::string sErr(e.what());
         if (sErr.empty())
         {
-            // If we catch an exception is because err_msgs=nullptr but we found
-            // an error, which was already dumped to cerr. So just return false
-            // and we're done.
+            // If we catch an exception is because err_msgs=nullptr but we
+            // found an error, which was already dumped to cerr. So just
+            // return false and we're done.
             return false;
         }
         else
@@ -1047,7 +340,8 @@ void CFiniteElementProblem::internal_parser1_Parameters(
 
             if (ctx.parameters.count(k) != 0)
                 throw std::runtime_error(mrpt::format(
-                    "[Line: %i] parameter with name '%s' was already defined.",
+                    "[Line: %i] parameter with name '%s' was already "
+                    "defined.",
                     kv.first.marks.line + 1, k.c_str()));
 
             ctx.lin_num       = kv.second.marks.line;
@@ -1074,7 +368,8 @@ void CFiniteElementProblem::internal_parser2_BeamSections(
     {
         if (!f.has("beam_sections"))
             throw std::runtime_error(
-                "Cannot find mandatory 'beam_sections' section in YAML file");
+                "Cannot find mandatory 'beam_sections' section in YAML "
+                "file");
 
         auto p = f["beam_sections"];
         ASSERT_(p.isSequence());
@@ -1091,15 +386,17 @@ void CFiniteElementProblem::internal_parser2_BeamSections(
             const auto sectionName = ne.at("name").as<std::string>();
 
             auto& bsp = ctx.beamSectionParameters[sectionName];
+            bsp       = mrpt::containers::yaml::Map();
 
             for (const auto& kv : ne)
             {
                 const auto k = kv.first.as<std::string>();
                 if (k == "name") continue;
 
-                if (bsp.count(k) != 0)
+                if (bsp.has(k))
                     throw std::runtime_error(mrpt::format(
-                        "[Line: %i] beam parameter with name '%s' was already "
+                        "[Line: %i] beam parameter with name '%s' was "
+                        "already "
                         "defined.",
                         kv.first.marks.line + 1, k.c_str()));
 
@@ -1120,5 +417,424 @@ void CFiniteElementProblem::internal_parser2_BeamSections(
             std::cerr << e.what();
         throw std::runtime_error(
             "Errors found in 'beam_sections' section, aborting.");
+    }
+}
+
+void CFiniteElementProblem::internal_parser3_nodes(
+    const mrpt::containers::yaml& f, EvaluationContext& ctx)
+{
+    try
+    {
+        if (!f.has("nodes"))
+            throw std::runtime_error(
+                "Cannot find mandatory 'nodes' section in YAML file");
+
+        auto p = f["nodes"];
+        ASSERT_(p.isSequence());
+        ASSERT_(!p.asSequence().empty());
+
+        for (const auto& e : p.asSequence())
+        {
+            ASSERT_(e.isMap());
+            const auto& em = e.asMap();
+
+            // - {id: 0, coords: [0   ,  0], rot_z=30, label: A}
+
+            const double dID = ctx.evaluate(em.at("id").as<std::string>());
+            const auto   id  = mrpt::round(dID);
+
+            // auto-grow list of nodes:
+            if (id >= getNumberOfNodes()) setNumberOfNodes(id + 1);
+
+            const auto& seqCoords = em.at("coords").asSequence();
+            ASSERTMSG_(
+                seqCoords.size() == 2 || seqCoords.size() == 3,
+                mrpt::format(
+                    "Near line %i: `coords` of node must have 2 [x,y] or 3 "
+                    "[x,y,z] numbers",
+                    e.marks.line + 1));
+
+            num_t x = 0, y = 0, z = 0, rot_x = 0, rot_y = 0, rot_z = 0;
+            x = ctx.evaluate(seqCoords.at(0).as<std::string>());
+            y = ctx.evaluate(seqCoords.at(1).as<std::string>());
+            if (seqCoords.size() >= 3)
+                z = ctx.evaluate(seqCoords.at(2).as<std::string>());
+
+            if (em.count("rot_z") != 0)
+                rot_z = DEG2RAD(ctx.evaluate(em.at("rot_z").as<std::string>()));
+
+            std::string nodeLabel;
+            if (em.count("label") != 0)
+                nodeLabel = em.at("label").as<std::string>();
+
+            // We have all the data, do insert the new node:
+
+            // Set node pose:
+            TRotationTrans3D node_pose(
+                x, y, z, DEG2RAD(rot_x), DEG2RAD(rot_y), DEG2RAD(rot_z));
+
+            setNodePose(id, node_pose);
+            m_node_labels[id] = nodeLabel;
+
+            OB_MESSAGE(3) << "Adding node #" << id << " at (" << x << "," << y
+                          << "," << z << "," << rot_x << "," << rot_y << ","
+                          << rot_z << ") label='" << nodeLabel << "'\n";
+        }
+
+        // check no undefined node IDs:
+        std::string unusedNodesErrorMsg;
+        for (size_t i = 0; i < m_node_defined.size(); i++)
+        {
+            if (!m_node_defined[i].used)
+            {
+                unusedNodesErrorMsg += std::to_string(i);
+                unusedNodesErrorMsg += " ";
+            }
+        }
+        if (!unusedNodesErrorMsg.empty())
+        {
+            throw std::runtime_error(mrpt::format(
+                "Undefined node IDs: %s", unusedNodesErrorMsg.c_str()));
+        }
+    }
+    catch (const std::exception& e)
+    {
+        if (ctx.err_msgs)
+            ctx.err_msgs->push_back(e.what());
+        else
+            std::cerr << e.what();
+        throw std::runtime_error("Errors found in 'nodes' section, aborting.");
+    }
+}
+
+void CFiniteElementProblem::internal_parser4_elements(
+    const mrpt::containers::yaml& f, EvaluationContext& ctx)
+{
+    try
+    {
+        if (!f.has("elements"))
+            throw std::runtime_error(
+                "Cannot find mandatory 'elements' section in YAML file");
+
+        auto p = f["elements"];
+        ASSERT_(p.isSequence());
+        ASSERT_(!p.asSequence().empty());
+
+        for (const auto& e : p.asSequence())
+        {
+            ASSERT_(e.isMap());
+            const auto& em = e.asMap();
+
+            // - {type: BEAM2D_AA, nodes: [0, 1], section: MY_BAR}
+
+            // Element type:
+            const std::string eType = em.at("type").as<std::string>();
+
+            auto el = CElement::createElementByName(eType);
+            if (!el)
+            {
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: Unknown element type '%s'", e.marks.line + 1,
+                    eType.c_str()));
+            }
+
+            // connected nodes:
+            ASSERT_(em.at("nodes").isSequence());
+            ASSERT_GE_(em.at("nodes").asSequence().size(), 2U);
+
+            const auto seqNodes = em.at("nodes").asSequence();
+            if (seqNodes.size() != el->conected_nodes_ids.size())
+            {
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: Element of type '%s' expects %u connected "
+                    "nodes, "
+                    "but %u provided",
+                    e.marks.line + 1, eType.c_str(),
+                    static_cast<unsigned int>(seqNodes.size()),
+                    static_cast<unsigned int>(el->conected_nodes_ids.size())));
+            }
+            for (size_t i = 0; i < el->conected_nodes_ids.size(); i++)
+                el->conected_nodes_ids.at(i) =
+                    ctx.evaluate(seqNodes.at(i).as<std::string>());
+
+            // And process the rest of params:
+            const std::string sectionName = em.at("section").as<std::string>();
+            if (ctx.beamSectionParameters.count(sectionName) == 0)
+            {
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: Element of type '%s' uses section '%s' which "
+                    "was "
+                    "not defined.",
+                    e.marks.line + 1, eType.c_str(), sectionName.c_str()));
+            }
+
+            auto& bsp = ctx.beamSectionParameters.at(sectionName);
+
+            el->loadParamsFromSet(bsp, ctx);
+            insertElement(el);
+
+            OB_MESSAGE(3) << "Adding element of type " << eType
+                          << " connected to nodes "
+                          << mrpt::containers::sprintf_vector(
+                                 "%u", el->conected_nodes_ids)
+                          << ": " << el->asString() << "\n";
+        }
+    }
+    catch (const std::exception& e)
+    {
+        if (ctx.err_msgs)
+            ctx.err_msgs->push_back(e.what());
+        else
+            std::cerr << e.what();
+        throw std::runtime_error(
+            "Errors found in 'elements' section, aborting.");
+    }
+}
+
+void CFiniteElementProblem::internal_parser5_constraints(
+    const mrpt::containers::yaml& f, EvaluationContext& ctx)
+{
+    try
+    {
+        if (!f.has("constraints"))
+            throw std::runtime_error(
+                "Cannot find mandatory 'constraints' section in YAML file");
+
+        auto p = f["constraints"];
+        ASSERT_(p.isSequence());
+        ASSERT_(!p.asSequence().empty());
+
+        for (const auto& e : p.asSequence())
+        {
+            ASSERT_(e.isMap());
+            const auto& em = e.asMap();
+
+            const std::string reqFields[2] = {"node", "dof"};
+            for (const auto& f : reqFields)
+            {
+                if (!em.count(f))
+                {
+                    throw std::runtime_error(mrpt::format(
+                        "Line %i: Missing required '%s' entry",
+                        e.marks.line + 1, f.c_str()));
+                }
+            }
+
+            // - {node: 0, dof: DXDY}
+            // - {node: 0, dof: DXDY, value=0.01}
+            const unsigned int nodeId =
+                mrpt::round(ctx.evaluate(em.at("node").as<std::string>()));
+            ASSERT_(nodeId < getNumberOfNodes());
+
+            const std::string sDof      = em.at("dof").as<std::string>();
+            num_t             constrVal = 0;
+            if (em.count("value") != 0)
+                constrVal = ctx.evaluate(em.at("value").as<std::string>());
+
+            bool found = false;
+            for (size_t i = 0; i < listDofNamesCount; i++)
+            {
+                if (strCmpI(listDofNames[i].name, sDof))
+                {
+                    for (int k = 0; k < 6; k++)
+                        if (listDofNames[i].dofs[k])
+                        {
+                            const size_t globalIdxDOF =
+                                this->getDOFIndex(nodeId, DoF_index(k));
+                            if (globalIdxDOF != string::npos)
+                            {
+                                this->insertConstraint(globalIdxDOF, constrVal);
+
+                                OB_MESSAGE(4)
+                                    << "Adding constraint in DoF=" << sDof
+                                    << " of node " << nodeId
+                                    << " value=" << constrVal << "\n";
+                            }
+                            else
+                            {
+                                if (ctx.warn_unused_constraints)
+                                {
+                                    ctx.lin_num = e.marks.line + 1;
+
+                                    REPORT_WARNING(mrpt::format(
+                                        "Constraint ignored since the DoF %i "
+                                        "is not considered in the problem "
+                                        "geometry.",
+                                        k));
+                                }
+                            }
+                        }
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: Field 'dof' has an invalid value='%s'",
+                    e.marks.line + 1, sDof.c_str()));
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        if (ctx.err_msgs)
+            ctx.err_msgs->push_back(e.what());
+        else
+            std::cerr << e.what();
+        throw std::runtime_error(
+            "Errors found in 'constraints' section, aborting.");
+    }
+}
+
+void CFiniteElementProblem::internal_parser6_node_loads(
+    const mrpt::containers::yaml& f, EvaluationContext& ctx)
+{
+    try
+    {
+        if (!f.has("node_loads")) return;
+
+        auto p = f["node_loads"];
+        ASSERT_(p.isSequence());
+
+        for (const auto& e : p.asSequence())
+        {
+            ASSERT_(e.isMap());
+            const auto& em = e.asMap();
+
+            const std::string reqFields[3] = {"node", "dof", "value"};
+            for (const auto& f : reqFields)
+            {
+                if (!em.count(f))
+                {
+                    throw std::runtime_error(mrpt::format(
+                        "Line %i: Missing required '%s' entry",
+                        e.marks.line + 1, f.c_str()));
+                }
+            }
+
+            // - {node: 2, dof: DX, value: +P}
+            const unsigned int nodeId =
+                mrpt::round(ctx.evaluate(em.at("node").as<std::string>()));
+            ASSERT_(nodeId < getNumberOfNodes());
+
+            const std::string sDof = em.at("dof").as<std::string>();
+            num_t loadVal = ctx.evaluate(em.at("value").as<std::string>());
+
+            bool found = false;
+            for (size_t i = 0; i < listDofNamesCount; i++)
+            {
+                if (strCmpI(listDofNames[i].name, sDof))
+                {
+                    for (int k = 0; k < 6; k++)
+                        if (listDofNames[i].dofs[k])
+                        {
+                            const size_t globalIdxDOF =
+                                this->getDOFIndex(nodeId, DoF_index(k));
+                            if (globalIdxDOF != string::npos)
+                            {
+                                this->addLoadAtDOF(globalIdxDOF, loadVal);
+
+                                OB_MESSAGE(4) << "Adding node load on node "
+                                              << nodeId << " dof=" << sDof
+                                              << " value=" << loadVal << "\n";
+                            }
+                            else
+                            {
+                            }
+                        }
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: Node load applied in dof='%s' which has not been "
+                    "included in the problem (is it a free degree of freedom?)",
+                    e.marks.line + 1, sDof.c_str()));
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        if (ctx.err_msgs)
+            ctx.err_msgs->push_back(e.what());
+        else
+            std::cerr << e.what();
+        throw std::runtime_error(
+            "Errors found in 'node_loads' section, aborting.");
+    }
+}
+
+void CFiniteElementProblem::internal_parser7_element_loads(
+    const mrpt::containers::yaml& f, EvaluationContext& ctx)
+{
+    try
+    {
+        if (!f.has("element_loads")) return;
+
+        auto p = f["element_loads"];
+        ASSERT_(p.isSequence());
+
+        CStructureProblem* myObj = dynamic_cast<CStructureProblem*>(this);
+        if (!myObj)
+        {
+            throw std::runtime_error(
+                "`element_loads` only applicable to "
+                "openbeam::CStructureProblem objects");
+        }
+
+        for (const auto& e : p.asSequence())
+        {
+            ASSERT_(e.isMap());
+            const auto& em = e.asMap();
+
+            const std::string reqFields[2] = {"element", "type"};
+            for (const auto& f : reqFields)
+            {
+                if (!em.count(f))
+                {
+                    throw std::runtime_error(mrpt::format(
+                        "Line %i: Missing required '%s' entry",
+                        e.marks.line + 1, f.c_str()));
+                }
+            }
+
+            // #- {element: 0, type: TEMPERATURE, deltaT: 20}
+            const unsigned int elementId =
+                mrpt::round(ctx.evaluate(em.at("element").as<std::string>()));
+            ASSERT_(elementId < getNumberOfElements());
+
+            const std::string sType = em.at("type").as<std::string>();
+
+            auto load = CLoadOnBeam::createLoadByName(sType);
+            if (!load)
+            {
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: Unknown element load type='%s'", e.marks.line + 1,
+                    sType.c_str()));
+            }
+            else
+            {
+                // Process the rest of
+                // params:
+                load->loadParamsFromSet(e, ctx);
+
+                // And add:
+                myObj->addLoadAtBeam(elementId, load);
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        if (ctx.err_msgs)
+            ctx.err_msgs->push_back(e.what());
+        else
+            std::cerr << e.what();
+        throw std::runtime_error(
+            "Errors found in 'element_loads' section, aborting.");
     }
 }

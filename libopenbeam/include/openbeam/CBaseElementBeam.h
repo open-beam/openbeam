@@ -42,8 +42,8 @@ class CBaseElementBeam : public CElement
     num_t E  = UNINITIALIZED_VALUE;  //!< Young modulus (N/m^2)
     num_t A  = UNINITIALIZED_VALUE;  //!< Section (m^2)
     num_t Iz = UNINITIALIZED_VALUE;  //!< Section inertia moment (m^4)
-    num_t G  = UNINITIALIZED_VALUE;  //!< Shear modulus of elasticity (N/m^2)
-    num_t J  = UNINITIALIZED_VALUE;  //!< Polar moment of inertia (m^4)
+    num_t G  = 0;  //!< Shear modulus of elasticity (N/m^2)
+    num_t J  = 0;  //!< Polar moment of inertia (m^4)
 
     /** Sets the basic beam parameters from another existing element. */
     void copyCommonBeamParamsFrom(const CBaseElementBeam& o)
@@ -54,6 +54,8 @@ class CBaseElementBeam : public CElement
         G  = o.G;
         J  = o.J;
     }
+
+    std::string asString() const override;
 
     /** Draws the element to a SVG Cairo context (a pointer to a
      * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed

@@ -449,10 +449,17 @@ class CFiniteElementProblem
     /** @name Main data
         @{ */
 
+    struct node_used_t
+    {
+        node_used_t() = default;
+
+        bool used = false;
+    };
+
+    std::deque<node_used_t>      m_node_defined;
     std::deque<TRotationTrans3D> m_node_poses;
-    /// empty: default, custom label otherwise
-    std::vector<std::string>  m_node_labels;
-    std::deque<CElement::Ptr> m_elements;
+    std::vector<std::string>     m_node_labels;  //!< node custom label
+    std::deque<CElement::Ptr>    m_elements;
 
     /** List of constrainsts for each "fixed/constrained" DoF.
      *  Map key are indices in \a m_problem_DoFs.
@@ -495,6 +502,18 @@ class CFiniteElementProblem
 
     void internal_parser2_BeamSections(
         const mrpt::containers::yaml& f, EvaluationContext& ctx) const;
+
+    void internal_parser3_nodes(
+        const mrpt::containers::yaml& f, EvaluationContext& ctx);
+    void internal_parser4_elements(
+        const mrpt::containers::yaml& f, EvaluationContext& ctx);
+    void internal_parser5_constraints(
+        const mrpt::containers::yaml& f, EvaluationContext& ctx);
+
+    void internal_parser6_node_loads(
+        const mrpt::containers::yaml& f, EvaluationContext& ctx);
+    void internal_parser7_element_loads(
+        const mrpt::containers::yaml& f, EvaluationContext& ctx);
 
     /** From the list of elements and their properties and connections, build
      * the list of DoFs relevant to the problem.
