@@ -102,8 +102,7 @@ std::string AppOpenBeam::GetReactionsAsHTML()
     const std::vector<NodeDoF>& dofs = problem_to_solve_->getProblemDoFs();
 
     std::stringstream ss;
-    ss << "<h3>"
-       << "(F<sub>R</sub>):</h3>\n";
+    ss << "<h3>" << _t(STR_Reactions) << " (F<sub>R</sub>):</h3>\n";
 
     ss << "<table border=\"1\" cellpadding=\"9\" cellspacing=\"0\">\n";
     ss << "<tr><td bgcolor=\"#E0E0E0\">" << _t(STR_dof)
@@ -143,5 +142,66 @@ std::string AppOpenBeam::GetReactionsAsHTML()
 
     ss << "</table>\n";
 
+    return ss.str();
+}
+
+std::string AppOpenBeam::GetDisplacementsAsHTML()
+{
+    using namespace openbeam;
+    using namespace openbeam::localization;
+
+    std::stringstream ss;
+
+    BuildProblemInfo&           info = sInfo_.build_info;
+    const size_t                nF   = info.free_dof_indices.size();
+    const size_t                nB   = info.bounded_dof_indices.size();
+    const std::vector<NodeDoF>& dofs = problem_to_solve_->getProblemDoFs();
+    const size_t nTotalNodes         = problem_to_solve_->getNumberOfNodes();
+
+    std::vector<std::vector<double>> U(nTotalNodes);
+    for (size_t i = 0; i < nTotalNodes; i++) U[i].assign(6, 0);
+    for (size_t i = 0; i < nF; i++)
+    {
+        const NodeDoF& dof            = dofs[info.free_dof_indices[i]];
+        U[dof.nodeId][dof.dofAsInt()] = sInfo_.U_f[i];
+    }
+    for (size_t i = 0; i < nB; i++)
+    {
+        const NodeDoF& dof            = dofs[info.bounded_dof_indices[i]];
+        U[dof.nodeId][dof.dofAsInt()] = info.U_b[i];
+    }
+
+    ss << "<h3>" << _t(STR_Displacements) << " (U<sub>R</sub> " << _t(STR_and)
+       << " U<sub>L</sub>):</h3>\n";
+
+    ss << "<table border=\"1\" cellpadding=\"9\" cellspacing=\"0\">\n";
+
+    ss << "<tr>"
+          "<td bgcolor=\"#E0E0E0\">"
+       << _t(STR_node)
+       << "</td>"
+          "<td bgcolor=\"#E0E0E0\">DX (mm)</td>"
+          "<td bgcolor=\"#E0E0E0\">DY (mm)</td>"
+          "<td bgcolor=\"#E0E0E0\">DZ (mm)</td>"
+          "<td bgcolor=\"#E0E0E0\">RX (deg)</td>"
+          "<td bgcolor=\"#E0E0E0\">RY (deg)</td>"
+          "<td bgcolor=\"#E0E0E0\">RZ (deg)</td></tr>\n";
+
+    for (size_t i = 0; i < nTotalNodes; i++)
+    {
+        ss << "<tr><td>" << problem_to_solve_->getNodeLabel(i) << "</td>";
+        for (int k = 0; k < 6; k++)
+            if (U[i][k] == 0)
+                ss << "<td>0</td>";
+            else
+            {
+                if (k < 3)
+                    ss << format("<td>%.03f</td>", U[i][k] * 1e3);
+                else
+                    ss << format("<td>%.02f</td>", U[i][k] * 180 / M_PI);
+            }
+        ss << "</tr>\n";
+    }
+    ss << "</table>\n";
     return ss.str();
 }

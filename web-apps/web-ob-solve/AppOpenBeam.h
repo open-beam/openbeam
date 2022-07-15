@@ -16,6 +16,7 @@ class AppOpenBeam
     std::string Solve();
 
     std::string GetReactionsAsHTML();
+    std::string GetDisplacementsAsHTML();
 
    private:
     openbeam::CStructureProblem structure_;
@@ -34,5 +35,7 @@ EMSCRIPTEN_BINDINGS(EMTest)
         .function(
             "LoadStructureDefinition", &AppOpenBeam::LoadStructureDefinition)
         .function("Solve", &AppOpenBeam::Solve)
-        .function("GetReactionsAsHTML", &AppOpenBeam::GetReactionsAsHTML);
+        .function("GetReactionsAsHTML", &AppOpenBeam::GetReactionsAsHTML)
+        .function(
+            "GetDisplacementsAsHTML", &AppOpenBeam::GetDisplacementsAsHTML);
 }

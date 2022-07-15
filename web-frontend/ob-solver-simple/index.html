@@ -21,6 +21,7 @@
     <title>OpenBeam online App</title>
 
     <script type="text/javascript" src="../js-ace-min-noconflict/ace.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../js-ace-min-noconflict/ext-linking.js" charset="utf-8"></script>
     <script type="text/javascript" src="../js/web-ob-solve.js" defer></script>
 
 
@@ -31,10 +32,10 @@
         }
 
         #parent {
-            width: 500px;
-            height: 500px;
-            display: inline-block;
-            float: left;
+            height: 400px;
+            flex: 450px 0 0;
+            /*display: inline-block;
+            float: left;*/
             position: relative;
         }
 
@@ -49,7 +50,7 @@
         #canvas {
             flex-grow: 1;
             border: 1px solid #555;
-            height: 500px;
+            height: 400px;
         }
 
         #top-toolbar {
@@ -58,7 +59,7 @@
         }
 
         #OutputArea {
-            width: 500px;
+            width: 100%;
         }
     </style>
 
@@ -77,10 +78,13 @@
             var ret2 = instance.Solve();
 
             var reactions = instance.GetReactionsAsHTML();
+            var displacements = instance.GetDisplacementsAsHTML();
 
             document.getElementById('OutputArea').value = ret + ret2;
 
-            document.getElementById('OutputReactions').innerHTML = reactions;
+            document.getElementById('Results').innerHTML =
+                reactions +
+                displacements;
 
             // Render GL visualization:
 
@@ -109,14 +113,24 @@
     <div>
         <textarea readonly id="OutputArea" rows="10">(output messages)</textarea>
     </div>
-    <div id="OutputReactions">(Reactions)</div>
+    <div id="Results">(Results)</div>
 
 
     <script>
         var editor = ace.edit("editor");
         editor.setTheme("ace/theme/monokai");
         editor.session.setMode("ace/mode/yaml");
+        editor.setOptions({
+            enableLinking: true
+        });
         editor.resize();
+
+        editor.on("linkClick", function (data) {
+            console.log("CLICK", data); // Just for testing so you can see what classes things are...
+            if (data && data.token && data.token.type == "link") {
+                window.open(data.token.value, "_blank");
+            }
+        });
     </script>
 
 
@@ -173,9 +187,19 @@
                 editor.setValue(f, -1); // "-1": move cursor to start
             }
         }
-
     </script>
 
+    <script type="text/javascript">
+        var sc_project = 6918510;
+        var sc_invisible = 1;
+        var sc_security = "d4180ad8"; 
+    </script>
+    <script type="text/javascript" src="https://www.statcounter.com/counter/counter.js" async></script>
+    <noscript>
+        <div class="statcounter"><a title="Statcounter" href="https://statcounter.com/" target="_blank">
+                <img class="statcounter" src="https://c.statcounter.com/6918510/0/d4180ad8/1/" alt="Statcounter"
+                    referrerPolicy="no-referrer-when-downgrade"></a></div>
+    </noscript>
 </body>
 
 </html>

@@ -1,12 +1,9 @@
 # -------------------------------------------------------
 # Example of a FE problem for the OpenBeam library
-#  
-#  By Jose Luis Blanco Claraco (2011-2022)
 #
-#  Problem in section 5.1 from course textbook in 
-#   University of Malaga.
-#
-#          https://github.com/open-beam/openbeam
+# Problem in section 5.1 from course textbook in 
+# University of Malaga, with a modified tilted plane.
+#        https://github.com/open-beam/openbeam
 # -------------------------------------------------------
 
 # -------------------------------------------------

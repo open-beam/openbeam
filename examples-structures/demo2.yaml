@@ -1,12 +1,9 @@
 # -------------------------------------------------------
 # Example of a FE problem for the OpenBeam library
-#  
-#  2011-2022, (C) Jose Luis Blanco Claraco
 #
-#  Problem in section 5.2 from course textbook in 
-#   University of Malaga.
-#
-#          https://github.com/open-beam/openbeam
+# Problem in section 5.2 from course textbook in 
+# University of Malaga.
+#        https://github.com/open-beam/openbeam
 # -------------------------------------------------------
 
 
