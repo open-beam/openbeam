@@ -1,12 +1,109 @@
-#include "AppOpenBeam.h"
 
+
+#define GL_GLEXT_PROTOTYPES
+#define EGL_EGLEXT_PROTOTYPES
+//#include "/home/jlblanco/code/mrpt/3rdparty/nanogui/ext/glfw/deps/linmath.h"
+#include <GLFW/glfw3.h>
+//
 #include <localization.h>  // Internationalization support
+#include <mrpt/opengl/CGridPlaneXY.h>
 #include <openbeam/openbeam.h>
 #include <openbeam/print_html_matrix.h>
 
+#include <cstdio>
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <string>
+
+#include "AppOpenBeam.h"
+
+static void error_callback(int error, const char* description)
+{
+    fprintf(stderr, "Error: %s\n", description);
+}
+std::function<void()> loop;
+void                  main_loop()
+{
+    // loop();
+}
+GLFWwindow* window = nullptr;
+
+// Initialize WebGL
+AppOpenBeam::AppOpenBeam()
+{
+    try
+    {
+        glfwSetErrorCallback(error_callback);
+
+        if (!glfwInit()) exit(EXIT_FAILURE);
+
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+        window = glfwCreateWindow(800, 400, "Openbeam", nullptr, nullptr);
+        if (!window)
+        {
+            glfwTerminate();
+            exit(EXIT_FAILURE);
+        }
+        // glfwSetKeyCallback(window, key_callback);
+        glfwMakeContextCurrent(window);
+
+        glfwSwapInterval(1);
+
+        // TestDisplay3D();
+
+        std::cout << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
+
+        // theScene_->getViewport()->getCamera().setZoomDistance(20);
+
+        theScene_ = mrpt::opengl::COpenGLScene::Create();
+        {
+            auto obj =
+                mrpt::opengl::CGridPlaneXY::Create(-20, 20, -20, 20, 0, 1);
+            obj->setColor(0.8f, 0.8f, 0.8f);
+            theScene_->insert(obj);
+        }
+
+        // emscripten_set_main_loop(main_loop, 0, true);
+
+        // glfwDestroyWindow(window);
+        // glfwTerminate();
+        // exit(EXIT_SUCCESS);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error: " << mrpt::exception_to_str(e) << std::endl;
+    }
+}
+
+void AppOpenBeam::repaintCanvas()
+{
+    if (!window || !theScene_) return;
+
+    try
+    {
+        glfwMakeContextCurrent(window);
+        glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
+        glClear(
+            GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        // theScene_->getViewport()->getCamera().setPointingAt(camx,
+        // camy, camz);
+
+        theScene_->render();
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+}
 
 std::string AppOpenBeam::LoadStructureDefinition(const std::string& def)
 {

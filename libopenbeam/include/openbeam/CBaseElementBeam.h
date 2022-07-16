@@ -60,28 +60,28 @@ class CBaseElementBeam : public CElement
     /** Draws the element to a SVG Cairo context (a pointer to a
      * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
      * options */
-    virtual void drawSVG(
+    void drawSVG(
         void* _cairo_context, const DrawStructureOptions& options,
         const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
-        const MeshOutputInfo* meshing_info) const;
+        const MeshOutputInfo* meshing_info) const override;
 #if OPENBEAM_HAS_QT5Svg
-    virtual void drawQtSVG(
+    void drawQtSVG(
         QSvgGenerator& svg, const DrawStructureOptions& options,
         const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
-        const MeshOutputInfo* meshing_info) const;
+        const MeshOutputInfo* meshing_info) const override;
 #endif
 
     /** Mesh this element into a set of (possibly) smaller ones */
-    virtual void do_mesh(
+    void do_mesh(
         const size_t my_idx, CStructureProblem& out_fem,
-        MeshOutputInfo& out_info, const MeshParams& params);
+        MeshOutputInfo& out_info, const MeshParams& params) override;
 
     /** Parse a set of parameters by (casi insensitive) name and set the element
      * values from them.
      *  Each element must document the supported parameters and their meaning.
      */
-    virtual void loadParamsFromSet(
-        const mrpt::containers::yaml& p, const EvaluationContext& ctx);
+    void loadParamsFromSet(
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx) override;
 
    private:
     bool m_pinned_end0,

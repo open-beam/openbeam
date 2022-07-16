@@ -25,6 +25,17 @@ set_target_properties(${PROJECT_NAME}
 )
 # --preload-file ${CMAKE_SOURCE_DIR}/examples-structures
 
+target_compile_options(${PROJECT_NAME} PRIVATE
+    -sUSE_SDL=2
+)
+target_link_options(${PROJECT_NAME} PRIVATE
+    -sUSE_SDL=2
+    -sUSE_GLFW=3
+    -sFULL_ES2=1
+    -sFULL_ES3=1
+    -sMAX_WEBGL_VERSION=2
+)
+
 target_include_directories(${PROJECT_NAME}
     PRIVATE
     "."
