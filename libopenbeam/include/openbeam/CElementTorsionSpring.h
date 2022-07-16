@@ -66,6 +66,13 @@ class CElementTorsionSpring : public CElement
         const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo* meshing_info) const;
 #endif
+    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+        const DrawStructureOptions& options, const RenderInitData& ri,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const override
+    {
+        return {};
+    }
 
     /** Mesh this element into a set of (possibly) smaller ones */
     virtual void do_mesh(

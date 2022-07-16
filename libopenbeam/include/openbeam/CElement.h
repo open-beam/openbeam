@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <mrpt/opengl/CSetOfObjects.h>
 #include <openbeam/DrawStructureOptions.h>
 #include <openbeam/types.h>
 
@@ -155,6 +156,11 @@ class CElement
         const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo* meshing_info) const = 0;
 #endif
+
+    virtual mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+        const DrawStructureOptions& options, const RenderInitData& ri,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const = 0;
 
     /** Mesh this element into a set of (possibly) smaller ones */
     virtual void do_mesh(

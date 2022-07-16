@@ -70,6 +70,10 @@ class CBaseElementBeam : public CElement
         const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo* meshing_info) const override;
 #endif
+    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+        const DrawStructureOptions& options, const RenderInitData& ri,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const override;
 
     /** Mesh this element into a set of (possibly) smaller ones */
     void do_mesh(

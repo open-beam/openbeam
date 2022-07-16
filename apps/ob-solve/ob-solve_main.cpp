@@ -30,6 +30,7 @@
 // ---
 #include <mrpt/system/CConsoleRedirector.h>
 //
+#include <mrpt/opengl/COpenGLScene.h>
 #include <mrpt/system/string_utils.h>
 #include <openbeam/openbeam.h>
 #include <openbeam/print_html_matrix.h>
@@ -473,6 +474,32 @@ int main_code(int argc, char** argv)
             sFilOriginal, draw_options, &sInfo,
             !arg_draw_mesh.isSet() ? mesh_info : nullptr);
 
+#if 1
+        MRPT_TODO("temporary, to remove:");
+        {
+            RenderInitData ri;
+            // get the Bounding box:
+            problem_to_solve->getBoundingBox(
+                ri.min_x, ri.max_x, ri.min_y, ri.max_y, true /*deformed*/,
+                &sInfo);
+
+            // Image size:
+            ri.width  = ri.max_x - ri.min_x;
+            ri.height = ri.max_y - ri.min_y;
+
+            ri.scaleFactor = 1;
+
+            auto glObj = problem_to_solve->getVisualization(
+                ri, draw_options, sInfo,
+                !arg_draw_mesh.isSet() ? mesh_info : nullptr);
+
+            mrpt::opengl::COpenGLScene scene;
+            scene.insert(glObj);
+            scene.saveToFile(
+                arg_svg_filename_prefix.getValue() +
+                string("_original.3Dscene"));
+        }
+#endif
         draw_options.show_nodes_original     = true;
         draw_options.nodes_original_alpha    = 0.2;
         draw_options.show_nodes_deformed     = true;

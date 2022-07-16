@@ -65,11 +65,6 @@ set(EXECUTABLE_OUTPUT_PATH ${${PROJECT_NAME}_BINARY_DIR}/bin CACHE PATH "Output 
 # --------------------------
 set(OPENBEAM_LINK_LIBS "")
 
-set(EIGEN3_INCLUDE_DIR "${OpenBeam_SOURCE_DIR}/3rdparty/eigen3/" CACHE PATH "Path to Eigen3 include directory")
-mark_as_advanced(EIGEN3_INCLUDE_DIR)
-
-include_directories(${EIGEN3_INCLUDE_DIR})
-
 # Cairo
 # ----------------------------
 set(OPENBEAM_HAS_CAIRO 0)
@@ -232,7 +227,7 @@ endif()
 #TODO: Update to use modern cmake exported targets
 
 # Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
-set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"${CMAKE_CURRENT_SOURCE_DIR}/include\" \"${EIGEN3_INCLUDE_DIR}\"")
+set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "\"${CMAKE_CURRENT_SOURCE_DIR}/include\" ")
 set(CMAKE_LIB_DIRS_CONFIGCMAKE "${LIBRARY_OUTPUT_PATH}")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/OpenBeamConfig.cmake.in" "${CMAKE_BINARY_DIR}/OpenBeamConfig.cmake" IMMEDIATE @ONLY)
