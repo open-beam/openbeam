@@ -20,6 +20,7 @@
    +---------------------------------------------------------------------------+
  */
 
+#include <mrpt/opengl/CSetOfLines.h>
 #include <openbeam/CFiniteElementProblem.h>
 
 #include "internals.h"
@@ -234,35 +235,57 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
             {
                 TRotationTrans3D node_pose;
 
+                auto glConstr = mrpt::opengl::CSetOfLines::Create();
+
                 if (pass == 0)
                 {  // original:
-#if 0
-                    cr->set_line_width(H2 * 0.1);
-                    cr->set_source_rgba(
-                        0, 0, 0, options.constraints_original_alpha);
-#endif
+
+                    glConstr->setColor(
+                        .0f, .0f, .0f, options.constraints_original_alpha);
+
                     node_pose = this->getNodePose(dof_info.nodeId);
                 }
                 else if (pass == 1)
                 {  // deformed:
-#if 0
-                    cr->set_line_width(H2 * 0.1);
-                    cr->set_source_rgba(
-                        0, 0, 0, options.constraints_deformed_alpha);
-#endif
+                    glConstr->setColor(
+                        .0f, .0f, .0f, options.constraints_deformed_alpha);
+
                     node_pose = this->getNodePose(dof_info.nodeId);
+
                     Vector3 pt;
                     this->getNodeDeformedPosition(
                         dof_info.nodeId, pt, solver_info,
                         DEFORMED_SCALE_FACTOR);
+
                     for (int k = 0; k < 3; k++) node_pose.t.coords[k] = pt[k];
                 }
 
                 // Draw:
-#if 0
-                internal::drawLocalScaledSegments(
-                    cr, node_pose, 1.0, seq_points_local);
-#endif
+
+                ASSERT_(seq_points_local.size() >= 2);
+                glConstr->appendLine(
+                    seq_points_local[0].coords[0],
+                    seq_points_local[0].coords[1],
+                    seq_points_local[0].coords[2],  //
+                    seq_points_local[1].coords[0],
+                    seq_points_local[1].coords[1],
+                    seq_points_local[1].coords[2]);
+
+                for (size_t i = 2; i < seq_points_local.size(); i++)
+                {
+                    glConstr->appendLineStrip(
+                        seq_points_local[i].coords[0],
+                        seq_points_local[i].coords[1],
+                        seq_points_local[i].coords[2]);
+                }
+
+                glConstr->setPose(
+                    mrpt::poses::CPose3D::FromRotationAndTranslation(
+                        node_pose.r.getRot(),
+                        mrpt::math::CVectorFixed<double, 3>(
+                            node_pose.t.coords)));
+
+                gl->insert(glConstr);
             }  // end for "pass" (original/deformed)
         }
     }
