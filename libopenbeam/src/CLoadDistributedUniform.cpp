@@ -199,3 +199,12 @@ void CLoadDistributedUniform::meshLoad(
             meshed_element_idxs[i],
             std::make_shared<CLoadDistributedUniform>(*this));
 }
+
+mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedUniform::getVisualization(
+    const DrawStructureOptions&   options,
+    const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo*         meshing_info) const
+{
+    //
+    return {};
+}

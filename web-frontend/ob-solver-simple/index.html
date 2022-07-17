@@ -48,6 +48,7 @@
             /*flex-grow: 1;*/
             width: 800px;
             border: 1px solid #555;
+            margin: 1px;
             height: 400px;
         }
 
@@ -77,8 +78,12 @@
             // save text to textarea
             var s = editor.getValue();
 
+            var solveOpts = '';
+            solveOpts += 'mesh: true\n';
+            solveOpts += 'mesh_max_length: 0.10\n';
+
             var ret = obApp.LoadStructureDefinition(s);
-            var ret2 = obApp.Solve();
+            var ret2 = obApp.Solve(solveOpts);
 
             var reactions = obApp.GetReactionsAsHTML();
             var displacements = obApp.GetDisplacementsAsHTML();
@@ -90,7 +95,11 @@
                 displacements;
 
             // Render GL visualization:
+            var vizOpts = '';
+            vizOpts += '\n';
 
+            obApp.generateVisualization(vizOpts);
+            obApp.repaintCanvas();
         }
     </script>
 </head>
@@ -123,7 +132,7 @@
 
 
     <div>
-        <textarea readonly id="OutputArea" rows="10">(output messages)</textarea>
+        <textarea readonly id="OutputArea" rows="4">(output messages)</textarea>
     </div>
     <div id="Results">(Results)</div>
 

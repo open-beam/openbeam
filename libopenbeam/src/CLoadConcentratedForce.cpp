@@ -192,3 +192,11 @@ void CLoadConcentratedForce::meshLoad(
 
     meshed_fem.addLoadAtBeam(idx_affected_element, new_load);
 }
+
+mrpt::opengl::CSetOfObjects::Ptr CLoadConcentratedForce::getVisualization(
+    const DrawStructureOptions&   options,
+    const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo*         meshing_info) const
+{
+    return {};
+}

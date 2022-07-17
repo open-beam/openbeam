@@ -80,6 +80,8 @@ struct TGraphData
 
 int main_code(int argc, char** argv)
 {
+    using namespace std::string_literals;
+
     // -------------------------------------------------------------
     // Process command line args:
     // ----------------------------------------------------------
@@ -113,6 +115,8 @@ int main_code(int argc, char** argv)
         cmd);
     TCLAP::SwitchArg arg_svg(
         "", "svg", "Enable generation of SVG images (Default: no)", cmd);
+    TCLAP::SwitchArg arg_3Dscene(
+        "", "3D", "Enable generation of .3Dscene files (Default: no)", cmd);
     TCLAP::SwitchArg arg_sep_plots(
         "", "sep-plots", "Generate separate plot files (Default: no)", cmd);
 
@@ -209,6 +213,7 @@ int main_code(int argc, char** argv)
     const bool out_html         = arg_html.getValue();
     const bool out_html_no_head = false;
 
+    const bool        out_3Dscene             = arg_3Dscene.getValue();
     const bool        out_svg                 = arg_svg.getValue();
     const bool        out_full_k              = arg_full_K.getValue();
     const bool        out_full_k_csv          = arg_full_K_csv.isSet();
@@ -450,7 +455,54 @@ int main_code(int argc, char** argv)
 
     std::string scripts_before_body_end;
 
-    // Images:
+    // Visualization:
+    if (out_3Dscene)
+    {
+        openbeam::DrawStructureOptions draw_options;
+        draw_options.image_width            = arg_out_images_width.getValue();
+        draw_options.show_nodes_original    = true;
+        draw_options.show_nodes_deformed    = false;
+        draw_options.show_node_labels       = true;
+        draw_options.show_element_labels    = true;
+        draw_options.show_elements_original = true;
+        draw_options.show_elements_deformed = false;
+
+        {
+            auto glObj = problem_to_solve->getVisualization(
+                draw_options, sInfo,
+                !arg_draw_mesh.isSet() ? mesh_info : nullptr);
+
+            mrpt::opengl::COpenGLScene scene;
+            scene.insert(glObj);
+            const auto sFil =
+                arg_svg_filename_prefix.getValue() + "_original.3Dscene"s;
+            std::cout << "Saving: " << sFil << std::endl;
+            scene.saveToFile(sFil);
+        }
+
+        draw_options.show_nodes_original     = true;
+        draw_options.nodes_original_alpha    = 0.2;
+        draw_options.show_nodes_deformed     = true;
+        draw_options.show_elements_original  = true;
+        draw_options.elements_original_alpha = 0.2;
+        draw_options.show_elements_deformed  = true;
+        draw_options.show_element_labels     = false;
+        draw_options.deformed_scale_factor = arg_svg_deformed_factor.getValue();
+
+        {
+            auto glObj = problem_to_solve->getVisualization(
+                draw_options, sInfo,
+                !arg_draw_mesh.isSet() ? mesh_info : nullptr);
+
+            mrpt::opengl::COpenGLScene scene;
+            scene.insert(glObj);
+            const auto sFil =
+                arg_svg_filename_prefix.getValue() + "_deformed.3Dscene"s;
+            std::cout << "Saving: " << sFil << std::endl;
+            scene.saveToFile(sFil);
+        }
+    }
+
     if (out_html && out_svg)
     {
 #if OPENBEAM_HAS_CAIRO
@@ -474,20 +526,6 @@ int main_code(int argc, char** argv)
             sFilOriginal, draw_options, &sInfo,
             !arg_draw_mesh.isSet() ? mesh_info : nullptr);
 
-#if 1
-        MRPT_TODO("temporary, to remove:");
-        {
-            auto glObj = problem_to_solve->getVisualization(
-                draw_options, sInfo,
-                !arg_draw_mesh.isSet() ? mesh_info : nullptr);
-
-            mrpt::opengl::COpenGLScene scene;
-            scene.insert(glObj);
-            scene.saveToFile(
-                arg_svg_filename_prefix.getValue() +
-                string("_original.3Dscene"));
-        }
-#endif
         draw_options.show_nodes_original     = true;
         draw_options.nodes_original_alpha    = 0.2;
         draw_options.show_nodes_deformed     = true;

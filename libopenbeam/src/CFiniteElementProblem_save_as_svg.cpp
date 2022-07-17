@@ -126,11 +126,13 @@ bool CFiniteElementProblem::saveAsImage(
 
 bool CFiniteElementProblem::renderToCairoContext(
     void* _cairo_context, const RenderInitData& ri,
-    const DrawStructureOptions&   options,
+    const DrawStructureOptions&   orgOptions,
     const StaticSolveProblemInfo* solver_info,
     const MeshOutputInfo*         meshing_info) const
 {
 #if OPENBEAM_HAS_CAIRO
+    DrawStructureOptions options = orgOptions;
+
     const size_t nNodes = getNumberOfNodes();
     const size_t nEle   = getNumberOfElements();
 
@@ -142,8 +144,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 
     // "Screen constant sized" objects -------------
     const double NODE_LABEL_SIZE = options.labels_size / ri.scaleFactor;
-    const_cast<DrawStructureOptions*>(&options)->node_radius =
-        3 / ri.scaleFactor;
+    options.node_radius          = 3 / ri.scaleFactor;
     // --------------
 
     Cairo::RefPtr<Cairo::Context>& cr =

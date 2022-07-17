@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 //
 #include <localization.h>  // Internationalization support
+#include <mrpt/containers/yaml.h>
 #include <mrpt/opengl/CGridPlaneXY.h>
 #include <openbeam/openbeam.h>
 #include <openbeam/print_html_matrix.h>
@@ -87,12 +88,31 @@ void AppOpenBeam::repaintCanvas()
     try
     {
         glfwMakeContextCurrent(window);
-        glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(
             GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        // theScene_->getViewport()->getCamera().setPointingAt(camx,
-        // camy, camz);
+        auto& cam = theScene_->getViewport()->getCamera();
+        cam.setOrthogonal();
+        cam.setElevationDegrees(90);
+        cam.setAzimuthDegrees(-90);
+
+        // get un-deformed bbox:
+        {
+            num_t min_x, max_x, min_y, max_y;
+            structure_.getBoundingBox(min_x, max_x, min_y, max_y);
+
+            const double Ax          = std::max<double>(max_x - min_x, 1.0);
+            const double Ay          = std::max<double>(max_y - min_y, 1.0);
+            const double marginRatio = 0.15;
+            min_x -= marginRatio * Ax;
+            max_x += marginRatio * Ax;
+            min_y -= marginRatio * Ay;
+            max_y += marginRatio * Ay;
+
+            cam.setPointingAt((min_x + max_x) * 0.5, (min_y + max_y) * 0.5, 0);
+            cam.setZoomDistance(2 * Ay * (1.0 + marginRatio + 0.10));
+        }
 
         theScene_->render();
 
@@ -137,19 +157,22 @@ std::string AppOpenBeam::LoadStructureDefinition(const std::string& def)
     return retStr;
 }
 
-std::string AppOpenBeam::Solve()
+std::string AppOpenBeam::Solve(const std::string& options)
 {
     using namespace openbeam;
     using namespace std::string_literals;
 
     std::string ret;
 
+    const auto o = mrpt::containers::yaml::FromText(options);
+
     try
     {
         MeshParams mesh_params;
-        mesh_params.max_element_length = 0.10;  // [m]
+        mesh_params.max_element_length =
+            o.getOrDefault<double>("mesh_max_length", 0.10);
 
-        bool doMesh = false;
+        bool doMesh = o.getOrDefault<bool>("mesh", true);
 
         if (doMesh)
         {
@@ -301,4 +324,24 @@ std::string AppOpenBeam::GetDisplacementsAsHTML()
     }
     ss << "</table>\n";
     return ss.str();
+}
+
+void AppOpenBeam::generateVisualization(const std::string& options)
+{
+    openbeam::DrawStructureOptions draw_options;
+    draw_options.show_nodes_original    = true;
+    draw_options.show_nodes_deformed    = false;
+    draw_options.show_node_labels       = true;
+    draw_options.show_element_labels    = true;
+    draw_options.show_elements_original = true;
+    draw_options.show_elements_deformed = false;
+
+    const auto o = mrpt::containers::yaml::FromText(options);
+    draw_options.loadFromYaml(o);
+
+    auto glObj =
+        problem_to_solve_->getVisualization(draw_options, sInfo_, mesh_info_);
+
+    theScene_->clear();
+    theScene_->insert(glObj);
 }

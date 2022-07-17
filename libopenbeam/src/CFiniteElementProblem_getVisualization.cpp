@@ -25,6 +25,7 @@
 #include <mrpt/opengl/CSphere.h>
 #include <mrpt/opengl/CText.h>
 #include <openbeam/CFiniteElementProblem.h>
+#include <openbeam/CStructureProblem.h>
 #include <openbeam/DrawStructureOptions.h>
 
 #include "internals.h"
@@ -408,15 +409,36 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
                 0, 0, 1,
                 o.show_nodes_deformed ? o.loads_deformed_alpha
                                       : o.loads_original_alpha);
-            glNodeLoad->setHeadRatio(0.15f);
-            glNodeLoad->setSmallRadius(2 * o.node_radius);
-            glNodeLoad->setLargeRadius(4 * o.node_radius);
+            glNodeLoad->setHeadRatio(0.2f);
+            glNodeLoad->setSmallRadius(0.75 * o.node_radius);
+            glNodeLoad->setLargeRadius(1.25 * o.node_radius);
             glNodeLoad->setArrowEnds(
                 seq_points_global.at(0), seq_points_global.at(1));
             gl->insert(glNodeLoad);
         }
-
     }  // end draw loads
+
+    // Loads on elements
+    // ----------------------------------------------------
+    if (auto str = dynamic_cast<const CStructureProblem*>(this);
+        str && o.show_loads)
+    {
+        for (const auto& eLoadKV : str->loadsOnBeams())
+        {
+            const auto beamId = eLoadKV.first;
+            const auto eLoad  = eLoadKV.second;
+            if (!eLoad) continue;
+
+            DrawElementExtraParams el_params;
+            el_params.element_index = beamId;
+            el_params.color_alpha   = o.show_nodes_deformed
+                                        ? o.loads_deformed_alpha
+                                        : o.loads_original_alpha;
+            el_params.draw_original_position = !o.show_nodes_deformed;
+
+            gl->insert(eLoad->getVisualization(o, el_params, meshing_info));
+        }
+    }
 
     return gl;
 }

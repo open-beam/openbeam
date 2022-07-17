@@ -66,6 +66,11 @@ struct CLoadOnBeam
         const std::vector<size_t>& meshed_element_idxs,
         const size_t               original_bar_idx,
         const CStructureProblem&   original_fem) const = 0;
+
+    virtual mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+        const DrawStructureOptions&   options,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const = 0;
 };
 
 /** A "load" for a constant increase of temperature in the whole element.
@@ -78,19 +83,25 @@ struct CLoadConstTemperature : public CLoadOnBeam
 
     CLoadConstTemperature() = default;
 
-    virtual void computeStressAndEquivalentLoads(
-        const CElement* el, ElementStress& stress, std::vector<array6>& loads);
+    void computeStressAndEquivalentLoads(
+        const CElement* el, ElementStress& stress,
+        std::vector<array6>& loads) override;
     /** See declaration in base class */
-    virtual void loadParamsFromSet(
-        const mrpt::containers::yaml& p, const EvaluationContext& ctx);
+    void loadParamsFromSet(
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx) override;
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
-    virtual void meshLoad(
+    void meshLoad(
         CStructureProblem&         meshed_fem,
         const std::vector<size_t>& meshed_element_idxs,
         const size_t               original_bar_idx,
-        const CStructureProblem&   original_fem) const;
+        const CStructureProblem&   original_fem) const override;
+
+    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+        const DrawStructureOptions&   options,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const override;
 
     //!< Temperature increment value (in C)
     num_t m_incr_temp = UNINITIALIZED_VALUE;
@@ -115,19 +126,25 @@ struct CLoadDistributedUniform : public CLoadOnBeam
         dir[0] = dir[1] = dir[2] = UNINITIALIZED_VALUE;
     }
 
-    virtual void computeStressAndEquivalentLoads(
-        const CElement* el, ElementStress& stress, std::vector<array6>& loads);
+    void computeStressAndEquivalentLoads(
+        const CElement* el, ElementStress& stress,
+        std::vector<array6>& loads) override;
     /** See declaration in base class */
-    virtual void loadParamsFromSet(
-        const mrpt::containers::yaml& p, const EvaluationContext& ctx);
+    void loadParamsFromSet(
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx) override;
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
-    virtual void meshLoad(
+    void meshLoad(
         CStructureProblem&         meshed_fem,
         const std::vector<size_t>& meshed_element_idxs,
         const size_t               original_bar_idx,
-        const CStructureProblem&   original_fem) const;
+        const CStructureProblem&   original_fem) const override;
+
+    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+        const DrawStructureOptions&   options,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const override;
 
     num_t q;  //!< Load density (N/m)
     num_t dir[3];  //!< Director vector, in GLOBAL coordinates.
@@ -157,19 +174,25 @@ struct CLoadDistributedTriangular : public CLoadOnBeam
         dir[0] = dir[1] = dir[2] = UNINITIALIZED_VALUE;
     }
 
-    virtual void computeStressAndEquivalentLoads(
-        const CElement* el, ElementStress& stress, std::vector<array6>& loads);
+    void computeStressAndEquivalentLoads(
+        const CElement* el, ElementStress& stress,
+        std::vector<array6>& loads) override;
     /** See declaration in base class */
-    virtual void loadParamsFromSet(
-        const mrpt::containers::yaml& p, const EvaluationContext& ctx);
+    void loadParamsFromSet(
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx) override;
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
-    virtual void meshLoad(
+    void meshLoad(
         CStructureProblem&         meshed_fem,
         const std::vector<size_t>& meshed_element_idxs,
         const size_t               original_bar_idx,
-        const CStructureProblem&   original_fem) const;
+        const CStructureProblem&   original_fem) const override;
+
+    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+        const DrawStructureOptions&   options,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const override;
 
     /// Load density at the start and end points of the beam (N/m)
     num_t q_ini, q_end;
@@ -203,19 +226,25 @@ struct CLoadConcentratedForce : public CLoadOnBeam
         dir[0] = dir[1] = dir[2] = UNINITIALIZED_VALUE;
     }
 
-    virtual void computeStressAndEquivalentLoads(
-        const CElement* el, ElementStress& stress, std::vector<array6>& loads);
+    void computeStressAndEquivalentLoads(
+        const CElement* el, ElementStress& stress,
+        std::vector<array6>& loads) override;
     /** See declaration in base class */
-    virtual void loadParamsFromSet(
-        const mrpt::containers::yaml& p, const EvaluationContext& ctx);
+    void loadParamsFromSet(
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx) override;
 
     /** Decompose the distributed load as needed into the set of elements in
      * which the original element has been meshed */
-    virtual void meshLoad(
+    void meshLoad(
         CStructureProblem&         meshed_fem,
         const std::vector<size_t>& meshed_element_idxs,
         const size_t               original_bar_idx,
-        const CStructureProblem&   original_fem) const;
+        const CStructureProblem&   original_fem) const override;
+
+    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+        const DrawStructureOptions&   options,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const override;
 
     num_t P;  //!< Load modulus (N)
     num_t dist;  //!< Load modulus (N)

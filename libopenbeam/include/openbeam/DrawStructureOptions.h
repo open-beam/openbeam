@@ -35,6 +35,8 @@ struct DrawStructureOptions
     DrawStructureOptions()  = default;
     ~DrawStructureOptions() = default;
 
+    void loadFromYaml(const mrpt::containers::yaml& d);
+
     bool show_nodes_original    = true;
     bool show_nodes_deformed    = false;
     bool show_node_labels       = false;

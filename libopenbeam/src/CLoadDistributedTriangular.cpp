@@ -210,3 +210,11 @@ void CLoadDistributedTriangular::meshLoad(
         meshed_fem.addLoadAtBeam(meshed_element_idxs[i], new_load);
     }
 }
+
+mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedTriangular::getVisualization(
+    const DrawStructureOptions&   options,
+    const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo*         meshing_info) const
+{
+    return {};
+}

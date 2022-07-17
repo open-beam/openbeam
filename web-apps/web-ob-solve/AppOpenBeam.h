@@ -15,12 +15,20 @@ class AppOpenBeam
     /** Returns: error descriptions. Empty string if it was all good. */
     std::string LoadStructureDefinition(const std::string& def);
 
-    /** Returns: log messages */
-    std::string Solve();
+    /** Returns: log messages
+     *
+     *  options, as YAML/JSON:
+     *  \code
+     *  mesh: true
+     *  mesh_max_length: 0.10
+     *  \endcode
+     */
+    std::string Solve(const std::string& options);
 
     std::string GetReactionsAsHTML();
     std::string GetDisplacementsAsHTML();
 
+    void generateVisualization(const std::string& options);
     void repaintCanvas();
 
    private:
@@ -43,6 +51,7 @@ EMSCRIPTEN_BINDINGS(EMTest)
         .function(
             "LoadStructureDefinition", &AppOpenBeam::LoadStructureDefinition)
         .function("Solve", &AppOpenBeam::Solve)
+        .function("generateVisualization", &AppOpenBeam::generateVisualization)
         .function("GetReactionsAsHTML", &AppOpenBeam::GetReactionsAsHTML)
         .function(
             "GetDisplacementsAsHTML", &AppOpenBeam::GetDisplacementsAsHTML);

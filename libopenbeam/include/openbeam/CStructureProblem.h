@@ -73,6 +73,11 @@ class CStructureProblem : public CFiniteElementProblem
     /** @} */
     // ----------------------------------------------------------------------------
 
+    const std::multimap<size_t, CLoadOnBeam::Ptr>& loadsOnBeams() const
+    {
+        return m_loads_on_beams;
+    }
+
    private:
     /** @name Structure data
         @{ */
