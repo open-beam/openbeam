@@ -1,7 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>imgs/exit_32x32.png</file>
-        <file>imgs/refresh_32x32.png</file>
-        <file>imgs/play_32x32.png</file>
-    </qresource>
-</RCC>
