@@ -477,20 +477,8 @@ int main_code(int argc, char** argv)
 #if 1
         MRPT_TODO("temporary, to remove:");
         {
-            RenderInitData ri;
-            // get the Bounding box:
-            problem_to_solve->getBoundingBox(
-                ri.min_x, ri.max_x, ri.min_y, ri.max_y, true /*deformed*/,
-                &sInfo);
-
-            // Image size:
-            ri.width  = ri.max_x - ri.min_x;
-            ri.height = ri.max_y - ri.min_y;
-
-            ri.scaleFactor = 1;
-
             auto glObj = problem_to_solve->getVisualization(
-                ri, draw_options, sInfo,
+                draw_options, sInfo,
                 !arg_draw_mesh.isSet() ? mesh_info : nullptr);
 
             mrpt::opengl::COpenGLScene scene;

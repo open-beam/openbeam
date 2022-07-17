@@ -23,6 +23,7 @@
 #include <openbeam/CElementSpring.h>
 #include <openbeam/CFiniteElementProblem.h>
 #include <openbeam/CStructureProblem.h>
+#include <openbeam/DrawStructureOptions.h>
 
 #include "internals.h"
 
@@ -132,24 +133,14 @@ void CElementSpring::drawSVG(
 
         for (int l = 0; l < 3; l++)
         {
-            p0.t.coords[l] = pt0_deformed[l];
-            p1.t.coords[l] = pt1_deformed[l];
+            p0.t[l] = pt0_deformed[l];
+            p1.t[l] = pt1_deformed[l];
         }
     }
 
     // Unit director vector:
-    const TPoint3D p1_p0 = TPoint3D(
-        p1.t.coords[0] - p0.t.coords[0], p1.t.coords[1] - p0.t.coords[1],
-        p1.t.coords[2] - p0.t.coords[2]);
-    const num_t p1_p0_norm = p1_p0.norm();
-    TPoint3D    dir;
-    if (p1_p0_norm == 0)
-        dir = p1_p0;
-    else
-    {
-        const num_t inv = 1 / p1_p0_norm;
-        for (int l = 0; l < 3; l++) dir.coords[l] = p1_p0.coords[l] * inv;
-    }
+    //    const TPoint3D dir        = (p1.t - p0.t).unitarize();
+    const auto p1_p0_norm = (p1.t - p0.t).norm();
 
     // Draw the spring:
     static const double PTS[] = {
@@ -160,9 +151,9 @@ void CElementSpring::drawSVG(
     std::vector<TPoint3D> local_pts(N);
     for (size_t i = 0; i < N; i++)
     {
-        local_pts[i].coords[0] = PTS[3 * i + 0];
-        local_pts[i].coords[1] = PTS[3 * i + 1];
-        local_pts[i].coords[2] = PTS[3 * i + 2];
+        local_pts[i].x = PTS[3 * i + 0];
+        local_pts[i].y = PTS[3 * i + 1];
+        local_pts[i].z = PTS[3 * i + 2];
     }
 
     // Equivalent pose of this element: orientation p0 -> p1
@@ -181,10 +172,8 @@ void CElementSpring::drawSVG(
     {
         cr->set_source_rgb(0, 0, 0.9);
 
-        const double x0 =
-            0.5 * (p0.t.coords[0] + p1.t.coords[0]) + 0.5 * options.node_radius;
-        const double y0 =
-            0.5 * (p0.t.coords[1] + p1.t.coords[1]) + 0.5 * options.node_radius;
+        const double x0 = 0.5 * (p0.t.x + p1.t.x) + 0.5 * options.node_radius;
+        const double y0 = 0.5 * (p0.t.y + p1.t.y) + 0.5 * options.node_radius;
         cr->move_to(x0, y0);
         cr->show_text(openbeam::format(
             "E%u", static_cast<unsigned int>(draw_el_params.element_index)));

@@ -23,7 +23,6 @@
 #pragma once
 
 #include <mrpt/opengl/CSetOfObjects.h>
-#include <openbeam/DrawStructureOptions.h>
 #include <openbeam/types.h>
 
 #include <memory>
@@ -158,7 +157,7 @@ class CElement
 #endif
 
     virtual mrpt::opengl::CSetOfObjects::Ptr getVisualization(
-        const DrawStructureOptions& options, const RenderInitData& ri,
+        const DrawStructureOptions&   options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const = 0;
 

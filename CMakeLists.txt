@@ -142,29 +142,6 @@ endif()
 
 add_definitions(-DOPENBEAM_HAS_CAIRO=${OPENBEAM_HAS_CAIRO})
 
-# Qt5
-# --------------------------------
-if (NOT (CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
-    # Instruct CMake to run moc automatically when needed.
-    set(CMAKE_AUTOMOC ON)
-    
-    if(POLICY CMP0020)
-        cmake_policy(SET CMP0020 NEW)
-    endif()
-    
-    set(OPENBEAM_HAS_QT5Svg 0)
-    
-    # Find includes in corresponding build directories
-    find_package(Qt5Svg QUIET)  # Find the QtWidgets library
-    if (NOT Qt5Svg_FOUND)
-        message(STATUS "*WARNING* Qt5Svg not found. Cannot build this target. \n  Add the installation prefix of Qt5Widgets to CMAKE_PREFIX_PATH \n  or set Qt5Svg_DIR to a directory containing one of the above files, typically: 'C:\\Qt\\5.X\\msvcXXXX_64\\lib\\cmake\\Qt5Svg'")
-    else()
-        include_directories(${Qt5Svg_INCLUDE_DIRS})
-        add_definitions(${Qt5Svg_DEFINITIONS})
-        set(OPENBEAM_HAS_QT5Svg 1)
-    endif()
-    add_definitions(-DOPENBEAM_HAS_QT5Svg=${OPENBEAM_HAS_QT5Svg})
-endif()
 
 # --------------------------
 # Global compiler flags

@@ -67,7 +67,7 @@ class CElementTorsionSpring : public CElement
         const MeshOutputInfo* meshing_info) const;
 #endif
     mrpt::opengl::CSetOfObjects::Ptr getVisualization(
-        const DrawStructureOptions& options, const RenderInitData& ri,
+        const DrawStructureOptions&   options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const override
     {

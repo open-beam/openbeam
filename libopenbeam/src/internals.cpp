@@ -33,8 +33,8 @@ void openbeam::internal::computeOrientationFromTwoPoints(
 {
     // Vector: 1 -> 2
     const TPoint3D p12 = TPoint3D(
-        t2.coords[0] - t1.coords[0], t2.coords[1] - t1.coords[1],
-        t2.coords[2] - t1.coords[2]);
+        t2.x - t1.x, t2.y - t1.y,
+        t2.z - t1.z);
     const num_t len = p12.norm();
 
     Matrix33 R;
@@ -47,9 +47,9 @@ void openbeam::internal::computeOrientationFromTwoPoints(
             Z[3];  // Coordinates of the NEW axes wrt GLOBAL coordinates frame
 
         // New X:
-        X[0] = p12.coords[0] * len_inv;
-        X[1] = p12.coords[1] * len_inv;
-        X[2] = p12.coords[2] * len_inv;
+        X[0] = p12.x * len_inv;
+        X[1] = p12.y * len_inv;
+        X[2] = p12.z * len_inv;
 
         // New Z: orthogonal to X and with Zy=0:
         if (X[2] == 0)

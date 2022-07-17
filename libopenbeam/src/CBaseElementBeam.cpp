@@ -94,15 +94,11 @@ void CBaseElementBeam::drawQtSVG(
 #endif
 
 mrpt::opengl::CSetOfObjects::Ptr CBaseElementBeam::getVisualization(
-    const DrawStructureOptions& options, const RenderInitData& ri,
-    const DrawElementExtraParams& draw_el_params,
-    const MeshOutputInfo*         meshing_info) const
+    const DrawStructureOptions& o, const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo* meshing_info) const
 {
     auto gl = mrpt::opengl::CSetOfObjects::Create();
 
-    const double EDGE_WIDTH          = 4e-2;
-    const double BEAM_PINNED_RADIUS  = 10e-2;
-    const double PINNED_PEN_WIDTH    = 0.05 * BEAM_PINNED_RADIUS;
     const size_t MAX_NODE_ID_TO_DRAW = meshing_info
                                            ? meshing_info->num_original_nodes
                                            : static_cast<size_t>(-1);
@@ -134,102 +130,74 @@ mrpt::opengl::CSetOfObjects::Ptr CBaseElementBeam::getVisualization(
 
         for (int l = 0; l < 3; l++)
         {
-            p0.t.coords[l] = pt0_deformed[l];
-            p1.t.coords[l] = pt1_deformed[l];
+            p0.t[l] = pt0_deformed[l];
+            p1.t[l] = pt1_deformed[l];
         }
     }
 
     // Unit director vector:
-    const TPoint3D p1_p0 = TPoint3D(
-        p1.t.coords[0] - p0.t.coords[0], p1.t.coords[1] - p0.t.coords[1],
-        p1.t.coords[2] - p0.t.coords[2]);
-    const num_t p1_p0_norm = p1_p0.norm();
-    TPoint3D    dir;
-    if (p1_p0_norm == 0)
-        dir = p1_p0;
-    else
-    {
-        const num_t inv = 1 / p1_p0_norm;
-        for (int l = 0; l < 3; l++) dir.coords[l] = p1_p0.coords[l] * inv;
-    }
+    const TPoint3D dir = (p1.t - p0.t).unitarize();
 
     // Draw the beam itself:
-    TPoint3D pt0_end = TPoint3D(p0.t.coords[0], p0.t.coords[1], p0.t.coords[2]);
-    TPoint3D pt1_end = TPoint3D(p1.t.coords[0], p1.t.coords[1], p1.t.coords[2]);
+    TPoint3D pt0_end = p0.t;
+    TPoint3D pt1_end = p1.t;
 
     TPoint3D pt0 = pt0_end;
     TPoint3D pt1 = pt1_end;
 
     const num_t shorten0 =
         node0_is_to_draw
-            ? options.node_radius + (m_pinned_end0 ? 2 * BEAM_PINNED_RADIUS : 0)
+            ? o.node_radius + (m_pinned_end0 ? 2 * o.BEAM_PINNED_RADIUS : 0)
             : 0;
     const num_t shorten1 =
         node1_is_to_draw
-            ? options.node_radius + (m_pinned_end1 ? 2 * BEAM_PINNED_RADIUS : 0)
+            ? o.node_radius + (m_pinned_end1 ? 2 * o.BEAM_PINNED_RADIUS : 0)
             : 0;
 
-    for (int l = 0; l < 3; l++)
-    {
-        pt0.coords[l] += shorten0 * dir.coords[l];
-        pt0_end.coords[l] += options.node_radius * dir.coords[l];
-    }
-    for (int l = 0; l < 3; l++)
-    {
-        pt1.coords[l] -= shorten1 * dir.coords[l];
-        pt1_end.coords[l] -= options.node_radius * dir.coords[l];
-    }
+    pt0 += shorten0 * dir;
+    pt0_end += o.node_radius * dir;
+
+    pt1 -= shorten1 * dir;
+    pt1_end -= o.node_radius * dir;
 
     // beam cylinder:
     auto glBody = mrpt::opengl::CArrow::Create();
     glBody->setColor(0.4f, 0.4f, 0.4f, draw_el_params.color_alpha);
-    glBody->setArrowEnds(
-        pt0_end.coords[0], pt0_end.coords[1], pt0_end.coords[2],  //
-        pt1_end.coords[0], pt1_end.coords[1], pt1_end.coords[2]);
+    glBody->setArrowEnds(pt0, pt1);
     glBody->setHeadRatio(0);
-    glBody->setSmallRadius(EDGE_WIDTH);
+    glBody->setSmallRadius(o.EDGE_WIDTH);
     gl->insert(glBody);
 
     // And the "pinned ends circles":
     if (m_pinned_end0 && node0_is_to_draw)
     {
         auto glPin = mrpt::opengl::CSphere::Create();
-        glPin->setRadius(BEAM_PINNED_RADIUS);
+        glPin->setRadius(o.BEAM_PINNED_RADIUS);
         glPin->setColor_u8(0xf0, 0xf0, 0xf0, 0xff);
-        glPin->setNumberDivsLatitude(6);
-        glPin->setNumberDivsLongitude(6);
-        glPin->setLocation(
-            pt0_end.coords[0] + dir.coords[0] * BEAM_PINNED_RADIUS,
-            pt0_end.coords[1] + dir.coords[1] * BEAM_PINNED_RADIUS,
-            pt0_end.coords[2] + dir.coords[2] * BEAM_PINNED_RADIUS);
+        glPin->setNumberDivsLatitude(o.PIN_SPHERE_DIVS);
+        glPin->setNumberDivsLongitude(o.PIN_SPHERE_DIVS);
+        glPin->setLocation(pt0_end + dir * o.BEAM_PINNED_RADIUS);
         gl->insert(glPin);
     }
     if (m_pinned_end1 && node1_is_to_draw)
     {
         auto glPin = mrpt::opengl::CSphere::Create();
-        glPin->setRadius(BEAM_PINNED_RADIUS);
+        glPin->setRadius(o.BEAM_PINNED_RADIUS);
         glPin->setColor_u8(0xf0, 0xf0, 0xf0, 0xff);
-        glPin->setNumberDivsLatitude(6);
-        glPin->setNumberDivsLongitude(6);
-        glPin->setLocation(
-            pt1_end.coords[0] - dir.coords[0] * BEAM_PINNED_RADIUS,
-            pt1_end.coords[1] - dir.coords[1] * BEAM_PINNED_RADIUS,
-            pt1_end.coords[2] - dir.coords[2] * BEAM_PINNED_RADIUS);
+        glPin->setNumberDivsLatitude(o.PIN_SPHERE_DIVS);
+        glPin->setNumberDivsLongitude(o.PIN_SPHERE_DIVS);
+        glPin->setLocation(pt1_end - dir * o.BEAM_PINNED_RADIUS);
         gl->insert(glPin);
     }
 
-    if (options.show_element_labels && node0_is_to_draw && node1_is_to_draw)
+    if (o.show_element_labels && node0_is_to_draw && node1_is_to_draw)
     {
-        const double x0 =
-            0.5 * (p0.t.coords[0] + p1.t.coords[0]) + 0.5 * options.node_radius;
-        const double y0 =
-            0.5 * (p0.t.coords[1] + p1.t.coords[1]) + 0.5 * options.node_radius;
-        const double z0 =
-            0.5 * (p0.t.coords[2] + p1.t.coords[2]) + 0.5 * options.node_radius;
+        const auto p =
+            ((p0.t + p1.t) * 0.5) + 0.5 * o.node_radius * TPoint3D(1, 1, 1);
 
         auto glLb = mrpt::opengl::CText::Create();
         glLb->setColor_u8(0x00, 0x00, 0xd0);
-        glLb->setLocation(x0, y0, z0);
+        glLb->setLocation(p);
         glLb->setString(mrpt::format(
             "E%u", static_cast<unsigned int>(draw_el_params.element_index)));
         gl->insert(glLb);
@@ -284,28 +252,17 @@ void CBaseElementBeam::drawSVG(
 
         for (int l = 0; l < 3; l++)
         {
-            p0.t.coords[l] = pt0_deformed[l];
-            p1.t.coords[l] = pt1_deformed[l];
+            p0.t[l] = pt0_deformed[l];
+            p1.t[l] = pt1_deformed[l];
         }
     }
 
     // Unit director vector:
-    const TPoint3D p1_p0 = TPoint3D(
-        p1.t.coords[0] - p0.t.coords[0], p1.t.coords[1] - p0.t.coords[1],
-        p1.t.coords[2] - p0.t.coords[2]);
-    const num_t p1_p0_norm = p1_p0.norm();
-    TPoint3D    dir;
-    if (p1_p0_norm == 0)
-        dir = p1_p0;
-    else
-    {
-        const num_t inv = 1 / p1_p0_norm;
-        for (int l = 0; l < 3; l++) dir.coords[l] = p1_p0.coords[l] * inv;
-    }
+    const TPoint3D dir = (p1.t - p0.t).unitarize();
 
     // Draw the beam itself:
-    TPoint3D pt0_end = TPoint3D(p0.t.coords[0], p0.t.coords[1], p0.t.coords[2]);
-    TPoint3D pt1_end = TPoint3D(p1.t.coords[0], p1.t.coords[1], p1.t.coords[2]);
+    TPoint3D pt0_end = TPoint3D(p0.t.x, p0.t.y, p0.t.z);
+    TPoint3D pt1_end = TPoint3D(p1.t.x, p1.t.y, p1.t.z);
 
     TPoint3D pt0 = pt0_end;
     TPoint3D pt1 = pt1_end;
@@ -319,21 +276,16 @@ void CBaseElementBeam::drawSVG(
             ? options.node_radius + (m_pinned_end1 ? 2 * BEAM_PINNED_RADIUS : 0)
             : 0;
 
-    for (int l = 0; l < 3; l++)
-    {
-        pt0.coords[l] += shorten0 * dir.coords[l];
-        pt0_end.coords[l] += options.node_radius * dir.coords[l];
-    }
-    for (int l = 0; l < 3; l++)
-    {
-        pt1.coords[l] -= shorten1 * dir.coords[l];
-        pt1_end.coords[l] -= options.node_radius * dir.coords[l];
-    }
+    pt0 += shorten0 * dir;
+    pt0_end += options.node_radius * dir;
+
+    pt1 -= shorten1 * dir;
+    pt1_end -= options.node_radius * dir;
 
     cr->set_source_rgba(0.4, 0.4, 0.4, draw_el_params.color_alpha);
     cr->set_line_width(EDGE_WIDTH);
-    cr->move_to(pt0.coords[0], pt0.coords[1]);
-    cr->line_to(pt1.coords[0], pt1.coords[1]);
+    cr->move_to(pt0.x, pt0.y);
+    cr->line_to(pt1.x, pt1.y);
     cr->stroke();
 
     // And the "pinned ends circles":
@@ -341,18 +293,18 @@ void CBaseElementBeam::drawSVG(
     {
         cr->set_line_width(PINNED_PEN_WIDTH);
         cr->arc(
-            pt0_end.coords[0] + dir.coords[0] * BEAM_PINNED_RADIUS,
-            pt0_end.coords[1] + dir.coords[1] * BEAM_PINNED_RADIUS,
-            BEAM_PINNED_RADIUS, 0, 2 * M_PI);
+            pt0_end.x + dir.x * BEAM_PINNED_RADIUS,
+            pt0_end.y + dir.y * BEAM_PINNED_RADIUS, BEAM_PINNED_RADIUS, 0,
+            2 * M_PI);
         cr->stroke();
     }
     if (m_pinned_end1 && node1_is_to_draw)
     {
         cr->set_line_width(PINNED_PEN_WIDTH);
         cr->arc(
-            pt1_end.coords[0] - dir.coords[0] * BEAM_PINNED_RADIUS,
-            pt1_end.coords[1] - dir.coords[1] * BEAM_PINNED_RADIUS,
-            BEAM_PINNED_RADIUS, 0, 2 * M_PI);
+            pt1_end.x - dir.x * BEAM_PINNED_RADIUS,
+            pt1_end.y - dir.y * BEAM_PINNED_RADIUS, BEAM_PINNED_RADIUS, 0,
+            2 * M_PI);
         cr->stroke();
     }
 
@@ -360,10 +312,8 @@ void CBaseElementBeam::drawSVG(
     {
         cr->set_source_rgb(0, 0, 0.9);
 
-        const double x0 =
-            0.5 * (p0.t.coords[0] + p1.t.coords[0]) + 0.5 * options.node_radius;
-        const double y0 =
-            0.5 * (p0.t.coords[1] + p1.t.coords[1]) + 0.5 * options.node_radius;
+        const double x0 = 0.5 * (p0.t.x + p1.t.x) + 0.5 * options.node_radius;
+        const double y0 = 0.5 * (p0.t.y + p1.t.y) + 0.5 * options.node_radius;
         cr->move_to(x0, y0);
         cr->show_text(openbeam::format(
             "E%u", static_cast<unsigned int>(draw_el_params.element_index)));
@@ -389,9 +339,7 @@ void CBaseElementBeam::do_mesh(
 
     // vector: 0->1
     const TPoint3D v01(
-        node1.t.coords[0] - node0.t.coords[0],
-        node1.t.coords[1] - node0.t.coords[1],
-        node1.t.coords[2] - node0.t.coords[2]);
+        node1.t.x - node0.t.x, node1.t.y - node0.t.y, node1.t.z - node0.t.z);
     const num_t L = v01.norm();
 
     ASSERT_(L > 0);
@@ -417,8 +365,7 @@ void CBaseElementBeam::do_mesh(
         TRotationTrans3D p;
         p.r            = node0.r;
         const double f = node_idx / double(nElements);
-        for (int i = 0; i < 3; i++)
-            p.t.coords[i] = node0.t.coords[i] + v01.coords[i] * f;
+        for (int i = 0; i < 3; i++) p.t[i] = node0.t[i] + v01[i] * f;
 
         const size_t new_node_id = out_fem.insertNode(p);
         my_nodes.push_back(new_node_id);

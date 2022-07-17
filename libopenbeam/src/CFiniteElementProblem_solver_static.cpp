@@ -139,13 +139,12 @@ void CFiniteElementProblem::solveStatic(
                     out_info.U_f[i];  // The increment for this DoF
 
                 const size_t dof_idx = out_info.build_info.free_dof_indices[i];
-                const NodeDoF&  dof     = m_problem_DoFs[dof_idx];
+                const NodeDoF& dof   = m_problem_DoFs[dof_idx];
 
                 if (dof.dofAsInt() < 3)
                 {
                     // X, Y, Z
-                    m_node_poses[dof.nodeId].t.coords[dof.dofAsInt()] +=
-                        delta_val;
+                    m_node_poses[dof.nodeId].t[dof.dofAsInt()] += delta_val;
                 }
                 else
                 {

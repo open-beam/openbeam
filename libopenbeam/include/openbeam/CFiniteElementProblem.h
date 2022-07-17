@@ -27,7 +27,6 @@
 #include <mrpt/opengl/CSetOfObjects.h>
 #include <mrpt/system/CTimeLogger.h>
 #include <openbeam/CElement.h>
-#include <openbeam/DrawStructureOptions.h>
 #include <openbeam/types.h>
 
 #include <Eigen/Sparse>
@@ -259,7 +258,7 @@ class CFiniteElementProblem
         const MeshOutputInfo*         meshing_info) const;
 
     mrpt::opengl::CSetOfObjects::Ptr getVisualization(
-        const RenderInitData& ri, const DrawStructureOptions& options,
+        const DrawStructureOptions&   options,
         const StaticSolveProblemInfo& solver_info,
         const MeshOutputInfo*         meshing_info = nullptr) const;
 

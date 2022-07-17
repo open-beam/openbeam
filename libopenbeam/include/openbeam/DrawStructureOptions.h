@@ -48,6 +48,11 @@ struct DrawStructureOptions
     double image_width = 1024;
     double node_radius = 2e-2;
 
+    double       EDGE_WIDTH         = 5e-3;
+    double       BEAM_PINNED_RADIUS = 10e-3;
+    unsigned int PIN_SPHERE_DIVS    = 8;  // long and latitude sphere divisions
+    unsigned int NODE_SPHERE_DIVS   = 5;  // long and latitude sphere divisions
+
     /// Scale of deformed states (Default=0 means autodetermination from \a
     /// deformed_scale_auto_max_image_ratio)
     double deformed_scale_factor = 0;

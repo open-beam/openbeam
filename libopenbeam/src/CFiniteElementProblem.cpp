@@ -21,6 +21,7 @@
  */
 
 #include <openbeam/CFiniteElementProblem.h>
+#include <openbeam/DrawStructureOptions.h>
 
 #include <set>
 
@@ -113,9 +114,9 @@ void CFiniteElementProblem::setNodePose(
     size_t idx, const num_t x, const num_t y, const num_t z)
 {
     TRotationTrans3D& P = m_node_poses.at(idx);
-    P.t.coords[0]       = x;
-    P.t.coords[1]       = y;
-    P.t.coords[2]       = z;
+    P.t.x               = x;
+    P.t.y               = y;
+    P.t.z               = z;
 
     m_node_defined.at(idx).used = true;
 }
@@ -332,7 +333,7 @@ void CFiniteElementProblem::getNodeDeformedPosition(
     out_final_point = original_pose.r.getRot() * incr_pt * exageration_factor;
 
     // Plus original translation:
-    for (int l = 0; l < 3; l++) out_final_point[l] += original_pose.t.coords[l];
+    for (int i = 0; i < 3; i++) out_final_point[i] += original_pose.t[i];
 }
 
 /** Returns the maximum absolute value translation in any X,Y,Z directions
@@ -388,11 +389,11 @@ void CFiniteElementProblem::getBoundingBox(
         if (!deformed)
         {
             const TRotationTrans3D& p = this->getNodePose(i);
-            min_x                     = std::min(min_x, p.t.coords[0]);
-            max_x                     = std::max(max_x, p.t.coords[0]);
+            min_x                     = std::min(min_x, p.t.x);
+            max_x                     = std::max(max_x, p.t.x);
 
-            min_y = std::min(min_y, p.t.coords[1]);
-            max_y = std::max(max_y, p.t.coords[1]);
+            min_y = std::min(min_y, p.t.y);
+            max_y = std::max(max_y, p.t.y);
         }
         else
         {

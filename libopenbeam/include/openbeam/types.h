@@ -27,6 +27,7 @@
 #include <mrpt/containers/yaml.h>
 #include <mrpt/core/exceptions.h>  // ASSERT_(), etc.
 #include <mrpt/core/format.h>  // mrpt::format()
+#include <mrpt/math/TPoint3D.h>
 #include <mrpt/system/CTimeLogger.h>
 
 #include <Eigen/Dense>
@@ -166,29 +167,13 @@ struct TRotation3D
     bool     m_is_pure_identity;
 };
 
-struct TPoint3D
-{
-    num_t coords[3];
-
-    TPoint3D() {}
-    TPoint3D(const num_t x, const num_t y, const num_t z)
-    {
-        coords[0] = x;
-        coords[1] = y;
-        coords[2] = z;
-    }
-    inline num_t norm_squared() const
-    {
-        return coords[0] * coords[0] + coords[1] * coords[1] +
-               coords[2] * coords[2];
-    }
-    inline num_t norm() const { return std::sqrt(norm_squared()); }
-};
+using TPoint3D = mrpt::math::TPoint3D_<num_t>;
 
 struct TRotationTrans3D
 {
-    inline TRotationTrans3D() : t(0, 0, 0), r() {}
-    inline TRotationTrans3D(
+    TRotationTrans3D() = default;
+
+    TRotationTrans3D(
         num_t x, num_t y, num_t z, num_t ang_x, num_t ang_y, num_t ang_z)
         : t(x, y, z), r(ang_x, ang_y, ang_z)
     {
@@ -197,12 +182,9 @@ struct TRotationTrans3D
     TPoint3D    t;  //!< Translation vector in 3D
     TRotation3D r;  //!< Rotation in 3D
 
-    inline num_t distanceTo(const TRotationTrans3D& o) const
+    num_t distanceTo(const TRotationTrans3D& o) const
     {
-        return std::sqrt(
-            openbeam::square(t.coords[0] - o.t.coords[0]) +
-            openbeam::square(t.coords[1] - o.t.coords[1]) +
-            openbeam::square(t.coords[2] - o.t.coords[2]));
+        return t.distanceTo(o.t);
     }
 };
 
@@ -226,7 +208,10 @@ bool strCmpI(const std::string& s1, const std::string& s2);
 num_t str2num(const std::string& s);
 
 using mrpt::format;
-
 using array6 = std::array<num_t, 6>;
+
+struct DrawStructureOptions;
+struct RenderInitData;
+struct DrawElementExtraParams;
 
 }  // namespace openbeam

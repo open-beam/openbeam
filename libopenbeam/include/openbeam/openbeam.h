@@ -28,6 +28,7 @@
 // Generic classes ------------------
 #include <openbeam/CFiniteElementProblem.h>
 #include <openbeam/CStructureProblem.h>
+#include <openbeam/DrawStructureOptions.h>
 
 // Element library ------------------
 #include <openbeam/elements.h>

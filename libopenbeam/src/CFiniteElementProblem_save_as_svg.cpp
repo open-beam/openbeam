@@ -21,6 +21,7 @@
  */
 
 #include <openbeam/CFiniteElementProblem.h>
+#include <openbeam/DrawStructureOptions.h>
 
 #include "internals.h"
 
@@ -196,16 +197,15 @@ bool CFiniteElementProblem::renderToCairoContext(
         for (size_t i = 0; i < nNodesToDraw; i++)
         {
             const TRotationTrans3D& p = this->getNodePose(i);
-            cr->move_to(p.t.coords[0], p.t.coords[1]);
-            cr->arc(
-                p.t.coords[0], p.t.coords[1], options.node_radius, 0, 2 * M_PI);
+            cr->move_to(p.t.x, p.t.y);
+            cr->arc(p.t.x, p.t.y, options.node_radius, 0, 2 * M_PI);
             cr->fill();
 
             if (options.show_node_labels && !options.show_nodes_deformed)
             {
                 cr->move_to(
-                    p.t.coords[0] + 1.3 * options.node_radius,
-                    p.t.coords[1] + 0.8 * options.node_radius);
+                    p.t.x + 1.3 * options.node_radius,
+                    p.t.y + 0.8 * options.node_radius);
                 cr->show_text(getNodeLabel(i));
             }
         }
@@ -378,7 +378,7 @@ bool CFiniteElementProblem::renderToCairoContext(
                     this->getNodeDeformedPosition(
                         dof_info.nodeId, pt, *solver_info,
                         DEFORMED_SCALE_FACTOR);
-                    for (int k = 0; k < 3; k++) node_pose.t.coords[k] = pt[k];
+                    for (int k = 0; k < 3; k++) node_pose.t[k] = pt[k];
                 }
 
                 // Draw:
@@ -477,9 +477,7 @@ bool CFiniteElementProblem::renderToCairoContext(
             const size_t nPts = seq_points_local.size();
             if (force_val < 0)
                 for (size_t k = 0; k < nPts; k++)
-                    for (int l = 0; l < 3; l++)
-                        seq_points_local[k].coords[l] =
-                            -seq_points_local[k].coords[l];
+                    seq_points_local[k] = -seq_points_local[k];
 
             TRotationTrans3D node_pose;
 
@@ -499,7 +497,7 @@ bool CFiniteElementProblem::renderToCairoContext(
                 Vector3 pt;
                 this->getNodeDeformedPosition(
                     dof_info.nodeId, pt, *solver_info, DEFORMED_SCALE_FACTOR);
-                for (int k = 0; k < 3; k++) node_pose.t.coords[k] = pt[k];
+                for (int k = 0; k < 3; k++) node_pose.t[k] = pt[k];
             }
 
             const Matrix33& node_rot = node_pose.r.getRot();
@@ -512,8 +510,7 @@ bool CFiniteElementProblem::renderToCairoContext(
                 seq_points_global = seq_points_local;
                 for (size_t k = 0; k < nPts; k++)
                     // POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL
-                    for (int l = 0; l < 3; l++)
-                        seq_points_global[k].coords[l] += node_pose.t.coords[l];
+                    seq_points_global[k] += node_pose.t;
             }
             else
             {
@@ -522,22 +519,19 @@ bool CFiniteElementProblem::renderToCairoContext(
                 {
                     // POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL
                     for (int l = 0; l < 3; l++)
-                        seq_points_global[k].coords[l] =
-                            node_pose.t.coords[l] +
-                            node_rot.coeff(l, 0) *
-                                seq_points_local[k].coords[0] +
-                            node_rot.coeff(l, 1) *
-                                seq_points_local[k].coords[1] +
-                            node_rot.coeff(l, 2) *
-                                seq_points_local[k].coords[2];
+                        seq_points_global[k][l] =
+                            node_pose.t[l] +
+                            node_rot.coeff(l, 0) * seq_points_local[k].x +
+                            node_rot.coeff(l, 1) * seq_points_local[k].y +
+                            node_rot.coeff(l, 2) * seq_points_local[k].z;
                 }
             }
 
             // Draw the lines:
             for (size_t k = 0; k < nPts; k++)
             {
-                const double xx = seq_points_global[k].coords[0];
-                const double yy = seq_points_global[k].coords[1];
+                const double xx = seq_points_global[k].x;
+                const double yy = seq_points_global[k].y;
                 if (k == 0)
                     cr->move_to(xx, yy);
                 else

@@ -22,6 +22,7 @@
 
 #include <openbeam/CElement.h>
 #include <openbeam/CStructureProblem.h>
+#include <openbeam/DrawStructureOptions.h>
 #include <openbeam/elements.h>
 
 #include "internals.h"

@@ -52,13 +52,10 @@ void drawLocalScaledSegments(
         for (size_t k = 0; k < nPts; k++)
             // POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL
             if (scale == 1)
-                for (int l = 0; l < 3; l++)
-                    seq_points_global[k].coords[l] += node_pose.t.coords[l];
+                seq_points_global[k] += node_pose.t;
             else
-                for (int l = 0; l < 3; l++)
-                    seq_points_global[k].coords[l] =
-                        node_pose.t.coords[l] +
-                        scale * seq_points_global[k].coords[l];
+                seq_points_global[k] =
+                    node_pose.t + scale * seq_points_global[k];
     }
     else
     {
@@ -67,20 +64,19 @@ void drawLocalScaledSegments(
         {
             // POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL
             for (int l = 0; l < 3; l++)
-                seq_points_global[k].coords[l] =
-                    node_pose.t.coords[l] +
-                    scale *
-                        (node_rot.coeff(l, 0) * seq_points_local[k].coords[0] +
-                         node_rot.coeff(l, 1) * seq_points_local[k].coords[1] +
-                         node_rot.coeff(l, 2) * seq_points_local[k].coords[2]);
+                seq_points_global[k][l] =
+                    node_pose.t[l] +
+                    scale * (node_rot.coeff(l, 0) * seq_points_local[k].x +
+                             node_rot.coeff(l, 1) * seq_points_local[k].y +
+                             node_rot.coeff(l, 2) * seq_points_local[k].z);
         }
     }
 
     // Draw the lines:
     for (size_t k = 0; k < nPts; k++)
     {
-        const double xx = seq_points_global[k].coords[0];
-        const double yy = seq_points_global[k].coords[1];
+        const double xx = seq_points_global[k].x;
+        const double yy = seq_points_global[k].y;
         if (k == 0)
             cr->move_to(xx, yy);
         else

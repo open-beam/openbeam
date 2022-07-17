@@ -56,9 +56,7 @@ void CElementBeam_2D_RD::getLocalStiffnessMatrices(
     const TRotationTrans3D& node1 =
         m_parent->getNodePose(conected_nodes_ids[1]);
 
-    const num_t L2 = square(node1.t.coords[0] - node0.t.coords[0]) +
-                     square(node1.t.coords[1] - node0.t.coords[1]) +
-                     square(node1.t.coords[2] - node0.t.coords[2]);
+    const num_t L2 = (node1.t - node0.t).sqrNorm();
     const num_t L  = std::sqrt(L2);
     const num_t L3 = L2 * L;
 

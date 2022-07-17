@@ -41,9 +41,9 @@ void CLoadConcentratedForce::computeStressAndEquivalentLoads(
     const TRotationTrans3D& node1 =
         el->getParent()->getNodePose(el->conected_nodes_ids[1]);
 
-    num_t Ax = node1.t.coords[0] - node0.t.coords[0];
-    num_t Ay = node1.t.coords[1] - node0.t.coords[1];
-    num_t Az = node1.t.coords[2] - node0.t.coords[2];
+    num_t Ax = node1.t.x - node0.t.x;
+    num_t Ay = node1.t.y - node0.t.y;
+    num_t Az = node1.t.z - node0.t.z;
 
     const num_t L2 = square(Ax) + square(Ay) + square(Az);
     const num_t L  = std::sqrt(L2);
