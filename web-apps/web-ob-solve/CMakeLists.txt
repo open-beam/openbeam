@@ -34,6 +34,7 @@ target_link_options(${PROJECT_NAME} PRIVATE
     -sFULL_ES2=1
     -sFULL_ES3=1
     -sMAX_WEBGL_VERSION=2
+    -sNO_DISABLE_EXCEPTION_CATCHING
 )
 
 target_include_directories(${PROJECT_NAME}

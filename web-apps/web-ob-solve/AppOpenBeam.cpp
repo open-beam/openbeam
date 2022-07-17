@@ -146,29 +146,38 @@ std::string AppOpenBeam::LoadStructureDefinition(const std::string& def)
 {
     std::string retStr;
 
-    // std::ss << "[Debug] Parsing structure definition:\n" << def <<
-    // std::endl;
-
-    // openbeam::setVerbosityLevel(arg_verbose_level.getValue());
-
-    // Load from file:
-    openbeam::vector_string_t errMsg, warnMsg;
-
-    std::stringstream ss(def);
-    structure_.loadFromStream(ss, errMsg, warnMsg);
-
-    // Return errors:
-    for (const auto& m : errMsg)
+    try
     {
-        retStr += "ERR: ";
-        retStr += m;
-        retStr += "\n";
+        // std::ss << "[Debug] Parsing structure definition:\n" << def <<
+        // std::endl;
+
+        // openbeam::setVerbosityLevel(arg_verbose_level.getValue());
+
+        // Load from file:
+        openbeam::vector_string_t errMsg, warnMsg;
+
+        std::stringstream ss(def);
+        structure_.loadFromStream(ss, errMsg, warnMsg);
+
+        // Return errors:
+        for (const auto& m : errMsg)
+        {
+            retStr += "ERR: ";
+            retStr += m;
+            retStr += "\n";
+        }
+        for (const auto& m : warnMsg)
+        {
+            retStr += "WARN: ";
+            retStr += m;
+            retStr += "\n";
+        }
     }
-    for (const auto& m : warnMsg)
+    catch (const std::exception& e)
     {
-        retStr += "WARN: ";
-        retStr += m;
-        retStr += "\n";
+        std::cerr << e.what() << '\n';
+        retStr += "ERR: ";
+        retStr += e.what();
     }
 
     return retStr;
@@ -181,10 +190,10 @@ std::string AppOpenBeam::Solve(const std::string& options)
 
     std::string ret;
 
-    const auto o = mrpt::containers::yaml::FromText(options);
-
     try
     {
+        const auto o = mrpt::containers::yaml::FromText(options);
+
         MeshParams mesh_params;
         mesh_params.max_element_length =
             o.getOrDefault<double>("mesh_max_length", 0.10);
@@ -219,8 +228,9 @@ std::string AppOpenBeam::Solve(const std::string& options)
         const std::vector<NodeDoF>& dofs = problem_to_solve_->getProblemDoFs();
         ASSERT_(nTot == dofs.size());
 
-        ret += "Free DOF count: "s + std::to_string(nF) + "\n";
-        ret += "Constrained DOF count: "s + std::to_string(nB) + "\n";
+        ret += "Nodes: before meshing="s +
+               std::to_string(mesh_out_info_.num_original_nodes) + "\n"s;
+        ret += problem_to_solve_->getProblemDoFsDescription();
     }
     catch (const std::exception& e)
     {
@@ -235,51 +245,60 @@ std::string AppOpenBeam::GetReactionsAsHTML()
     using namespace openbeam;
     using namespace openbeam::localization;
 
-    BuildProblemInfo&           info = sInfo_.build_info;
-    const size_t                nF   = info.free_dof_indices.size();
-    const size_t                nB   = info.bounded_dof_indices.size();
-    const std::vector<NodeDoF>& dofs = problem_to_solve_->getProblemDoFs();
-
     std::stringstream ss;
-    ss << "<h3>" << _t(STR_Reactions) << " (F<sub>R</sub>):</h3>\n";
 
-    ss << "<table border=\"1\" cellpadding=\"9\" cellspacing=\"0\">\n";
-    ss << "<tr><td bgcolor=\"#E0E0E0\">" << _t(STR_dof)
-       << "</td> <td bgcolor=\"#E0E0E0\">(N, Nm)</td></tr>\n";
-
-    for (size_t i = 0; i < nB; i++)
+    try
     {
-        const NodeDoF& dof = dofs[info.bounded_dof_indices[i]];
-        ss << "<tr><td>";
-        switch (dof.dofAsInt())
-        {
-            case 0:
-                ss << "F<sub>x";
-                break;
-            case 1:
-                ss << "F<sub>y";
-                break;
-            case 2:
-                ss << "F<sub>z";
-                break;
-            case 3:
-                ss << "M<sub>x";
-                break;
-            case 4:
-                ss << "M<sub>y";
-                break;
-            case 5:
-                ss << "M<sub>z";
-                break;
-        };
-        ss << dof.nodeId;
-        ss << "</sub>";
-        ss << "</td><td>";
-        ss << format("%.2f", sInfo_.F_b[i]);
-        ss << "</td></tr>\n";
-    }
+        BuildProblemInfo&           info = sInfo_.build_info;
+        const size_t                nF   = info.free_dof_indices.size();
+        const size_t                nB   = info.bounded_dof_indices.size();
+        const std::vector<NodeDoF>& dofs = problem_to_solve_->getProblemDoFs();
 
-    ss << "</table>\n";
+        ss << "<h3>" << _t(STR_Reactions) << " (F<sub>R</sub>):</h3>\n";
+
+        ss << "<table border=\"1\" cellpadding=\"9\" cellspacing=\"0\">\n";
+        ss << "<tr><td bgcolor=\"#E0E0E0\">" << _t(STR_dof)
+           << "</td> <td bgcolor=\"#E0E0E0\">(N, Nm)</td></tr>\n";
+
+        for (size_t i = 0; i < nB; i++)
+        {
+            const NodeDoF& dof = dofs[info.bounded_dof_indices[i]];
+            ss << "<tr><td>";
+            switch (dof.dofAsInt())
+            {
+                case 0:
+                    ss << "F<sub>x";
+                    break;
+                case 1:
+                    ss << "F<sub>y";
+                    break;
+                case 2:
+                    ss << "F<sub>z";
+                    break;
+                case 3:
+                    ss << "M<sub>x";
+                    break;
+                case 4:
+                    ss << "M<sub>y";
+                    break;
+                case 5:
+                    ss << "M<sub>z";
+                    break;
+            };
+            ss << dof.nodeId;
+            ss << "</sub>";
+            ss << "</td><td>";
+            ss << format("%.2f", sInfo_.F_b[i]);
+            ss << "</td></tr>\n";
+        }
+
+        ss << "</table>\n";
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what();
+        ss << e.what();
+    }
 
     return ss.str();
 }
@@ -291,57 +310,65 @@ std::string AppOpenBeam::GetDisplacementsAsHTML()
 
     std::stringstream ss;
 
-    BuildProblemInfo&           info = sInfo_.build_info;
-    const size_t                nF   = info.free_dof_indices.size();
-    const size_t                nB   = info.bounded_dof_indices.size();
-    const std::vector<NodeDoF>& dofs = problem_to_solve_->getProblemDoFs();
-    const size_t nTotalNodes         = problem_to_solve_->getNumberOfNodes();
-
-    std::vector<std::vector<double>> U(nTotalNodes);
-    for (size_t i = 0; i < nTotalNodes; i++) U[i].assign(6, 0);
-    for (size_t i = 0; i < nF; i++)
+    try
     {
-        const NodeDoF& dof            = dofs[info.free_dof_indices[i]];
-        U[dof.nodeId][dof.dofAsInt()] = sInfo_.U_f[i];
-    }
-    for (size_t i = 0; i < nB; i++)
-    {
-        const NodeDoF& dof            = dofs[info.bounded_dof_indices[i]];
-        U[dof.nodeId][dof.dofAsInt()] = info.U_b[i];
-    }
+        BuildProblemInfo&           info = sInfo_.build_info;
+        const size_t                nF   = info.free_dof_indices.size();
+        const size_t                nB   = info.bounded_dof_indices.size();
+        const std::vector<NodeDoF>& dofs = problem_to_solve_->getProblemDoFs();
+        const size_t nTotalNodes = problem_to_solve_->getNumberOfNodes();
 
-    ss << "<h3>" << _t(STR_Displacements) << " (U<sub>R</sub> " << _t(STR_and)
-       << " U<sub>L</sub>):</h3>\n";
+        std::vector<std::vector<double>> U(nTotalNodes);
+        for (size_t i = 0; i < nTotalNodes; i++) U[i].assign(6, 0);
+        for (size_t i = 0; i < nF; i++)
+        {
+            const NodeDoF& dof            = dofs[info.free_dof_indices[i]];
+            U[dof.nodeId][dof.dofAsInt()] = sInfo_.U_f[i];
+        }
+        for (size_t i = 0; i < nB; i++)
+        {
+            const NodeDoF& dof            = dofs[info.bounded_dof_indices[i]];
+            U[dof.nodeId][dof.dofAsInt()] = info.U_b[i];
+        }
 
-    ss << "<table border=\"1\" cellpadding=\"9\" cellspacing=\"0\">\n";
+        ss << "<h3>" << _t(STR_Displacements) << " (U<sub>R</sub> "
+           << _t(STR_and) << " U<sub>L</sub>):</h3>\n";
 
-    ss << "<tr>"
-          "<td bgcolor=\"#E0E0E0\">"
-       << _t(STR_node)
-       << "</td>"
-          "<td bgcolor=\"#E0E0E0\">DX (mm)</td>"
-          "<td bgcolor=\"#E0E0E0\">DY (mm)</td>"
-          "<td bgcolor=\"#E0E0E0\">DZ (mm)</td>"
-          "<td bgcolor=\"#E0E0E0\">RX (deg)</td>"
-          "<td bgcolor=\"#E0E0E0\">RY (deg)</td>"
-          "<td bgcolor=\"#E0E0E0\">RZ (deg)</td></tr>\n";
+        ss << "<table border=\"1\" cellpadding=\"9\" cellspacing=\"0\">\n";
 
-    for (size_t i = 0; i < nTotalNodes; i++)
-    {
-        ss << "<tr><td>" << problem_to_solve_->getNodeLabel(i) << "</td>";
-        for (int k = 0; k < 6; k++)
-            if (U[i][k] == 0)
-                ss << "<td>0</td>";
-            else
-            {
-                if (k < 3)
-                    ss << format("<td>%.03f</td>", U[i][k] * 1e3);
+        ss << "<tr>"
+              "<td bgcolor=\"#E0E0E0\">"
+           << _t(STR_node)
+           << "</td>"
+              "<td bgcolor=\"#E0E0E0\">DX (mm)</td>"
+              "<td bgcolor=\"#E0E0E0\">DY (mm)</td>"
+              "<td bgcolor=\"#E0E0E0\">DZ (mm)</td>"
+              "<td bgcolor=\"#E0E0E0\">RX (deg)</td>"
+              "<td bgcolor=\"#E0E0E0\">RY (deg)</td>"
+              "<td bgcolor=\"#E0E0E0\">RZ (deg)</td></tr>\n";
+
+        for (size_t i = 0; i < nTotalNodes; i++)
+        {
+            ss << "<tr><td>" << problem_to_solve_->getNodeLabel(i) << "</td>";
+            for (int k = 0; k < 6; k++)
+                if (U[i][k] == 0)
+                    ss << "<td>0</td>";
                 else
-                    ss << format("<td>%.02f</td>", U[i][k] * 180 / M_PI);
-            }
-        ss << "</tr>\n";
+                {
+                    if (k < 3)
+                        ss << format("<td>%.03f</td>", U[i][k] * 1e3);
+                    else
+                        ss << format("<td>%.02f</td>", U[i][k] * 180 / M_PI);
+                }
+            ss << "</tr>\n";
+        }
+        ss << "</table>\n";
     }
-    ss << "</table>\n";
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what();
+        ss << e.what();
+    }
     return ss.str();
 }
 
@@ -352,51 +379,59 @@ std::string AppOpenBeam::GetStressAsHTML()
 
     std::stringstream ss;
 
-    BuildProblemInfo&           info = sInfo_.build_info;
-    const size_t                nF   = info.free_dof_indices.size();
-    const size_t                nB   = info.bounded_dof_indices.size();
-    const std::vector<NodeDoF>& dofs = problem_to_solve_->getProblemDoFs();
-    const size_t nTotalNodes         = problem_to_solve_->getNumberOfNodes();
-
-    ss << "<h4>Element stress:</h4>\n";
-
-    ss << "<table border=\"1\" cellspacing=\"0\" cellpadding=\"3\">\n"
-          "<tr><td>Element</td><td>Face</td><td>N</td><td>Vy</"
-          "td><td>Vz</td><td>Mx</td><td>My</td><td>Mz</td></tr>\n";
-
-    const unsigned int nE =
-        static_cast<unsigned int>(stressInfo_.element_stress.size());
-    for (unsigned int i = 0; i < nE; i++)
+    try
     {
-        for (unsigned int face = 0; face < stressInfo_.element_stress[i].size();
-             face++)
+        BuildProblemInfo&           info = sInfo_.build_info;
+        const size_t                nF   = info.free_dof_indices.size();
+        const size_t                nB   = info.bounded_dof_indices.size();
+        const std::vector<NodeDoF>& dofs = problem_to_solve_->getProblemDoFs();
+        const size_t nTotalNodes = problem_to_solve_->getNumberOfNodes();
+
+        ss << "<h4>Element stress:</h4>\n";
+
+        ss << "<table border=\"1\" cellspacing=\"0\" cellpadding=\"3\">\n"
+              "<tr><td>Element</td><td>Face</td><td>N</td><td>Vy</"
+              "td><td>Vz</td><td>Mx</td><td>My</td><td>Mz</td></tr>\n";
+
+        const unsigned int nE =
+            static_cast<unsigned int>(stressInfo_.element_stress.size());
+        for (unsigned int i = 0; i < nE; i++)
         {
-            const FaceStress& es = stressInfo_.element_stress[i][face];
-            ss << format(
-                "<tr><td align=\"center\">%s</td><td "
-                "align=\"center\">%2u (%s)</td>",
-                face == 0 ? format(" %5u ", i).c_str() : "       ", face,
-                problem_to_solve_
-                    ->getNodeLabel(problem_to_solve_->getElement(i)
-                                       ->conected_nodes_ids[face])
-                    .c_str());
-
-            const num_t nums[6] = {es.N, es.Vy, es.Vz, es.Mx, es.My, es.Mz};
-
-            for (int i = 0; i < 6; i++)
+            for (unsigned int face = 0;
+                 face < stressInfo_.element_stress[i].size(); face++)
             {
-                ss << "<td align=\"right\">";
-                if (nums[i] == 0)
-                    ss << "0";
-                else
-                    ss << format("%f", nums[i]);
-                ss << "</td>";
-            }
-            ss << "</tr>\n";
-        }
-    }
+                const FaceStress& es = stressInfo_.element_stress[i][face];
+                ss << format(
+                    "<tr><td align=\"center\">%s</td><td "
+                    "align=\"center\">%2u (%s)</td>",
+                    face == 0 ? format(" %5u ", i).c_str() : "       ", face,
+                    problem_to_solve_
+                        ->getNodeLabel(problem_to_solve_->getElement(i)
+                                           ->conected_nodes_ids[face])
+                        .c_str());
 
-    ss << "</table>\n";
+                const num_t nums[6] = {es.N, es.Vy, es.Vz, es.Mx, es.My, es.Mz};
+
+                for (int i = 0; i < 6; i++)
+                {
+                    ss << "<td align=\"right\">";
+                    if (nums[i] == 0)
+                        ss << "0";
+                    else
+                        ss << format("%f", nums[i]);
+                    ss << "</td>";
+                }
+                ss << "</tr>\n";
+            }
+        }
+
+        ss << "</table>\n";
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what();
+        ss << e.what();
+    }
 
     return ss.str();
 }
