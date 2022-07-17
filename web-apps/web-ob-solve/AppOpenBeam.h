@@ -27,6 +27,7 @@ class AppOpenBeam
 
     std::string GetReactionsAsHTML();
     std::string GetDisplacementsAsHTML();
+    std::string GetStressAsHTML();
 
     void generateVisualization(const std::string& options);
     void repaintCanvas();
@@ -39,6 +40,7 @@ class AppOpenBeam
     openbeam::CStructureProblem*     problem_to_solve_ = nullptr;
     openbeam::MeshOutputInfo*        mesh_info_        = nullptr;
     openbeam::StaticSolveProblemInfo sInfo_;
+    openbeam::StressInfo             stressInfo_;
 
     mrpt::opengl::COpenGLScene::Ptr theScene_;
 };
@@ -54,5 +56,6 @@ EMSCRIPTEN_BINDINGS(EMTest)
         .function("generateVisualization", &AppOpenBeam::generateVisualization)
         .function("GetReactionsAsHTML", &AppOpenBeam::GetReactionsAsHTML)
         .function(
-            "GetDisplacementsAsHTML", &AppOpenBeam::GetDisplacementsAsHTML);
+            "GetDisplacementsAsHTML", &AppOpenBeam::GetDisplacementsAsHTML)
+        .function("GetStressAsHTML", &AppOpenBeam::GetStressAsHTML);
 }

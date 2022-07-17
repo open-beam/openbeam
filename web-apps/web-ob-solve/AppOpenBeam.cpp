@@ -2,7 +2,7 @@
 
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
-//#include "/home/jlblanco/code/mrpt/3rdparty/nanogui/ext/glfw/deps/linmath.h"
+// #include "/home/jlblanco/code/mrpt/3rdparty/nanogui/ext/glfw/deps/linmath.h"
 #include <GLFW/glfw3.h>
 //
 #include <localization.h>  // Internationalization support
@@ -97,10 +97,27 @@ void AppOpenBeam::repaintCanvas()
         cam.setElevationDegrees(90);
         cam.setAzimuthDegrees(-90);
 
-        // get un-deformed bbox:
+        // get deformed bbox:
         {
+            // Auto determine maximum deformation:
+            double MAX_DEFORMATION_SCALE = 0;
+            {
+                const num_t MAX_DISPL =
+                    problem_to_solve_->getMaximumDeformedDisplacement(sInfo_);
+                num_t min_x, max_x, min_y, max_y;
+                problem_to_solve_->getBoundingBox(min_x, max_x, min_y, max_y);
+                const num_t Ax                  = max_x - min_x;
+                const num_t Ay                  = max_y - min_y;
+                const num_t MAX_ABS_DEFORMATION = std::max(Ax, Ay) * 0.05;
+                MAX_DEFORMATION_SCALE = MAX_ABS_DEFORMATION / MAX_DISPL;
+            }
+
+            double deformed_scale_factor_for_bbox = MAX_DEFORMATION_SCALE;
+
             num_t min_x, max_x, min_y, max_y;
-            structure_.getBoundingBox(min_x, max_x, min_y, max_y);
+            structure_.getBoundingBox(
+                min_x, max_x, min_y, max_y, true /*deformed*/, &sInfo_,
+                deformed_scale_factor_for_bbox);
 
             const double Ax          = std::max<double>(max_x - min_x, 1.0);
             const double Ay          = std::max<double>(max_y - min_y, 1.0);
@@ -190,7 +207,9 @@ std::string AppOpenBeam::Solve(const std::string& options)
         problem_to_solve_->solveStatic(sInfo_);
 
         BuildProblemInfo& info = sInfo_.build_info;
-        problem_to_solve_->assembleProblem(info);
+        // problem_to_solve_->assembleProblem(info);
+
+        problem_to_solve_->postProcCalcStress(stressInfo_, sInfo_);
 
         // Stats:
         const size_t nF   = info.free_dof_indices.size();
@@ -326,22 +345,85 @@ std::string AppOpenBeam::GetDisplacementsAsHTML()
     return ss.str();
 }
 
+std::string AppOpenBeam::GetStressAsHTML()
+{
+    using namespace openbeam;
+    using namespace openbeam::localization;
+
+    std::stringstream ss;
+
+    BuildProblemInfo&           info = sInfo_.build_info;
+    const size_t                nF   = info.free_dof_indices.size();
+    const size_t                nB   = info.bounded_dof_indices.size();
+    const std::vector<NodeDoF>& dofs = problem_to_solve_->getProblemDoFs();
+    const size_t nTotalNodes         = problem_to_solve_->getNumberOfNodes();
+
+    ss << "<h4>Element stress:</h4>\n";
+
+    ss << "<table border=\"1\" cellspacing=\"0\" cellpadding=\"3\">\n"
+          "<tr><td>Element</td><td>Face</td><td>N</td><td>Vy</"
+          "td><td>Vz</td><td>Mx</td><td>My</td><td>Mz</td></tr>\n";
+
+    const unsigned int nE =
+        static_cast<unsigned int>(stressInfo_.element_stress.size());
+    for (unsigned int i = 0; i < nE; i++)
+    {
+        for (unsigned int face = 0; face < stressInfo_.element_stress[i].size();
+             face++)
+        {
+            const FaceStress& es = stressInfo_.element_stress[i][face];
+            ss << format(
+                "<tr><td align=\"center\">%s</td><td "
+                "align=\"center\">%2u (%s)</td>",
+                face == 0 ? format(" %5u ", i).c_str() : "       ", face,
+                problem_to_solve_
+                    ->getNodeLabel(problem_to_solve_->getElement(i)
+                                       ->conected_nodes_ids[face])
+                    .c_str());
+
+            const num_t nums[6] = {es.N, es.Vy, es.Vz, es.Mx, es.My, es.Mz};
+
+            for (int i = 0; i < 6; i++)
+            {
+                ss << "<td align=\"right\">";
+                if (nums[i] == 0)
+                    ss << "0";
+                else
+                    ss << format("%f", nums[i]);
+                ss << "</td>";
+            }
+            ss << "</tr>\n";
+        }
+    }
+
+    ss << "</table>\n";
+
+    return ss.str();
+}
+
 void AppOpenBeam::generateVisualization(const std::string& options)
 {
-    openbeam::DrawStructureOptions draw_options;
-    draw_options.show_nodes_original    = true;
-    draw_options.show_nodes_deformed    = false;
-    draw_options.show_node_labels       = true;
-    draw_options.show_element_labels    = true;
-    draw_options.show_elements_original = true;
-    draw_options.show_elements_deformed = false;
+    try
+    {
+        openbeam::DrawStructureOptions draw_options;
+        draw_options.show_nodes_original    = true;
+        draw_options.show_nodes_deformed    = false;
+        draw_options.show_node_labels       = true;
+        draw_options.show_element_labels    = true;
+        draw_options.show_elements_original = true;
+        draw_options.show_elements_deformed = false;
 
-    const auto o = mrpt::containers::yaml::FromText(options);
-    draw_options.loadFromYaml(o);
+        const auto o = mrpt::containers::yaml::FromText(options);
+        draw_options.loadFromYaml(o);
 
-    auto glObj =
-        problem_to_solve_->getVisualization(draw_options, sInfo_, mesh_info_);
+        auto glObj = problem_to_solve_->getVisualization(
+            draw_options, sInfo_, mesh_info_);
 
-    theScene_->clear();
-    theScene_->insert(glObj);
+        theScene_->clear();
+        theScene_->insert(glObj);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what();
+    }
 }
