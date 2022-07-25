@@ -58,7 +58,7 @@ void CElementBeam_2D_RD::getLocalStiffnessMatrices(
 
     const num_t L2 = (node1.t - node0.t).sqrNorm();
     const num_t L  = std::sqrt(L2);
-    const num_t L3 = L2 * L;
+    // const num_t L3 = L2 * L;
 
     ASSERT_(L > 0);
     if (E == UNINITIALIZED_VALUE)

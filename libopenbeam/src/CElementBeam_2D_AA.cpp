@@ -58,7 +58,7 @@ void CElementBeam_2D_AA::getLocalStiffnessMatrices(
 
     const num_t L2 = (node1.t - node0.t).sqrNorm();
     const num_t L  = std::sqrt(L2);
-    OB_TODO("Allow custom bar lengths!");
+    OB_TODO("Allow custom bar lengths: create forces.");
 
     ASSERT_(L > 0);
     if (E == UNINITIALIZED_VALUE)

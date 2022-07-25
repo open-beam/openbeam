@@ -84,15 +84,6 @@ std::string CBaseElementBeam::asString() const
     return ret;
 }
 
-#if OPENBEAM_HAS_QT5Svg
-void CBaseElementBeam::drawQtSVG(
-    QSvgGenerator& svg, const DrawStructureOptions& options,
-    const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
-    const MeshOutputInfo* meshing_info) const
-{
-}
-#endif
-
 mrpt::opengl::CSetOfObjects::Ptr CBaseElementBeam::getVisualization(
     const DrawStructureOptions& o, const DrawElementExtraParams& draw_el_params,
     const MeshOutputInfo* meshing_info) const

@@ -32,9 +32,9 @@ void CLoadDistributedTriangular::computeStressAndEquivalentLoads(
     const CElement* el, ElementStress& stress, std::vector<array6>& loads)
 {
     // make sure director vector is unitary:
-    ASSERTDEB_(
+    ASSERT_(
         std::abs(1 - (dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2])) <
-        1e-6)
+        1e-6);
 
     const TRotationTrans3D& node0 =
         el->getParent()->getNodePose(el->conected_nodes_ids[0]);
@@ -89,11 +89,8 @@ void CLoadDistributedTriangular::computeStressAndEquivalentLoads(
     num_t m1, m2;
 
     // Bending problem (axial is decoupled, solved below)
-    if (dynamic_cast<const CElementBeam_2D_AA*>(el) != nullptr)
+    if (const auto* e = dynamic_cast<const CElementBeam_2D_AA*>(el); e)
     {
-        const CElementBeam_2D_AA* e =
-            dynamic_cast<const CElementBeam_2D_AA*>(el);
-
         throw std::runtime_error("TODO");
 
         f1[1] = q_n * L * 0.5;
@@ -101,20 +98,16 @@ void CLoadDistributedTriangular::computeStressAndEquivalentLoads(
         f2[1] = q_n * L * 0.5;
         m2    = 0;
     }
-    else if (dynamic_cast<const CElementBeam_2D_RR*>(el) != nullptr)
+    else if (const auto* e = dynamic_cast<const CElementBeam_2D_RR*>(el); e)
     {
-        const CElementBeam_2D_RR* e =
-            dynamic_cast<const CElementBeam_2D_RR*>(el);
         f1[1] = L * (q0_n * 0.5 + (q1_n - q0_n) * 3. / 20.);
         m1    = +L * L * (q0_n * 1. / 12. + (q1_n - q0_n) * 1. / 30.);
 
         f2[1] = L * (q0_n * 0.5 + (q1_n - q0_n) * 7. / 20.);
         m2    = -L * L * (q0_n * 1. / 12. + (q1_n - q0_n) * 1. / 20.);
     }
-    else if (dynamic_cast<const CElementBeam_2D_RA*>(el) != nullptr)
+    else if (const auto* e = dynamic_cast<const CElementBeam_2D_RA*>(el); e)
     {
-        const CElementBeam_2D_RA* e =
-            dynamic_cast<const CElementBeam_2D_RA*>(el);
         throw std::runtime_error("TODO");
 
         f1[1] = q_n * L * (5. / 8);
@@ -122,10 +115,8 @@ void CLoadDistributedTriangular::computeStressAndEquivalentLoads(
         f2[1] = q_n * L * (3. / 8);
         m2    = 0;
     }
-    else if (dynamic_cast<const CElementBeam_2D_AR*>(el) != nullptr)
+    else if (const auto* e = dynamic_cast<const CElementBeam_2D_AR*>(el); e)
     {
-        const CElementBeam_2D_AR* e =
-            dynamic_cast<const CElementBeam_2D_AR*>(el);
         throw std::runtime_error("TODO");
 
         f1[1] = q_n * L * (3. / 8);
@@ -153,12 +144,11 @@ void CLoadDistributedTriangular::computeStressAndEquivalentLoads(
     stress[1].Mz = m2;
 
     // Equivalent load -------------------------------------------
-    const Matrix33& R =
-        el->getGlobalOrientation()
-            .getRot();  // Reference to the 3D rotation matrix (3x3) of the beam
+    // Reference to the 3D rotation matrix (3x3) of the beam
+    const Matrix33& R = el->getGlobalOrientation().getRot();
 
-    const Eigen::Matrix<num_t, 3, 1> F1 =
-        -R * f1;  // "-" since loads are the inverse of reactions/stress.
+    // "-" since loads are the inverse of reactions/stress.
+    const Eigen::Matrix<num_t, 3, 1> F1 = -R * f1;
     const Eigen::Matrix<num_t, 3, 1> F2 = -R * f2;
 
     loads.resize(2);

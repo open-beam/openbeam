@@ -89,15 +89,6 @@ void CElementSpring::loadParamsFromSet(
     this->K = ctx.evaluate(p["K"]);
 }
 
-#if OPENBEAM_HAS_QT5Svg
-void CElementSpring::drawQtSVG(
-    QSvgGenerator& svg, const DrawStructureOptions& options,
-    const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
-    const MeshOutputInfo* meshing_info) const
-{
-}
-#endif
-
 /** Draws the element to a SVG Cairo context (a pointer to a
  * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
  * options */

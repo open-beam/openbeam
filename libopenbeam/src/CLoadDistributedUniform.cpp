@@ -32,9 +32,9 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
     const CElement* el, ElementStress& stress, std::vector<array6>& loads)
 {
     // make sure director vector is unitary:
-    ASSERTDEB_(
+    ASSERT_(
         std::abs(1 - (dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2])) <
-        1e-6)
+        1e-6);
 
     const TRotationTrans3D& node0 =
         el->getParent()->getNodePose(el->conected_nodes_ids[0]);
@@ -81,11 +81,8 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
 
     num_t m1, m2;
 
-    if (dynamic_cast<const CElementBeam_2D_AA*>(el) != nullptr)
+    if (const auto* e = dynamic_cast<const CElementBeam_2D_AA*>(el); e)
     {
-        const CElementBeam_2D_AA* e =
-            dynamic_cast<const CElementBeam_2D_AA*>(el);
-
         f1[0] = -q_t * L * 0.5;
         f1[1] = q_n * L * 0.5;
         m1    = 0;
@@ -93,11 +90,8 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
         f2[1] = q_n * L * 0.5;
         m2    = 0;
     }
-    else if (dynamic_cast<const CElementBeam_2D_RR*>(el) != nullptr)
+    else if (const auto* e = dynamic_cast<const CElementBeam_2D_RR*>(el); e)
     {
-        const CElementBeam_2D_RR* e =
-            dynamic_cast<const CElementBeam_2D_RR*>(el);
-
         f1[0] = -q_t * L * 0.5;
         f1[1] = q_n * L * 0.5;
         m1    = +q_n * L * L / 12;
@@ -105,11 +99,8 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
         f2[1] = q_n * L * 0.5;
         m2    = -q_n * L * L / 12;
     }
-    else if (dynamic_cast<const CElementBeam_2D_RA*>(el) != nullptr)
+    else if (const auto* e = dynamic_cast<const CElementBeam_2D_RA*>(el))
     {
-        const CElementBeam_2D_RA* e =
-            dynamic_cast<const CElementBeam_2D_RA*>(el);
-
         f1[0] = -q_t * L * 0.5;
         f1[1] = q_n * L * (5. / 8);
         m1    = +q_n * L * L / 8;
@@ -117,11 +108,8 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
         f2[1] = q_n * L * (3. / 8);
         m2    = 0;
     }
-    else if (dynamic_cast<const CElementBeam_2D_AR*>(el) != nullptr)
+    else if (const auto* e = dynamic_cast<const CElementBeam_2D_AR*>(el); e)
     {
-        const CElementBeam_2D_AR* e =
-            dynamic_cast<const CElementBeam_2D_AR*>(el);
-
         f1[0] = -q_t * L * 0.5;
         f1[1] = q_n * L * (3. / 8);
         m1    = 0;
@@ -132,11 +120,6 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
     else
         throw std::runtime_error(
             "Unsupported element type for load 'CLoadDistributedUniform'");
-
-#if 0
-	cout << "L = " << L << " f1: " << f1.transpose() << "<br>" <<endl;
-	cout << "f2: " << f2.transpose() << "<br>" <<endl;
-#endif
 
     // Stress:
     stress.resize(2);
@@ -150,12 +133,11 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
     stress[1].Mz = m2;
 
     // Equivalent load -------------------------------------------
-    const Matrix33& R =
-        el->getGlobalOrientation()
-            .getRot();  // Reference to the 3D rotation matrix (3x3) of the beam
+    // Reference to the 3D rotation matrix (3x3) of the beam
+    const Matrix33& R = el->getGlobalOrientation().getRot();
 
-    const Eigen::Matrix<num_t, 3, 1> F1 =
-        -R * f1;  // "-" since loads are the inverse of reactions/stress.
+    // "-" since loads are the inverse of reactions/stress.
+    const Eigen::Matrix<num_t, 3, 1> F1 = -R * f1;
     const Eigen::Matrix<num_t, 3, 1> F2 = -R * f2;
 
     loads.resize(2);

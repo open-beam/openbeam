@@ -196,7 +196,7 @@ struct CLoadDistributedTriangular : public CLoadOnBeam
 
     /// Load density at the start and end points of the beam (N/m)
     num_t q_ini, q_end;
-    num_t dir[3] = {0, 0, 0};  //!< Director vector, in GLOBAL coordinates.
+    num_t dir[3] = {0, 0, 0};  //!< Unit director vector, in GLOBAL coordinates.
 };
 
 /** Concentrated force applied at any point along the beam, in an arbitrary

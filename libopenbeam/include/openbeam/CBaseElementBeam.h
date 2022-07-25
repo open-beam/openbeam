@@ -64,12 +64,6 @@ class CBaseElementBeam : public CElement
         void* _cairo_context, const DrawStructureOptions& options,
         const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo* meshing_info) const override;
-#if OPENBEAM_HAS_QT5Svg
-    void drawQtSVG(
-        QSvgGenerator& svg, const DrawStructureOptions& options,
-        const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
-        const MeshOutputInfo* meshing_info) const override;
-#endif
     mrpt::opengl::CSetOfObjects::Ptr getVisualization(
         const DrawStructureOptions&   o,
         const DrawElementExtraParams& draw_el_params,

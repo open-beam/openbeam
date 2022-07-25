@@ -27,10 +27,6 @@
 
 #include <memory>
 
-#if OPENBEAM_HAS_QT5Svg
-#include <QtSvg>
-#endif
-
 namespace openbeam
 {
 class CFiniteElementProblem;
@@ -149,12 +145,6 @@ class CElement
         void* _cairo_context, const DrawStructureOptions& options,
         const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo* meshing_info) const = 0;
-#if OPENBEAM_HAS_QT5Svg
-    virtual void drawQtSVG(
-        QSvgGenerator& svg, const DrawStructureOptions& options,
-        const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
-        const MeshOutputInfo* meshing_info) const = 0;
-#endif
 
     virtual mrpt::opengl::CSetOfObjects::Ptr getVisualization(
         const DrawStructureOptions&   options,
