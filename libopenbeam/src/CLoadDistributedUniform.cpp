@@ -22,6 +22,7 @@
 
 #include <openbeam/CFiniteElementProblem.h>
 #include <openbeam/CStructureProblem.h>
+#include <openbeam/DrawStructureOptions.h>
 #include <openbeam/elements.h>
 #include <openbeam/loads.h>
 
@@ -32,9 +33,8 @@ void CLoadDistributedUniform::computeStressAndEquivalentLoads(
     const CElement* el, ElementStress& stress, std::vector<array6>& loads)
 {
     // make sure director vector is unitary:
-    ASSERT_(
-        std::abs(1 - (dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2])) <
-        1e-6);
+    ASSERT_NEAR_(
+        dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2], 1.0, 1e-6);
 
     const TRotationTrans3D& node0 =
         el->getParent()->getNodePose(el->conected_nodes_ids[0]);
@@ -183,10 +183,30 @@ void CLoadDistributedUniform::meshLoad(
 }
 
 mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedUniform::getVisualization(
-    const DrawStructureOptions&   options,
+    const CFiniteElementProblem& fem, const DrawStructureOptions& options,
     const DrawElementExtraParams& draw_el_params,
     const MeshOutputInfo*         meshing_info) const
 {
-    //
-    return {};
+    // num_t q;
+    // num_t dir[3];  Director vector, in GLOBAL coordinates.
+    auto glObjs = mrpt::opengl::CSetOfObjects::Create();
+
+    const auto  elIdx       = draw_el_params.element_index;
+    const auto& nodes       = meshing_info->element2nodes.at(elIdx);
+    const auto& subElements = meshing_info->element2elements.at(elIdx);
+    for (auto& subElIdx : subElements)
+    {
+        const auto& el = fem.getElement(subElIdx);
+        for (const auto n : el->conected_nodes_ids)
+        {
+            std::cout << "dbg: elIdx=" << elIdx << " subEl=" << subElIdx
+                      << " node=" << n
+                      << " pose: " << fem.getNodePose(n).t.asString() << "\n";
+        }
+    }
+
+    // fem.getNodePose()
+    // draw_el_params.solver_info->
+
+    return glObjs;
 }

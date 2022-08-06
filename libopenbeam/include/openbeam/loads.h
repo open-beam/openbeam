@@ -68,7 +68,7 @@ struct CLoadOnBeam
         const CStructureProblem&   original_fem) const = 0;
 
     virtual mrpt::opengl::CSetOfObjects::Ptr getVisualization(
-        const DrawStructureOptions&   options,
+        const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const = 0;
 };
@@ -99,7 +99,7 @@ struct CLoadConstTemperature : public CLoadOnBeam
         const CStructureProblem&   original_fem) const override;
 
     mrpt::opengl::CSetOfObjects::Ptr getVisualization(
-        const DrawStructureOptions&   options,
+        const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const override;
 
@@ -142,7 +142,7 @@ struct CLoadDistributedUniform : public CLoadOnBeam
         const CStructureProblem&   original_fem) const override;
 
     mrpt::opengl::CSetOfObjects::Ptr getVisualization(
-        const DrawStructureOptions&   options,
+        const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const override;
 
@@ -190,7 +190,7 @@ struct CLoadDistributedTriangular : public CLoadOnBeam
         const CStructureProblem&   original_fem) const override;
 
     mrpt::opengl::CSetOfObjects::Ptr getVisualization(
-        const DrawStructureOptions&   options,
+        const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const override;
 
@@ -242,7 +242,7 @@ struct CLoadConcentratedForce : public CLoadOnBeam
         const CStructureProblem&   original_fem) const override;
 
     mrpt::opengl::CSetOfObjects::Ptr getVisualization(
-        const DrawStructureOptions&   options,
+        const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const override;
 

@@ -53,6 +53,6 @@ node_loads:
 - {node: 2, dof: DX, value: -P}
 
 element_loads:
-- {element: 0, type: DISTRIB_UNIFORM, q: 2000*G, DX: 0, DY: -1}
-- {element: 1, type: DISTRIB_UNIFORM, q: 2000*G, DX: 0, DY: -1}
+- {element: 0, type: DISTRIB_UNIFORM, q: 2000*G, DX: 0, DY: -1, DZ: 0}
+- {element: 1, type: DISTRIB_UNIFORM, q: 2000*G, DX: 0, DY: -1, DZ: 0}
 

@@ -436,7 +436,8 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
                                         : o.loads_original_alpha;
             el_params.draw_original_position = !o.show_nodes_deformed;
 
-            gl->insert(eLoad->getVisualization(o, el_params, meshing_info));
+            gl->insert(
+                eLoad->getVisualization(*this, o, el_params, meshing_info));
         }
     }
 

@@ -194,7 +194,7 @@ void CLoadConcentratedForce::meshLoad(
 }
 
 mrpt::opengl::CSetOfObjects::Ptr CLoadConcentratedForce::getVisualization(
-    const DrawStructureOptions&   options,
+    const CFiniteElementProblem& fem, const DrawStructureOptions& options,
     const DrawElementExtraParams& draw_el_params,
     const MeshOutputInfo*         meshing_info) const
 {

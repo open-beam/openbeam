@@ -202,7 +202,7 @@ void CLoadDistributedTriangular::meshLoad(
 }
 
 mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedTriangular::getVisualization(
-    const DrawStructureOptions&   options,
+    const CFiniteElementProblem& fem, const DrawStructureOptions& options,
     const DrawElementExtraParams& draw_el_params,
     const MeshOutputInfo*         meshing_info) const
 {
