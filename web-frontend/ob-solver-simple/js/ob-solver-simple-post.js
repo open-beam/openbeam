@@ -44,12 +44,12 @@ function loadFile(filePath) {
 lstExamples = JSON.parse(loadFile('../examples-structures/demo-list.json'));
 var selectElement = document.getElementById('demoSelect');
 
-{
+/*{
     var el = document.createElement("option");
     el.textContent = '';
     el.value = '';
     selectElement.appendChild(el);
-}
+}*/
 
 for (var i = 0; i < lstExamples.length; i++) {
     var opt = lstExamples[i];
@@ -58,6 +58,9 @@ for (var i = 0; i < lstExamples.length; i++) {
     el.value = opt;
     selectElement.appendChild(el);
 }
+
+// auto load the first example:
+loadDemoFile(lstExamples[0]);
 
 function loadDemoFile(fil) {
     if (fil != '') {
