@@ -213,5 +213,6 @@ using array6 = std::array<num_t, 6>;
 struct DrawStructureOptions;
 struct RenderInitData;
 struct DrawElementExtraParams;
+struct StaticSolveProblemInfo;
 
 }  // namespace openbeam

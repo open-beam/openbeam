@@ -20,6 +20,7 @@
    +---------------------------------------------------------------------------+
  */
 
+#include <mrpt/opengl/CSetOfLines.h>
 #include <openbeam/CFiniteElementProblem.h>
 #include <openbeam/CStructureProblem.h>
 #include <openbeam/DrawStructureOptions.h>
@@ -183,30 +184,66 @@ void CLoadDistributedUniform::meshLoad(
 }
 
 mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedUniform::getVisualization(
-    const CFiniteElementProblem& fem, const DrawStructureOptions& options,
+    const CFiniteElementProblem& fem, const DrawStructureOptions& o,
     const DrawElementExtraParams& draw_el_params,
     const MeshOutputInfo*         meshing_info) const
 {
+    if (!o.show_loads) return {};
+
     // num_t q;
     // num_t dir[3];  Director vector, in GLOBAL coordinates.
     auto glObjs = mrpt::opengl::CSetOfObjects::Create();
 
-    const auto  elIdx       = draw_el_params.element_index;
-    const auto& nodes       = meshing_info->element2nodes.at(elIdx);
-    const auto& subElements = meshing_info->element2elements.at(elIdx);
-    for (auto& subElIdx : subElements)
+    const auto elIdx = draw_el_params.element_index;
+
+    // extreme coordinates:
+    std::vector<TPoint3D> nodeCoords;
+
     {
-        const auto& el = fem.getElement(subElIdx);
+        const auto& el = fem.getElement(elIdx);
+        ASSERT_(el);
         for (const auto n : el->conected_nodes_ids)
         {
-            std::cout << "dbg: elIdx=" << elIdx << " subEl=" << subElIdx
-                      << " node=" << n
-                      << " pose: " << fem.getNodePose(n).t.asString() << "\n";
+            if (draw_el_params.draw_original_position)
+            {  // original:
+                nodeCoords.push_back(fem.getNodePose(n).t);
+            }
+            else
+            {  // deformed:
+                Vector3 pt;
+                fem.getNodeDeformedPosition(
+                    n, pt, *draw_el_params.solver_info,
+                    draw_el_params.deformed_scale_factor);
+
+                nodeCoords.push_back({pt.x(), pt.y(), pt.z()});
+            }
         }
     }
 
-    // fem.getNodePose()
-    // draw_el_params.solver_info->
+    if (nodeCoords.size() == 2)
+    {
+        const auto pt0 = nodeCoords.at(0);
+        const auto pt1 = nodeCoords.at(1);
+
+        const mrpt::math::TVector3D u          = {dir[0], dir[1], dir[2]};
+        const double                len        = (pt1 - pt0).norm();
+        const auto                  elementDir = (pt1 - pt0).unitarize();
+
+        const double forceSize = this->q / (10 * 10000);
+
+        auto glLins = mrpt::opengl::CSetOfLines::Create();
+
+        glLins->setColor(0, 0, 1, draw_el_params.color_alpha);
+
+        const auto pt01 = pt0 - u * forceSize;
+        const auto pt11 = pt1 - u * forceSize;
+
+        glLins->appendLine(pt0, pt01);
+        glLins->appendLine(pt01, pt11);
+        glLins->appendLine(pt11, pt1);
+
+        glObjs->insert(glLins);
+    }
 
     return glObjs;
 }

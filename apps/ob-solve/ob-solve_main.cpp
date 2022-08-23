@@ -466,6 +466,8 @@ int main_code(int argc, char** argv)
         draw_options.show_element_labels    = true;
         draw_options.show_elements_original = true;
         draw_options.show_elements_deformed = false;
+        draw_options.loads_deformed_alpha   = 0;
+        draw_options.loads_original_alpha   = 1;
 
         {
             auto glObj = problem_to_solve->getVisualization(
@@ -487,6 +489,9 @@ int main_code(int argc, char** argv)
         draw_options.elements_original_alpha = 0.2;
         draw_options.show_elements_deformed  = true;
         draw_options.show_element_labels     = false;
+        draw_options.loads_deformed_alpha    = 1;
+        draw_options.loads_original_alpha    = 0;
+
         draw_options.deformed_scale_factor = arg_svg_deformed_factor.getValue();
 
         {

@@ -102,7 +102,7 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
     }
 
     // If there is anything to draw in "deformed", determine the scale:
-    // ==============================================
+    // =======================================================================
     num_t DEFORMED_SCALE_FACTOR = o.deformed_scale_factor;
     if (DEFORMED_SCALE_FACTOR == 0 &&
         (o.show_nodes_deformed || o.show_elements_deformed))
@@ -117,6 +117,10 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
                 ? 1
                 : max_desired_deformation / max_real_deformation;
     }
+
+    // Automatic determination of distributed load scale:
+    // =======================================================================
+    // TODO.
 
     // Edges deformed:  ==============================================
     if (o.show_elements_deformed)
@@ -435,6 +439,8 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
                                         ? o.loads_deformed_alpha
                                         : o.loads_original_alpha;
             el_params.draw_original_position = !o.show_nodes_deformed;
+            el_params.solver_info            = &solver_info;
+            el_params.deformed_scale_factor  = DEFORMED_SCALE_FACTOR;
 
             gl->insert(
                 eLoad->getVisualization(*this, o, el_params, meshing_info));
