@@ -11,7 +11,7 @@ OpenBeam project
    :hidden:
 
    Home <self>
-   Online solver <apps/ob-solver/#http://>
+   Online solver <ob-solver-simple/#http://>
    compile
    structure-definition-format
    C++ API <doxygen/html/classes.html#http://>
@@ -22,7 +22,7 @@ This project includes a C++ library, CLI tools, and web applications.
 
 Use the menu on the left to navigate through the documentation and the on-line apps:
 
-* `ob-solver <apps/ob-solver/>`_: Main online app to solve static analysis of any structure,
+* `ob-solver <ob-solver-simple/>`_: Main **online app** to solve static analysis of any structure,
   defined by means of the `YAML problem definition file <structure-definition-format.html>`_.
 
 
@@ -33,7 +33,7 @@ Demo video
   :width: 650
   :alt: Animation of deformed structure
 
-Github repository: https://github.com/jlblancoc/openbeam
+Github repository: https://github.com/open-beam/openbeam
 
 Indices and tables
 ==================

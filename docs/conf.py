@@ -18,9 +18,12 @@ import sphinx_rtd_theme
 import subprocess
 import os
 
-read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
-if read_the_docs_build:
-    subprocess.call('mkdir -p _build/html/doxygen/; doxygen', shell=True)
+# 1) Build Doxygen docs:
+subprocess.call('mkdir -p _build/html/doxygen/; doxygen', shell=True)
+
+# 2) Build online apps:
+subprocess.call(
+    'cd ../build-emscripten && make web && cp -r html/* ../docs/_build/html/', shell=True)
 
 # -- Project information -----------------------------------------------------
 
