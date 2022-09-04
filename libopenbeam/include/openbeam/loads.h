@@ -71,6 +71,19 @@ struct CLoadOnBeam
         const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const = 0;
+
+    virtual void getVisualization_init(
+        const CFiniteElementProblem& fem, const DrawStructureOptions& options,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const
+    {
+    }
+    virtual void getVisualization_pre(
+        const CFiniteElementProblem& fem, const DrawStructureOptions& options,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const
+    {
+    }
 };
 
 /** A "load" for a constant increase of temperature in the whole element.
@@ -142,6 +155,16 @@ struct CLoadDistributedUniform : public CLoadOnBeam
         const CStructureProblem&   original_fem) const override;
 
     mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+        const CFiniteElementProblem& fem, const DrawStructureOptions& options,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const override;
+
+    void getVisualization_init(
+        const CFiniteElementProblem& fem, const DrawStructureOptions& options,
+        const DrawElementExtraParams& draw_el_params,
+        const MeshOutputInfo*         meshing_info) const override;
+
+    void getVisualization_pre(
         const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const override;

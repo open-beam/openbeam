@@ -183,6 +183,9 @@ void CLoadDistributedUniform::meshLoad(
             std::make_shared<CLoadDistributedUniform>(*this));
 }
 
+// maximum load density in all distributed loads
+static double max_distributed_q = .0;
+
 mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedUniform::getVisualization(
     const CFiniteElementProblem& fem, const DrawStructureOptions& o,
     const DrawElementExtraParams& draw_el_params,
@@ -225,11 +228,13 @@ mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedUniform::getVisualization(
         const auto pt0 = nodeCoords.at(0);
         const auto pt1 = nodeCoords.at(1);
 
-        const mrpt::math::TVector3D u          = {dir[0], dir[1], dir[2]};
-        const double                len        = (pt1 - pt0).norm();
-        const auto                  elementDir = (pt1 - pt0).unitarize();
+        const mrpt::math::TVector3D u = {dir[0], dir[1], dir[2]};
+        // const double                len        = (pt1 - pt0).norm();
+        // const auto                  elementDir = (pt1 - pt0).unitarize();
 
-        const double forceSize = this->q / (10 * 10000);
+        const double scale = o.node_loads_max_relative_size /
+                             std::max<double>(max_distributed_q, 1e-6);
+        const double forceSize = this->q * scale;
 
         auto glLins = mrpt::opengl::CSetOfLines::Create();
 
@@ -246,4 +251,20 @@ mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedUniform::getVisualization(
     }
 
     return glObjs;
+}
+
+void CLoadDistributedUniform::getVisualization_init(
+    const CFiniteElementProblem& fem, const DrawStructureOptions& options,
+    const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo*         meshing_info) const
+{
+    max_distributed_q = 0;
+}
+
+void CLoadDistributedUniform::getVisualization_pre(
+    const CFiniteElementProblem& fem, const DrawStructureOptions& options,
+    const DrawElementExtraParams& draw_el_params,
+    const MeshOutputInfo*         meshing_info) const
+{
+    mrpt::keep_max(max_distributed_q, this->q);
 }

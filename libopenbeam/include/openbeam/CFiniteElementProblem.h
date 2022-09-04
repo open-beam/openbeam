@@ -568,5 +568,22 @@ class CFiniteElementProblem
      *  Each item is a map from element_id -> TNodeElementConnection
      */
     std::vector<TNodeConnections> m_node_connections;
+
+    // Visualization subroutines:
+    void internal_getVisualization_nodeLoads(
+        mrpt::opengl::CSetOfObjects& gl, const DrawStructureOptions& options,
+        const StaticSolveProblemInfo& solver_info,
+        const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const;
+
+    void internal_getVisualization_constraints(
+        mrpt::opengl::CSetOfObjects& gl, const DrawStructureOptions& options,
+        const StaticSolveProblemInfo& solver_info,
+        const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const;
+
+    void internal_getVisualization_distributedLoads(
+        const CStructureProblem* str, mrpt::opengl::CSetOfObjects& gl,
+        const DrawStructureOptions&   options,
+        const StaticSolveProblemInfo& solver_info,
+        const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const;
 };
 }  // namespace openbeam
