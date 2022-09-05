@@ -141,3 +141,65 @@ Example:
       #- {node: 2, dof: DY, value: 1e-3} # optional value different than zero.
 
 
+6. Loads on nodes
+----------------------
+
+This sections allows the definition of concentrated forces or torques
+at particular DoFs of nodes. 
+Each entry must define these keys:
+
+* ``node``: The node ``id`` as defined in the `node section above <#geometry-nodes>`_.
+* ``dof``: The DoF on which the load is defined. Any of: 
+
+  * ``DX``, ``DY``, ``DZ``: for forces. Positive values are in the direction of the axes.
+  * ``RX`` (torsion), ``RY`` (bending), ``RZ``  (bending): for torques.
+
+Example:
+
+.. code-block:: yaml
+
+    # Loads:
+    node_loads:
+      - {node: 2, dof: DX, value: -P}
+
+
+7. Distributed loads on the elements
+---------------------------------------
+
+Loads which are distributed along the elements.
+
+The element ``id`` number is the 0-based index of the elements
+as defined in the ``elements`` section above.
+
+Implemented load ``type`` are:
+
+* ``TEMPERATURE``: Temperature increment load. Parameters:
+
+  * ``deltaT``: Temperature increment (in Celsius degrees).
+  * NOTE: Temperature coefficient is right now fixed to ``12e-6``.
+
+* ``DISTRIB_UNIFORM``: Uniformly distributed load. Parameters:
+
+  * ``q``: Load density value.
+  * ``DX``, ``DY`` (and optionally, ``DZ``): They must form a unit vector specifying the load direction.
+
+* ``TRIANGULAR``: Triangular or trapezoidal load.  Parameters:
+
+  * ``q_ini``, ``q_end``: Load density values at the first and second element nodes.
+  * ``DX``, ``DY`` (and optionally, ``DZ``): They must form a unit vector specifying the load direction.
+
+
+* ``CONCENTRATED``: Concentrated load at a particular point amid the element.  Parameters:
+
+  * ``p``: Concentrated load value.
+  * ``DX``, ``DY`` (and optionally, ``DZ``): They must form a unit vector specifying the load direction.
+  * ``dist``: Distance from the first element node.
+
+
+Example:
+
+.. code-block:: yaml
+
+    element_loads:
+      - {element: 0, type: DISTRIB_UNIFORM, q: 2000*G, DX: 0, DY: -1, DZ: 0}
+
