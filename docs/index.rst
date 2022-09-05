@@ -14,6 +14,7 @@ OpenBeam project
    Online solver <ob-solver-simple/#http://>
    compile
    structure-definition-format
+   finite_elements
    C++ API <doxygen/html/classes.html#http://>
 
 .. (JLBC note: Do not remove the #http:// above, it's the only way I found to allow that link to be included in the TOC).

@@ -213,7 +213,9 @@ void CElement::getGlobalDoFs(std::vector<used_DoFs_t>& dofs) const
     {
         // If all 3 XYZ are used, don't even lose more time on this...
         if (local_dofs[i][0] && local_dofs[i][1] && local_dofs[i][2])
-        { dofs[i][0] = dofs[i][1] = dofs[i][2] = true; }
+        {
+            dofs[i][0] = dofs[i][1] = dofs[i][2] = true;
+        }
         else
         {
             // X Y Z
@@ -230,7 +232,9 @@ void CElement::getGlobalDoFs(std::vector<used_DoFs_t>& dofs) const
 
         // If all 3 rotation are used, don't even lose more time on this...
         if (local_dofs[i][3] && local_dofs[i][4] && local_dofs[i][5])
-        { dofs[i][3] = dofs[i][4] = dofs[i][5] = true; }
+        {
+            dofs[i][3] = dofs[i][4] = dofs[i][5] = true;
+        }
         else
         {
             // thX thY thZ
