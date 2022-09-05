@@ -16,7 +16,8 @@ web-and-publish: html
 	git clone -b html https://github.com/open-beam/openbeam.git openbeam-web && \
 	rm -fr openbeam-web/* ; rm -fr openbeam-web/.gitignore
 	cp -vr _build/html/* /tmp/ob-web/openbeam-web/
-	cd /tmp/ob-web/openbeam-web/ && git add *
+	cd /tmp/ob-web/openbeam-web/ && touch .nojekyll
+	cd /tmp/ob-web/openbeam-web/ && git add * .nojekyll
 	cd /tmp/ob-web/openbeam-web/ && git commit -am "html" --amend
 	cd /tmp/ob-web/openbeam-web/ && git push origin html --force
 
