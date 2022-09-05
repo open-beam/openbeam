@@ -11,7 +11,7 @@ or by means of a `beam_sections` YAML entry to reuse sets of
 parameters for several elements.
 Note that defining more parameters than the minimum required ones
 is not an error, 
-e.g. you can define `Iz` for a `BEAM2D_AA` and it
+e.g. you can define ``Iz`` for a `BEAM2D_AA` and it
 will neither be used nor an error triggered.
 
 
@@ -19,14 +19,24 @@ will neither be used nor an error triggered.
 1. Rod 2D element (truss)
 -------------------------------------------------
 
+.. image:: imgs/element_BEAM2D_AA.png
+  :width: 347
+  :align: right
+  :alt: 2D rod finite element definition
+
 A planar (XY) rod element capable of axial stress only.
 
-* Type name: `BEAM2D_AA`
+* Type name: ``BEAM2D_AA``
 * Number of nodes: 2
 * Required parameters:
 
-  * `E`: Young elasticity module.
-  * `A`: Section area.
+  * ``E``: Young elasticity module.
+  * ``A``: Section area.
+
+.. raw:: html
+
+    <div style="clear: both"></div>
+
 
 2. Single-pinned 2D element (beam)
 -------------------------------------------------
@@ -37,13 +47,13 @@ Two names exist for this element for convenience of users,
 depending on which which node (the first or the second listed node)
 is the pinned one.
 
-* Type name: `BEAM2D_AR` (first node is pinned), `BEAM2D_RA` (second node is pinned)
+* Type name: ``BEAM2D_AR`` (first node is pinned), ``BEAM2D_RA`` (second node is pinned)
 * Number of nodes: 2
 * Required parameters:
 
-  * `E`: Young elasticity module.
-  * `A`: Section area.
-  * `Iz`: Second moment of inertia in the `Z` axis.
+  * ``E``: Young elasticity module.
+  * ``A``: Section area.
+  * ``Iz``: Second moment of inertia in the `Z` axis.
 
 3. 2D beam element
 -------------------------------------------------
@@ -51,13 +61,13 @@ is the pinned one.
 A planar (XY) beam element with both ends able to 
 transmit bending moment.
 
-* Type name: `BEAM2D_RR`
+* Type name: ``BEAM2D_RR``
 * Number of nodes: 2
 * Required parameters:
 
-  * `E`: Young elasticity module.
-  * `A`: Section area.
-  * `Iz`: Second moment of inertia in the `Z` axis.
+  * ``E``: Young elasticity module.
+  * ``A``: Section area.
+  * ``Iz``: Second moment of inertia in the `Z` axis.
 
 
 4. 2D beam element with slider
@@ -67,13 +77,13 @@ A planar (XY) beam element with both ends able to
 transmit bending moment, and second node free 
 to slide on the local Y axis.
 
-* Type name: `BEAM2D_RD`
+* Type name: ``BEAM2D_RD``
 * Number of nodes: 2
 * Required parameters:
 
-  * `E`: Young elasticity module.
-  * `A`: Section area.
-  * `Iz`: Second moment of inertia in the `Z` axis.
+  * ``E``: Young elasticity module.
+  * ``A``: Section area.
+  * ``Iz``: Second moment of inertia in the `Z` axis.
 
 
 5. Linear spring
@@ -81,11 +91,11 @@ to slide on the local Y axis.
 
 A spring element in the local X direction between two given nodes.
 
-* Type name: `SPRING_1D`
+* Type name: ``SPRING_1D``
 * Number of nodes: 2
 * Required parameters:
 
-  * `K`: Stiffness constant.
+  * ``K``: Stiffness constant.
 
 6. Two linear, one torsion spring
 -------------------------------------------------
@@ -93,22 +103,22 @@ A spring element in the local X direction between two given nodes.
 A spring element with three elastic components in the local X, Y and Z
 directions between two given nodes.
 
-* Type name: `SPRING_XYZ`
+* Type name: ``SPRING_XYZ``
 * Number of nodes: 2
 * Required parameters:
 
-  * `Kx`: Stiffness constant in X.
-  * `Ky`: Stiffness constant in Y.
-  * `Kz`: Torsional stiffness constant in Z.
+  * ``Kx``: Stiffness constant in X.
+  * ``Ky``: Stiffness constant in Y.
+  * ``Kz``: Torsional stiffness constant in Z.
 
 7. Torsion spring
 -------------------------------------------------
 
 A torsion spring element in the rotation Z axis between two given nodes.
 
-* Type name: `SPRING_TORSION`
+* Type name: ``SPRING_TORSION``
 * Number of nodes: 2
 * Required parameters:
 
-  * `K`: Torsional stiffness constant in Z.
+  * ``K``: Torsional stiffness constant in Z.
 
