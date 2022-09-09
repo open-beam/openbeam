@@ -36,7 +36,7 @@ using namespace Eigen;
  */
 void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
 {
-    timelog.enter("assembleProblem");
+    auto tle = mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem");
 
     updateElementsOrientation();
     updateNodeConnections();
@@ -68,12 +68,14 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
     bounded_dof_indices.clear();
     dof_types.resize(nDOFs);
 
-    OB_TODO("Do more efficient without find()")
+    auto tle2 =
+        mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.1_list_dofs");
+
     for (size_t k = 0; k < nDOFs; k++)
     {
-        constraint_list_t::const_iterator it = m_DoF_constraints.find(k);
-        if (it == m_DoF_constraints.end())
-        {  // Free DOF:
+        if (auto it = m_DoF_constraints.find(k); it == m_DoF_constraints.end())
+        {
+            // Free DOF:
             const size_t new_idx = free_dof_indices.size();
             problem_dof2free_dof_indices.insert(
                 problem_dof2free_dof_indices.end(), std::make_pair(k, new_idx));
@@ -83,7 +85,8 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
             dof_types[k].free_index    = new_idx;
         }
         else
-        {  // Bounded DOF:
+        {
+            // Constrained DOF:
             const size_t new_idx = bounded_dof_indices.size();
             problem_dof2bounded_dof_indices.insert(
                 problem_dof2bounded_dof_indices.end(),
@@ -94,6 +97,8 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
             dof_types[k].free_index    = string::npos;
         }
     }
+
+    tle2.stop();
 
     OB_MESSAGE(2) << nDOFs
                   << " DOFs in the problem: " << free_dof_indices.size()
@@ -110,6 +115,9 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
 
     std::vector<Eigen::Triplet<double>> K_tri;
     K_tri.reserve(estimated_number_of_non_zero);
+
+    auto tle3 =
+        mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.2_matrices");
 
     // Go thru all elements, and get their matrices:
     for (size_t e = 0; e < nElements; e++)
@@ -223,6 +231,11 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
         }  // end for each submatrix
     }  // end for each element
 
+    tle3.stop();
+
+    auto tle4 =
+        mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.3_full_K");
+
     // Build sparse K from triplets:
     SparseMatrix<num_t> K(
         static_cast<index_t>(nDOFs), static_cast<index_t>(nDOFs));
@@ -231,10 +244,16 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
     if (openbeam::getVerbosityLevel() >= 3)
         OB_MESSAGE(3) << "Complete K:\n" << Eigen::MatrixXd(K) << std::endl;
 
+    tle4.stop();
+
     // Split K into bounded(R) and free (L) dofs:
     // ------------------------------------------------
     // List of free indices : free_dof_indices
     // Indices are wrt      : m_problem_DoFs
+
+    OB_TODO("More efficient submatrices!");
+    auto tle5 =
+        mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.4_sub_Ks");
 
     const index_t nDOFs_f = static_cast<index_t>(free_dof_indices.size());
     const index_t nDOFs_b = static_cast<index_t>(bounded_dof_indices.size());
@@ -251,15 +270,17 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
                 static_cast<index_t>(bounded_dof_indices[r]),
                 static_cast<index_t>(bounded_dof_indices[c]));
 
-    // Symmetric K_ff
+    // Symmetric K_ff: IMPORTANT: Note the (c,r) transpose order, since LLT
+    // Cholesky expects the data in that triangular half.
     for (index_t r = 0; r < nDOFs_f; r++)
         for (index_t c = r; c < nDOFs_f; c++)
-            K_ff_aux.insert(r, c) = K.coeff(
+            K_ff_aux.insert(c, r) = K.coeff(
                 static_cast<index_t>(free_dof_indices[r]),
                 static_cast<index_t>(free_dof_indices[c]));
 
     // Non-symmetric K_bf
     for (index_t r = 0; r < nDOFs_b; r++)
+    {
         for (index_t c = 0; c < nDOFs_f; c++)
         {
             const index_t i_b = static_cast<index_t>(bounded_dof_indices[r]);
@@ -271,12 +292,22 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
                     : K.coeff(
                           i_f, i_b);  // Only the UPPER part of K is populated.
         }
+    }
+
+    tle5.stop();
 
     // Convert matrices to the sparse compressed form:
     // -----------------------------------------------------
+    auto tle6 =
+        mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.5_compress");
+
     K_bb = Eigen::SparseMatrix<num_t>(K_bb_aux);
     K_ff = Eigen::SparseMatrix<num_t>(K_ff_aux);
     K_bf = Eigen::SparseMatrix<num_t>(K_bf_aux);
+
+    tle6.stop();
+
+    auto tle7 = mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.6_Ub");
 
     // Build U_b vector:
     {
@@ -290,9 +321,12 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
         }
     }
 
+    tle7.stop();
+
+    auto tle8 = mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.7_Ff");
+
     // Before building the list of forces, give children classes the opportunity
-    // of
-    //  processing special loads:
+    // of processing special loads:
     this->internalComputeStressAndEquivalentLoads();
 
     // Build F_f vector:
@@ -304,20 +338,21 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
         for (size_t i = 0; i < nDOFs_f; i++)
         {
             const size_t dofIdx = out_info.free_dof_indices[i];
-            {
-                load_list_t::const_iterator it =
-                    m_loads_at_each_dof.find(dofIdx);
-                if (it != m_loads_at_each_dof.end())
-                    out_info.F_f[i] = it->second;
-            }
-            {
-                load_list_t::const_iterator it =
-                    m_loads_at_each_dof_equivs.find(dofIdx);
-                if (it != m_loads_at_each_dof_equivs.end())
-                    out_info.F_f[i] += it->second;
-            }
+
+            if (auto it = m_loads_at_each_dof.find(dofIdx);
+                it != m_loads_at_each_dof.end())
+                out_info.F_f[i] = it->second;
+
+            if (auto it = m_loads_at_each_dof_equivs.find(dofIdx);
+                it != m_loads_at_each_dof_equivs.end())
+                out_info.F_f[i] += it->second;
         }
     }
+
+    tle8.stop();
+
+    auto tle9 = mrpt::system::CTimeLoggerEntry(
+        timelog, "assembleProblem.9_nodalCoords");
 
     // Process nodal coordinates:
     for (size_t i = 0; i < nNodes; i++)
@@ -344,9 +379,10 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
             if (dof_i.dof_index[k] != -1)
             {
                 // This DOF is studied in the problem:
-                map<size_t, size_t>::const_iterator it =
-                    problem_dof2free_dof_indices.find(dof_i.dof_index[k]);
-                if (it != problem_dof2free_dof_indices.end())
+
+                if (auto it =
+                        problem_dof2free_dof_indices.find(dof_i.dof_index[k]);
+                    it != problem_dof2free_dof_indices.end())
                 {
                     // it is a free DOF:
                     Fs[k] = &out_info.F_f[it->second];
@@ -354,9 +390,8 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
                 else
                 {
                     // It must be bounded:
-                    map<size_t, size_t>::const_iterator it2 =
-                        problem_dof2bounded_dof_indices.find(
-                            dof_i.dof_index[k]);
+                    auto it2 = problem_dof2bounded_dof_indices.find(
+                        dof_i.dof_index[k]);
                     ASSERT_(it2 != problem_dof2bounded_dof_indices.end());
                     Us[k] = &out_info.U_b[it2->second];
                 }
@@ -407,8 +442,6 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
                     *Us[k] = URi(k - 3, 0);
             }
         }
-
     }  // end for each node: process nodal coordinates:
-
-    timelog.leave("assembleProblem");
+    tle9.stop();
 }

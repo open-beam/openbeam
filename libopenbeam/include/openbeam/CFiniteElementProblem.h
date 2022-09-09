@@ -66,8 +66,8 @@ struct NodeDoF
 
 enum class StaticSolverAlgorithm : uint8_t
 {
-    LLT = 0,
-    SVD
+    Dense_LLT = 0,
+    Sparse_LLT
 };
 
 /** Extra output information from \a assembleProblem() */
@@ -160,7 +160,7 @@ struct StaticSolverOptions
 {
     StaticSolverOptions() = default;
 
-    StaticSolverAlgorithm algorithm{StaticSolverAlgorithm::LLT};
+    StaticSolverAlgorithm algorithm          = StaticSolverAlgorithm::Dense_LLT;
     bool                  nonLinearIterative = false;
 };
 

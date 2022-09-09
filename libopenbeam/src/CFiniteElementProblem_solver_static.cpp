@@ -66,64 +66,76 @@ void CFiniteElementProblem::solveStatic(
     {
         nIter++;
 
+        mrpt::system::CTimeLoggerEntry tle2(
+            openbeam::timelog, "solveStatic.1_assemble");
+
         // Build stiffness matrices & vectors of restrictions and loads:
         // (TODO: Make more efficient by only recomputing what really changes)
         this->assembleProblem(out_info.build_info);
 
+        tle2.stop();
+
+        mrpt::system::CTimeLoggerEntry tle3(
+            openbeam::timelog, "solveStatic.2_solve");
+
         // Check if all U_b != 0 to use simplified expressions:
         U_b_all_zeros = (out_info.build_info.U_b.array() == 0).all();
 
-        DynMatrix Kff = DynMatrix(out_info.build_info.K_ff.transpose());
+        if (opts.algorithm == StaticSolverAlgorithm::Dense_LLT)
+        {
+            // ===================================
+            // DENSE SOLVER
+            // ===================================
+            DynMatrix Kff = DynMatrix(out_info.build_info.K_ff);
 
-        if (opts.algorithm == StaticSolverAlgorithm::SVD)
-        {  // make sym:
-            const int N = static_cast<int>(Kff.rows());
-            for (int r = 0; r < N; r++)
-                for (int c = r + 1; c < N; c++)
-                    Kff.coeffRef(r, c) = Kff.coeffRef(c, r);
+            OB_MESSAGE(3) << "SolveStatic (iter=" << nIter
+                          << ") will try to decompose matrix Kff:\n"
+                          << Kff << endl;
+
+            // Decomposition of a positive definite matrix for fast solving Ax=b
+            // below:
+            const Eigen::LLT<DynMatrix> Kff_llt = Kff.llt();
+            if (Kff_llt.info() != Eigen::Success)
+            {
+                // There's a structure problem! Probably it's not a
+                // structure, but a mechanism...
+                throw std::runtime_error(
+                    "[CFiniteElementProblem::solveStatic] "
+                    "Ill-conditioned matrix. Too few restrictions?");
+            }
+
+            // Do solve:
+            solveStaticInternal(Kff_llt, out_info, U_b_all_zeros);
+        }
+        else if (opts.algorithm == StaticSolverAlgorithm::Sparse_LLT)
+        {
+            // ===================================
+            // SPARSE SOLVER
+            // ===================================
+            openbeam::timelog.enter("solveStatic.2_solve_analyze");
+
+            Eigen::SimplicialLLT<Eigen::SparseMatrix<num_t>> cholesky;
+            cholesky.analyzePattern(out_info.build_info.K_ff);
+
+            openbeam::timelog.leave("solveStatic.2_solve_analyze");
+            openbeam::timelog.enter("solveStatic.2_solve_factorize");
+
+            cholesky.factorize(out_info.build_info.K_ff);
+
+            openbeam::timelog.leave("solveStatic.2_solve_factorize");
+
+            // Do solve:
+            solveStaticInternal(cholesky, out_info, U_b_all_zeros);
+        }
+        else
+        {
+            throw std::runtime_error("Invalid solver algorithm value");
         }
 
-        OB_MESSAGE(3) << "SolveStatic (iter=" << nIter
-                      << ") will try to decompose matrix Kff:\n"
-                      << Kff << endl;
+        tle3.stop();
 
-        // Decomposition of a positive definite matrix for fast solving Ax=b
-        // below:
-        switch (opts.algorithm)
-        {
-            case StaticSolverAlgorithm::LLT:
-            {
-                const Eigen::LLT<DynMatrix> Kff_llt = Kff.llt();
-                if (!Kff_llt.info() == Eigen::Success)
-                {
-                    // There's a structure problem! Probably it's not a
-                    // structure, but a mechanism...
-                    throw std::runtime_error(
-                        "[CFiniteElementProblem::solveStatic] Ill-conditioned "
-                        "matrix. Too few restrictions?");
-                }
-
-                // Do solve:
-                solveStaticInternal(Kff_llt, out_info, U_b_all_zeros);
-            }
-            break;
-
-            case StaticSolverAlgorithm::SVD:
-            {
-                const Eigen::JacobiSVD<DynMatrix> Kff_llt(
-                    Kff, Eigen::ComputeThinU | Eigen::ComputeThinV);
-
-                // Do solve:
-                solveStaticInternal(Kff_llt, out_info, U_b_all_zeros);
-            }
-            break;
-
-            default:
-                throw std::runtime_error("Invalid solver algorithm value");
-                break;
-        };
-
-        // If this is iterative: check ending condition and update node poses.
+        // If this is iterative: check ending condition and update node
+        // poses.
         if (opts.nonLinearIterative)
         {
             const num_t change_norm_L2 = std::sqrt(
@@ -173,7 +185,8 @@ void CFiniteElementProblem::solveStatic(
 
     // If doing iterations, the U_f displacements are actually only wrt the
     // contents of "m_node_poses":
-    //  Recompute overall displacements and restore the back-up of node poses:
+    //  Recompute overall displacements and restore the back-up of node
+    //  poses:
     if (opts.nonLinearIterative)
     {
         this->m_node_poses = orig_nodes;  // Restore copy
@@ -189,8 +202,8 @@ void CFiniteElementProblem::solveStatic(
     // Add the contributions of distributed forces to the reactions:
 
     // typedef std::map<size_t,num_t> TListOfLoads;
-    // m_loads_at_each_dof_equivs: The vector of overall loads (F_L') on each
-    // DoF due to distributed forces
+    // m_loads_at_each_dof_equivs: The vector of overall loads (F_L') on
+    // each DoF due to distributed forces
     //  Map keys are indices of \a m_problem_DoFs
     for (load_list_t::const_iterator it = m_loads_at_each_dof_equivs.begin();
          it != m_loads_at_each_dof_equivs.end(); ++it)

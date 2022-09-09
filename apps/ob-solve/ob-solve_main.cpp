@@ -156,6 +156,10 @@ int main_code(int argc, char** argv)
         "(Default: no)",
         cmd);
 
+    TCLAP::ValueArg<std::string> argSolver(
+        "", "solver", "Static solver algorithm", false, "Dense_LLT",
+        "{Dense_LLT|Sparse_LLT}", cmd);
+
     TCLAP::ValueArg<std::string> arg_out_animation(
         "", "animate-deformed",
         "Creates an animation of the structure deformed state and saves to "
@@ -332,12 +336,19 @@ int main_code(int argc, char** argv)
     // -------------------------------------------------------------
     // Solve:
     // -------------------------------------------------------------
+    StaticSolverOptions solverOptions;
+    if (argSolver.getValue() == "Dense_LLT")
+        solverOptions.algorithm = StaticSolverAlgorithm::Dense_LLT;
+    else if (argSolver.getValue() == "Sparse_LLT")
+        solverOptions.algorithm = StaticSolverAlgorithm::Sparse_LLT;
+    else
+        throw std::invalid_argument("Invalid --solver algorithm name.");
+
     StaticSolveProblemInfo sInfo;
-    problem_to_solve->solveStatic(sInfo);
+    problem_to_solve->solveStatic(sInfo, solverOptions);
 
-    BuildProblemInfo& info = sInfo.build_info;
-
-    problem_to_solve->assembleProblem(info);
+    const BuildProblemInfo& info = sInfo.build_info;
+    //    problem_to_solve->assembleProblem(info);
 
     // Stats:
     const size_t nF   = info.free_dof_indices.size();
