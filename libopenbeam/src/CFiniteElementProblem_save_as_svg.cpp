@@ -144,7 +144,7 @@ bool CFiniteElementProblem::renderToCairoContext(
 
     // "Screen constant sized" objects -------------
     const double NODE_LABEL_SIZE = options.labels_size / ri.scaleFactor;
-    options.node_radius          = 3 / ri.scaleFactor;
+    options.NODE_RADIUS          = 3 / ri.scaleFactor;
     // --------------
 
     Cairo::RefPtr<Cairo::Context>& cr =
@@ -199,14 +199,14 @@ bool CFiniteElementProblem::renderToCairoContext(
         {
             const TRotationTrans3D& p = this->getNodePose(i);
             cr->move_to(p.t.x, p.t.y);
-            cr->arc(p.t.x, p.t.y, options.node_radius, 0, 2 * M_PI);
+            cr->arc(p.t.x, p.t.y, options.NODE_RADIUS, 0, 2 * M_PI);
             cr->fill();
 
             if (options.show_node_labels && !options.show_nodes_deformed)
             {
                 cr->move_to(
-                    p.t.x + 1.3 * options.node_radius,
-                    p.t.y + 0.8 * options.node_radius);
+                    p.t.x + 1.3 * options.NODE_RADIUS,
+                    p.t.y + 0.8 * options.NODE_RADIUS);
                 cr->show_text(getNodeLabel(i));
             }
         }
@@ -268,14 +268,14 @@ bool CFiniteElementProblem::renderToCairoContext(
                 i, pt, *solver_info, DEFORMED_SCALE_FACTOR);
 
             cr->move_to(pt[0], pt[1]);
-            cr->arc(pt[0], pt[1], options.node_radius, 0, 2 * M_PI);
+            cr->arc(pt[0], pt[1], options.NODE_RADIUS, 0, 2 * M_PI);
             cr->fill();
 
             if (options.show_node_labels)
             {
                 cr->move_to(
-                    pt[0] + 1.3 * options.node_radius,
-                    pt[1] + 0.8 * options.node_radius);
+                    pt[0] + 1.3 * options.NODE_RADIUS,
+                    pt[1] + 0.8 * options.NODE_RADIUS);
                 cr->show_text(getNodeLabel(i));
             }
         }
@@ -289,7 +289,7 @@ bool CFiniteElementProblem::renderToCairoContext(
         cr->save();
 
         // Dimensions of constraint plots:
-        const double R     = options.node_radius;
+        const double R     = options.NODE_RADIUS;
         const double SCALE = R * 2;  // ...
         const double W     = SCALE * 0.9;
         const double H     = SCALE * 1.8;
@@ -397,7 +397,7 @@ bool CFiniteElementProblem::renderToCairoContext(
         cr->save();
 
         // Dimensions of constraint plots:
-        const double R                = options.node_radius;
+        const double R                = options.NODE_RADIUS;
         const double A                = 1.5 * R;  // Arrow size
         const double FORCE_LINE_WIDTH = R * 0.5;
 

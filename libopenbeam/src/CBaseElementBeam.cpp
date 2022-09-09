@@ -138,18 +138,18 @@ mrpt::opengl::CSetOfObjects::Ptr CBaseElementBeam::getVisualization(
 
     const num_t shorten0 =
         node0_is_to_draw
-            ? o.node_radius + (m_pinned_end0 ? 2 * o.BEAM_PINNED_RADIUS : 0)
+            ? o.NODE_RADIUS + (m_pinned_end0 ? 2 * o.BEAM_PINNED_RADIUS : 0)
             : 0;
     const num_t shorten1 =
         node1_is_to_draw
-            ? o.node_radius + (m_pinned_end1 ? 2 * o.BEAM_PINNED_RADIUS : 0)
+            ? o.NODE_RADIUS + (m_pinned_end1 ? 2 * o.BEAM_PINNED_RADIUS : 0)
             : 0;
 
     pt0 += shorten0 * dir;
-    pt0_end += o.node_radius * dir;
+    pt0_end += o.NODE_RADIUS * dir;
 
     pt1 -= shorten1 * dir;
-    pt1_end -= o.node_radius * dir;
+    pt1_end -= o.NODE_RADIUS * dir;
 
     // beam cylinder:
     auto glBody = mrpt::opengl::CArrow::Create();
@@ -184,7 +184,7 @@ mrpt::opengl::CSetOfObjects::Ptr CBaseElementBeam::getVisualization(
     if (o.show_element_labels && node0_is_to_draw && node1_is_to_draw)
     {
         const auto p =
-            ((p0.t + p1.t) * 0.5) + 0.5 * o.node_radius * TPoint3D(1, 1, 1);
+            ((p0.t + p1.t) * 0.5) + 0.5 * o.NODE_RADIUS * TPoint3D(1, 1, 1);
 
         auto glLb = mrpt::opengl::CText::Create();
         glLb->setColor_u8(0x00, 0x00, 0xd0);
@@ -260,18 +260,18 @@ void CBaseElementBeam::drawSVG(
 
     const num_t shorten0 =
         node0_is_to_draw
-            ? options.node_radius + (m_pinned_end0 ? 2 * BEAM_PINNED_RADIUS : 0)
+            ? options.NODE_RADIUS + (m_pinned_end0 ? 2 * BEAM_PINNED_RADIUS : 0)
             : 0;
     const num_t shorten1 =
         node1_is_to_draw
-            ? options.node_radius + (m_pinned_end1 ? 2 * BEAM_PINNED_RADIUS : 0)
+            ? options.NODE_RADIUS + (m_pinned_end1 ? 2 * BEAM_PINNED_RADIUS : 0)
             : 0;
 
     pt0 += shorten0 * dir;
-    pt0_end += options.node_radius * dir;
+    pt0_end += options.NODE_RADIUS * dir;
 
     pt1 -= shorten1 * dir;
-    pt1_end -= options.node_radius * dir;
+    pt1_end -= options.NODE_RADIUS * dir;
 
     cr->set_source_rgba(0.4, 0.4, 0.4, draw_el_params.color_alpha);
     cr->set_line_width(EDGE_WIDTH);
@@ -303,8 +303,8 @@ void CBaseElementBeam::drawSVG(
     {
         cr->set_source_rgb(0, 0, 0.9);
 
-        const double x0 = 0.5 * (p0.t.x + p1.t.x) + 0.5 * options.node_radius;
-        const double y0 = 0.5 * (p0.t.y + p1.t.y) + 0.5 * options.node_radius;
+        const double x0 = 0.5 * (p0.t.x + p1.t.x) + 0.5 * options.NODE_RADIUS;
+        const double y0 = 0.5 * (p0.t.y + p1.t.y) + 0.5 * options.NODE_RADIUS;
         cr->move_to(x0, y0);
         cr->show_text(openbeam::format(
             "E%u", static_cast<unsigned int>(draw_el_params.element_index)));

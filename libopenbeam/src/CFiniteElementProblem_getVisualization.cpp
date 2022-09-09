@@ -28,6 +28,8 @@
 #include <openbeam/CStructureProblem.h>
 #include <openbeam/DrawStructureOptions.h>
 
+#include <set>
+
 #include "internals.h"
 
 using namespace std;
@@ -82,7 +84,7 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
 
             {
                 auto glNode = mrpt::opengl::CSphere::Create();
-                glNode->setRadius(o.node_radius);
+                glNode->setRadius(o.NODE_RADIUS);
                 glNode->setColor(0, 0, 0, o.nodes_original_alpha);
                 glNode->setNumberDivsLatitude(o.NODE_SPHERE_DIVS);
                 glNode->setNumberDivsLongitude(o.NODE_SPHERE_DIVS);
@@ -94,7 +96,7 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
             {
                 auto glLb = mrpt::opengl::CText::Create();
                 glLb->setColor_u8(0x00, 0x00, 0xd0);
-                glLb->setLocation(p.t + TPoint3D(1.3, 0.8, 0) * o.node_radius);
+                glLb->setLocation(p.t + TPoint3D(1.3, 0.8, 0) * o.NODE_RADIUS);
                 glLb->setString(getNodeLabel(i));
                 gl->insert(glLb);
             }
@@ -148,7 +150,7 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
 
             {
                 auto glNode = mrpt::opengl::CSphere::Create();
-                glNode->setRadius(o.node_radius);
+                glNode->setRadius(o.NODE_RADIUS);
                 glNode->setColor(0, 0, 0, o.nodes_deformed_alpha);
                 glNode->setNumberDivsLatitude(o.NODE_SPHERE_DIVS);
                 glNode->setNumberDivsLongitude(o.NODE_SPHERE_DIVS);
@@ -162,7 +164,7 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
                 glLb->setColor_u8(0x00, 0x00, 0xd0);
                 glLb->setLocation(
                     TPoint3D(pt.x(), pt.y(), pt.z()) +
-                    TPoint3D(1.3, 0.8, 0) * o.node_radius);
+                    TPoint3D(1.3, 0.8, 0) * o.NODE_RADIUS);
                 glLb->setString(getNodeLabel(i));
                 gl->insert(glLb);
             }
@@ -203,7 +205,7 @@ void CFiniteElementProblem::internal_getVisualization_nodeLoads(
     getBoundingBox(min_x, max_x, min_y, max_y);
 
     // Dimensions of constraint plots:
-    const double R = o.node_radius;
+    const double R = o.NODE_RADIUS;
 
     // 0) Establish scale:
     num_t max_load_force = 0, max_load_torque = 0;
@@ -321,8 +323,8 @@ void CFiniteElementProblem::internal_getVisualization_nodeLoads(
             o.show_nodes_deformed ? o.loads_deformed_alpha
                                   : o.loads_original_alpha);
         glNodeLoad->setHeadRatio(0.2f);
-        glNodeLoad->setSmallRadius(0.75 * o.node_radius);
-        glNodeLoad->setLargeRadius(1.25 * o.node_radius);
+        glNodeLoad->setSmallRadius(0.75 * o.NODE_RADIUS);
+        glNodeLoad->setLargeRadius(1.25 * o.NODE_RADIUS);
         glNodeLoad->setArrowEnds(
             seq_points_global.at(0), seq_points_global.at(1));
         gl.insert(glNodeLoad);
@@ -334,73 +336,153 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
     const StaticSolveProblemInfo& solver_info,
     const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const
 {
+    using PT3 = mrpt::math::TPoint3D;
+    using namespace mrpt;
+
     // Dimensions of constraint plots:
-    const double R     = o.node_radius;
-    const double SCALE = R * 2;  // ...
-    const double W     = SCALE * 0.9;
+    const double R     = o.NODE_RADIUS;
+    const double SCALE = R * 5.0;
+    const double W     = SCALE * 1.2;
     const double H     = SCALE * 1.8;
-    const double H2    = SCALE * 0.8;
+    const double wR    = W / 3;  // Wheels radius
+
+    // Run the whole thing twice:
+    // 1) Draw original constraints.
+    // 2) Draw deformed constraints (only if "show_nodes_deformed")
+    const int num_layers = o.show_nodes_deformed ? 2 : 1;
+
+    using node_idx_t = std::size_t;
+
+    std::map<node_idx_t, std::set<uint8_t>> nodeConstrained;
 
     for (const auto& kv : m_DoF_constraints)
     {
         // Retrieve the 3D orientation of the node:
         const size_t dof_idx = kv.first;
+
+        OB_TODO("Draw constrained values != 0");
         // const num_t  const_value = kv.second;
 
-        const NodeDoF& dof_info = m_problem_DoFs[dof_idx];
+        const NodeDoF& dofInfo = m_problem_DoFs[dof_idx];
 
-        // Draw constraint on "dof_info.dof" [0,5]:
+        nodeConstrained[dofInfo.nodeId].insert(dofInfo.dofAsInt());
+    }
 
-        // 1st: generate shape of constaint in "local coords:"
-        std::vector<TPoint3D> seq_points_local;
-        switch (dof_info.dof)
+    OB_TODO("Rotation according to element orientation");
+
+    for (const auto& kv : nodeConstrained)
+    {
+        const auto nodeId     = kv.first;
+        const auto constrDoFs = kv.second;
+
+        // Build set into a bit field for convenience:
+        uint8_t constrBits = 0;
+        for (const auto bit : constrDoFs) constrBits = constrBits | (1 << bit);
+
+        // Build list of lines to draw depending on constraint, in local coords:
+        std::vector<mrpt::math::TSegment3D> sgms;
+
+        // Add a "wheel" at the given top point (x,y):
+        auto lambdaAddWheel = [&sgms](double x, double y, double R) {
+            const size_t                      nPts = 10;
+            std::vector<mrpt::math::TPoint3D> pts;
+            for (size_t i = 0; i < nPts; i++)
+            {
+                double ang =
+                    M_PI * 0.5 + 2 * M_PI * i / static_cast<double>(nPts);
+                pts.emplace_back(x + cos(ang) * R, y - R + sin(ang) * R, 0);
+            }
+
+            for (size_t i = 0; i < nPts; i++)
+                sgms.emplace_back(pts.at(i), pts.at((i + 1) % nPts));
+        };
+
+        // Add a "ground line" at the given top point (x,y):
+        auto lambdaAddGroundSymbol =
+            [&sgms](double x, double y, double L, double rotation = 0) {
+                const size_t nLines = 6;
+                const double dx     = 1.0 * L / static_cast<double>(nLines - 1);
+
+                const auto rot =
+                    mrpt::poses::CPose3D::FromYawPitchRoll(rotation, 0, 0);
+
+                sgms.emplace_back(
+                    PT3(x, y, 0) + rot.rotateVector({0, -L * 0.5, 0}),
+                    PT3(x, y, 0) + rot.rotateVector({0, +L * 0.5, 0}));
+
+                for (size_t i = 0; i < nLines; i++)
+                {
+                    double y0 =
+                        -L * 0.5 + L * i / static_cast<double>(nLines - 1);
+
+                    sgms.emplace_back(
+                        PT3(x, y, 0) + rot.rotateVector({0, y0, 0}),
+                        PT3(x, y, 0) + rot.rotateVector({-dx, y0 + dx, 0}));
+                }
+            };
+
+        // DOFs:
+        //      RR RDDD
+        //      ZY XZYX
+        //  0b0000 0011  = 0x03 // DX DY
+        //  0b0000 0001  = 0x01 // DX
+        //  0b0000 0010  = 0x02 // DY
+        //  0b0010 0011  = 0x23 // DX DY ROTZ
+        //
+
+        switch (constrBits)
         {
-            case DoF_index::DX:
-                seq_points_local.push_back(TPoint3D(-R, 0, 0));
-                seq_points_local.push_back(TPoint3D(-R - H, W, 0));
-                seq_points_local.push_back(TPoint3D(-R - H, -W, 0));
-                seq_points_local.push_back(TPoint3D(-R, 0, 0));
-                break;
-            case DoF_index::DY:
-                seq_points_local.push_back(TPoint3D(0, -R, 0));
-                seq_points_local.push_back(TPoint3D(W, -R - H, 0));
-                seq_points_local.push_back(TPoint3D(-W, -R - H, 0));
-                seq_points_local.push_back(TPoint3D(0, -R, 0));
-                break;
-            case DoF_index::DZ:
-                seq_points_local.push_back(TPoint3D(0, 0, -R));
-                seq_points_local.push_back(TPoint3D(0, W, -R - H));
-                seq_points_local.push_back(TPoint3D(0, -W, -R - H));
-                seq_points_local.push_back(TPoint3D(0, 0, -R));
-                break;
-            case DoF_index::RX:
-                seq_points_local.push_back(TPoint3D(-R - H, W, 0));
-                seq_points_local.push_back(TPoint3D(-R - H, -W, 0));
-                seq_points_local.push_back(TPoint3D(-R - H - H2, -W, 0));
-                seq_points_local.push_back(TPoint3D(-R - H - H2, W, 0));
-                seq_points_local.push_back(TPoint3D(-R - H, W, 0));
-                break;
-            case DoF_index::RY:
-                seq_points_local.push_back(TPoint3D(W, -R - H, 0));
-                seq_points_local.push_back(TPoint3D(-W, -R - H, 0));
-                seq_points_local.push_back(TPoint3D(-W, -R - H - H2, 0));
-                seq_points_local.push_back(TPoint3D(W, -R - H - H2, 0));
-                seq_points_local.push_back(TPoint3D(W, -R - H, 0));
-                break;
-            case DoF_index::RZ:
-                seq_points_local.push_back(TPoint3D(0, W, -R - H));
-                seq_points_local.push_back(TPoint3D(0, -W, -R - H));
-                seq_points_local.push_back(TPoint3D(0, -W, -R - H - H2));
-                seq_points_local.push_back(TPoint3D(0, W, -R - H - H2));
-                seq_points_local.push_back(TPoint3D(0, W, -R - H));
-                break;
-        }
+            case 0x03:
+                // xy only:
+                sgms.emplace_back(PT3(0, -R, 0), PT3(W, -R - H, 0));
+                sgms.emplace_back(PT3(W, -R - H, 0), PT3(-W, -R - H, 0));
+                sgms.emplace_back(PT3(-W, -R - H, 0), PT3(0, -R, 0));
 
-        // Run the whole thing twice:
-        // 1) Draw original constraints.
-        // 2) Draw deformed constraints (only if "show_nodes_deformed")
-        const int num_layers = o.show_nodes_deformed ? 2 : 1;
+                lambdaAddGroundSymbol(0, -R - H, 2 * W, 90.0_deg);
+                break;
 
+            case 0x01:
+                // x only:
+                sgms.emplace_back(PT3(-R, 0, 0), PT3(-R - H, W, 0));
+                sgms.emplace_back(PT3(-R - H, W, 0), PT3(-R - H, -W, 0));
+                sgms.emplace_back(PT3(-R - H, -W, 0), PT3(-R, 0, 0));
+                sgms.emplace_back(PT3(-R, 0, 0), PT3(-R - H, W, 0));
+
+                lambdaAddWheel(-R - H - wR, W * 0.8 + wR, wR);
+                lambdaAddWheel(-R - H - wR, 0 + wR, wR);
+                lambdaAddWheel(-R - H - wR, -W * 0.8 + wR, wR);
+
+                lambdaAddGroundSymbol(-R - H - 2 * W / 3, 0, 2 * W, 0.0_deg);
+                break;
+
+            case 0x02:
+                // y only:
+                sgms.emplace_back(PT3(0, -R, 0), PT3(W, -R - H, 0));
+                sgms.emplace_back(PT3(W, -R - H, 0), PT3(-W, -R - H, 0));
+                sgms.emplace_back(PT3(-W, -R - H, 0), PT3(0, -R, 0));
+                sgms.emplace_back(PT3(0, -R, 0), PT3(W, -R - H, 0));
+
+                lambdaAddWheel(W * 0.8, -R - H, wR);
+                lambdaAddWheel(0, -R - H, wR);
+                lambdaAddWheel(-W * 0.8, -R - H, wR);
+
+                lambdaAddGroundSymbol(0, -R - H - 2 * W / 3, 2 * W, 90.0_deg);
+                break;
+
+            case 0x23:
+                // 2D fix:
+                sgms.emplace_back(PT3(-R, H, 0), PT3(-R, -H, 0));
+
+                lambdaAddGroundSymbol(-R, 0, 2 * W);
+                break;
+
+            default:
+                throw std::runtime_error(mrpt::format(
+                    "Not implemented constrained bit field: 0x%02X",
+                    constrBits));
+        };
+
+        // Draw:
         for (int pass = 0; pass < num_layers; pass++)
         {
             TRotationTrans3D node_pose;
@@ -412,28 +494,25 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
 
                 glConstr->setColor(.0f, .0f, .0f, o.constraints_original_alpha);
 
-                node_pose = this->getNodePose(dof_info.nodeId);
+                node_pose = this->getNodePose(nodeId);
             }
             else if (pass == 1)
             {  // deformed:
                 glConstr->setColor(.0f, .0f, .0f, o.constraints_deformed_alpha);
 
-                node_pose = this->getNodePose(dof_info.nodeId);
+                node_pose = this->getNodePose(nodeId);
 
                 Vector3 pt;
                 this->getNodeDeformedPosition(
-                    dof_info.nodeId, pt, solver_info, DEFORMED_SCALE_FACTOR);
+                    nodeId, pt, solver_info, DEFORMED_SCALE_FACTOR);
 
                 for (int k = 0; k < 3; k++) node_pose.t[k] = pt[k];
             }
 
             // Draw:
 
-            ASSERT_(seq_points_local.size() >= 2);
-            glConstr->appendLine(seq_points_local[0], seq_points_local[1]);
-
-            for (size_t i = 2; i < seq_points_local.size(); i++)
-                glConstr->appendLineStrip(seq_points_local[i]);
+            ASSERT_(sgms.size() >= 2);
+            glConstr->appendLines(sgms);
 
             glConstr->setPose(mrpt::poses::CPose3D::FromRotationAndTranslation(
                 node_pose.r.getRot(), node_pose.t));

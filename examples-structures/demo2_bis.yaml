@@ -1,0 +1,58 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#
+# Problem in section 5.2 from course textbook in 
+# University of Malaga.
+#        https://github.com/open-beam/openbeam
+# -------------------------------------------------------
+
+
+# -------------------------------------------------
+#  Parameters
+# -------------------------------------------------
+parameters:
+  G: 9.81
+  L: 1         # Dimensions of the problem
+  P: G * 1000  # External load
+
+
+# -------------------------------------------------
+# beam sections
+# -------------------------------------------------
+beam_sections:
+- name: IPE200
+  E: 2.1e11     # Young module
+  A: 28.5e-4    # Area
+  Iz: 1940e-8   # Second moment of area in z
+
+
+# -------------------------------------------------
+#  Geometry: nodes, elements & constraints
+# -------------------------------------------------
+nodes:
+- {id: 0, coords: [0   , 0], label: A}
+- {id: 1, coords: [L   , 0], label: B}
+- {id: 2, coords: [2*L , 0], label: C}
+- {id: 3, coords: [2*L , L], label: D}
+
+elements:
+- {type: BEAM2D_RR, nodes: [0, 1], section: IPE200}
+- {type: BEAM2D_RR, nodes: [1, 2], section: IPE200}
+- {type: BEAM2D_RR, nodes: [2, 3], section: IPE200}
+
+# Constraints
+constraints:
+- {node: 0, dof: DXDYRZ}
+- {node: 3, dof: DXDYRZ}
+
+
+# ----------------------------------------------
+# Loads
+# ----------------------------------------------
+node_loads:
+- {node: 2, dof: DX, value: -P}
+
+element_loads:
+- {element: 0, type: DISTRIB_UNIFORM, q: 1000*G, DX: 0, DY: -1, DZ: 0}
+- {element: 1, type: DISTRIB_UNIFORM, q: 2000*G, DX: 0, DY: -1, DZ: 0}
+

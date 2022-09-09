@@ -163,8 +163,8 @@ void CElementSpring::drawSVG(
     {
         cr->set_source_rgb(0, 0, 0.9);
 
-        const double x0 = 0.5 * (p0.t.x + p1.t.x) + 0.5 * options.node_radius;
-        const double y0 = 0.5 * (p0.t.y + p1.t.y) + 0.5 * options.node_radius;
+        const double x0 = 0.5 * (p0.t.x + p1.t.x) + 0.5 * options.NODE_RADIUS;
+        const double y0 = 0.5 * (p0.t.y + p1.t.y) + 0.5 * options.NODE_RADIUS;
         cr->move_to(x0, y0);
         cr->show_text(openbeam::format(
             "E%u", static_cast<unsigned int>(draw_el_params.element_index)));

@@ -48,10 +48,10 @@ struct DrawStructureOptions
 
     /// Default: 1024px (Height is automatically determined)
     double image_width = 1024;
-    double node_radius = 2e-2;
 
-    double       EDGE_WIDTH         = 5e-3;
+    double       NODE_RADIUS        = 5e-3;
     double       BEAM_PINNED_RADIUS = 10e-3;
+    double       EDGE_WIDTH         = 5e-3;
     unsigned int PIN_SPHERE_DIVS    = 8;  // long and latitude sphere divisions
     unsigned int NODE_SPHERE_DIVS   = 5;  // long and latitude sphere divisions
 

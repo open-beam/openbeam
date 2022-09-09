@@ -251,7 +251,7 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
     // List of free indices : free_dof_indices
     // Indices are wrt      : m_problem_DoFs
 
-    OB_TODO("More efficient submatrices!");
+    OB_TODO("More efficient submatrices?");
     auto tle5 =
         mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.4_sub_Ks");
 
