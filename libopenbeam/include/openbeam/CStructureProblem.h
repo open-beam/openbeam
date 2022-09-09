@@ -38,8 +38,9 @@ class CStructureProblem : public CFiniteElementProblem
     CStructureProblem();
     virtual ~CStructureProblem();
 
-    virtual void clear();  //!< Delete all elements, nodes and constraints in
-                           //!< this structure, completely emptying it.
+    /// Delete all elements, nodes and constraints in this structure, completely
+    /// emptying it.
+    void clear() override;
 
     /** Adds a new load to an element. The object must be created with "new",
      * and not deleted by the user (it'll be done automatically by this class).
@@ -61,8 +62,8 @@ class CStructureProblem : public CFiniteElementProblem
     /** @name Structure solving
         @{ */
 
-    virtual void updateAll();  //!< Update all internal lists after changing the
-                               //!< structure.
+    /// Update all internal lists after changing the structure.
+    void updateAll() override;
 
     /** Mesh the structure into a set of small elements.
      */
@@ -88,6 +89,6 @@ class CStructureProblem : public CFiniteElementProblem
     /** In base classes, process loads on elements and populate the \a
      * m_loads_at_each_dof_equivs and \a m_extra_stress_for_each_element
      */
-    virtual void internalComputeStressAndEquivalentLoads();
+    void internalComputeStressAndEquivalentLoads() override;
 };
 }  // namespace openbeam

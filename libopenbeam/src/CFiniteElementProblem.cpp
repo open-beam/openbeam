@@ -139,14 +139,38 @@ void CFiniteElementProblem::updateAll()
 {
     updateElementsOrientation();
     updateListDoFs();
+    updateNodesMainOrientation();
 }
 
-/** Call the "updateOrientationFromNodePositions" in each element */
 void CFiniteElementProblem::updateElementsOrientation()
 {
+    // Compute global orientation of elements:
     const size_t nElements = m_elements.size();
     for (size_t i = 0; i < nElements; i++)
         m_elements[i]->updateOrientationFromNodePositions();
+}
+
+void CFiniteElementProblem::updateNodesMainOrientation()
+{
+    // Define the per-node main orientation:
+    const size_t nNodes = m_node_poses.size();
+    m_nodeMainDirection.assign(nNodes, TRotation3D());
+
+    // Take the FIRST element touching this node:
+    for (size_t nodeIdx = 0; nodeIdx < nNodes; nodeIdx++)
+    {
+        const TNodeConnections& ncs = m_node_connections.at(nodeIdx);
+        ASSERT_(!ncs.empty());
+        const element_index_t elIdx = ncs.begin()->first;
+        TRotation3D rot = m_elements.at(elIdx)->getGlobalOrientation();
+
+        // If the element is connected to this node, but it is not the FIRST
+        // element "port"/"face", we need to reverse the orientation:
+        if (m_elements.at(elIdx)->conected_nodes_ids.at(0) != nodeIdx)
+            rot.setRot(rot.getRot().transpose());
+
+        m_nodeMainDirection.at(nodeIdx) = rot;
+    }
 }
 
 /** From the list of elements and their properties and connections, build the
@@ -168,26 +192,26 @@ void CFiniteElementProblem::updateListDoFs()
     // Start with a list of all DOFs marked as unused:
     m_problem_DoFs_inverse_list.assign(nNodes, TProblemDOFIndicesForNode());
 
-    for (size_t i = 0; i < nNodes; i++)
+    for (size_t nodeIdx = 0; nodeIdx < nNodes; nodeIdx++)
     {
         used_DoFs_t dofs;
         for (unsigned char d = 0; d < 6; d++) dofs[d] = false;
 
-        for (TNodeConnections::const_iterator it =
-                 m_node_connections[i].begin();
-             it != m_node_connections[i].end(); ++it)
+        for (const auto& nc : m_node_connections[nodeIdx])
+        {
             for (int d = 0; d < 6; d++)
-                if (it->second.dofs[d]) dofs[d] = true;
+                if (nc.second.dofs[d]) dofs[d] = true;
+        }
 
         for (uint8_t d = 0; d < 6; d++)
-            if (dofs[d])
-            {
-                const int new_dof_index =
-                    static_cast<int>(m_problem_DoFs.size());
+        {
+            if (!dofs[d]) continue;
 
-                m_problem_DoFs.push_back(NodeDoF(i, d));
-                m_problem_DoFs_inverse_list[i].dof_index[d] = new_dof_index;
-            }
+            const int new_dof_index = static_cast<int>(m_problem_DoFs.size());
+
+            m_problem_DoFs.push_back(NodeDoF(nodeIdx, d));
+            m_problem_DoFs_inverse_list[nodeIdx].dof_index[d] = new_dof_index;
+        }
     }
 }
 
@@ -214,8 +238,8 @@ void CFiniteElementProblem::updateNodeConnections()
             ASSERT_(el->conected_nodes_ids[k] < nNodes);
             TNodeConnections& nc =
                 m_node_connections[el->conected_nodes_ids[k]];
-            nc[i].element_face_id = static_cast<unsigned char>(k);
-            nc[i].dofs            = el_dofs[k];
+            nc[i].elementFaceId = static_cast<unsigned char>(k);
+            nc[i].dofs          = el_dofs[k];
         }
     }
 }

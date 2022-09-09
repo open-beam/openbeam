@@ -106,12 +106,12 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
                   << " constrained.\n";
     OB_MESSAGE(2) << "List of all DOFs:\n" << getProblemDoFsDescription();
 
-    // Start with a dynamic-sparse matrix, later on we'll convert it into real
-    // sparse:
-    typedef SparseMatrix<num_t>::Index index_t;
-    const size_t                       estimated_number_of_non_zero =
-        nNodes * 6 * 6 *
-        (1 + 1);  // Will store only the UPPER triangular part of K.
+    /// Start with a dynamic-sparse matrix, later on we'll convert it into real
+    /// sparse:
+    using index_t = SparseMatrix<num_t>::Index;
+
+    /// Will store only the UPPER triangular part of K.
+    const size_t estimated_number_of_non_zero = nNodes * 6 * 6 * (1 + 1);
 
     std::vector<Eigen::Triplet<double>> K_tri;
     K_tri.reserve(estimated_number_of_non_zero);
@@ -137,10 +137,9 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
             const size_t j_node_idx = el->conected_nodes_ids[mats[j].edge_out];
 
             // Apply nodal coordinates?
-            Matrix66        K_element_nodal;
-            const Matrix66* K_element =
-                nullptr;  // Will point to either K_element_org or
-                          // K_element_nodal
+            Matrix66 KeNodal;
+            // Will point to either K_element_org or K_element_nodal
+            const Matrix66* K_element = nullptr;
 
             const TRotationTrans3D& rt_i = this->getNodePose(i_node_idx);
             const TRotationTrans3D& rt_j = this->getNodePose(j_node_idx);
@@ -153,33 +152,29 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
             else
             {
                 // Cases: T^t * K  , K * T  or T^t * K * T
-                K_element       = &K_element_nodal;
-                K_element_nodal = K_element_org;
+                K_element = &KeNodal;
+                KeNodal   = K_element_org;
                 if (!rt_i.r.isIdentity())
                 {
-                    K_element_nodal.block<3, 3>(0, 0) =
-                        rt_i.r.getRot().transpose() *
-                        K_element_nodal.block<3, 3>(0, 0);
-                    K_element_nodal.block<3, 3>(0, 3) =
-                        rt_i.r.getRot().transpose() *
-                        K_element_nodal.block<3, 3>(0, 3);
-                    K_element_nodal.block<3, 3>(3, 0) =
-                        rt_i.r.getRot().transpose() *
-                        K_element_nodal.block<3, 3>(3, 0);
-                    K_element_nodal.block<3, 3>(3, 3) =
-                        rt_i.r.getRot().transpose() *
-                        K_element_nodal.block<3, 3>(3, 3);
+                    KeNodal.block<3, 3>(0, 0) =
+                        rt_i.r.getRot().transpose() * KeNodal.block<3, 3>(0, 0);
+                    KeNodal.block<3, 3>(0, 3) =
+                        rt_i.r.getRot().transpose() * KeNodal.block<3, 3>(0, 3);
+                    KeNodal.block<3, 3>(3, 0) =
+                        rt_i.r.getRot().transpose() * KeNodal.block<3, 3>(3, 0);
+                    KeNodal.block<3, 3>(3, 3) =
+                        rt_i.r.getRot().transpose() * KeNodal.block<3, 3>(3, 3);
                 }
                 if (!rt_j.r.isIdentity())
                 {
-                    K_element_nodal.block<3, 3>(0, 0) =
-                        K_element_nodal.block<3, 3>(0, 0) * rt_j.r.getRot();
-                    K_element_nodal.block<3, 3>(0, 3) =
-                        K_element_nodal.block<3, 3>(0, 3) * rt_j.r.getRot();
-                    K_element_nodal.block<3, 3>(3, 0) =
-                        K_element_nodal.block<3, 3>(3, 0) * rt_j.r.getRot();
-                    K_element_nodal.block<3, 3>(3, 3) =
-                        K_element_nodal.block<3, 3>(3, 3) * rt_j.r.getRot();
+                    KeNodal.block<3, 3>(0, 0) =
+                        KeNodal.block<3, 3>(0, 0) * rt_j.r.getRot();
+                    KeNodal.block<3, 3>(0, 3) =
+                        KeNodal.block<3, 3>(0, 3) * rt_j.r.getRot();
+                    KeNodal.block<3, 3>(3, 0) =
+                        KeNodal.block<3, 3>(3, 0) * rt_j.r.getRot();
+                    KeNodal.block<3, 3>(3, 3) =
+                        KeNodal.block<3, 3>(3, 3) * rt_j.r.getRot();
                 }
             }
 
@@ -196,8 +191,8 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
             TNodeConnections::const_iterator it_nod_j = nc_j.find(e);
             ASSERT_(nc_i.end() != it_nod_i);
             ASSERT_(nc_j.end() != it_nod_j);
-            ASSERT_(it_nod_i->second.element_face_id == mats[j].edge_in);
-            ASSERT_(it_nod_j->second.element_face_id == mats[j].edge_out);
+            ASSERT_(it_nod_i->second.elementFaceId == mats[j].edge_in);
+            ASSERT_(it_nod_j->second.elementFaceId == mats[j].edge_out);
 
             const array<int, 6>& mat_rowidx2DoFidx =
                 m_problem_DoFs_inverse_list[i_node_idx].dof_index;
@@ -209,15 +204,12 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
             {
                 const int r_idx_in_K = mat_rowidx2DoFidx[r];
                 if (r_idx_in_K < 0) continue;
-                for (int c =
-                         (i_node_idx == j_node_idx
-                              ? r
-                              : 0);  // Diagonal blocks: c=[r,5] -> Only upper
-                                     // half
-                     c < 6; c++)
+                // Diagonal blocks: c=[r,5] -> Only upper half
+                for (int c = (i_node_idx == j_node_idx ? r : 0); c < 6; c++)
                 {
                     const int c_idx_in_K = mat_colidx2DoFidx[c];
                     if (c_idx_in_K < 0) continue;
+
                     // Only upper part of K:
                     if (r_idx_in_K > c_idx_in_K)
                         K_tri.push_back(Eigen::Triplet<double>(
@@ -227,7 +219,6 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
                             r_idx_in_K, c_idx_in_K, K_element->coeff(r, c)));
                 }
             }  // end insert this 6x6 submatrix
-
         }  // end for each submatrix
     }  // end for each element
 
@@ -379,7 +370,6 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
             if (dof_i.dof_index[k] != -1)
             {
                 // This DOF is studied in the problem:
-
                 if (auto it =
                         problem_dof2free_dof_indices.find(dof_i.dof_index[k]);
                     it != problem_dof2free_dof_indices.end())

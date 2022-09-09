@@ -69,8 +69,8 @@ class CElementTorsionSpring : public CElement
     }
 
     /** Mesh this element into a set of (possibly) smaller ones */
-    virtual void do_mesh(
+    void do_mesh(
         const size_t my_idx, CStructureProblem& out_fem,
-        MeshOutputInfo& out_info, const MeshParams& params);
+        MeshOutputInfo& out_info, const MeshParams& params) override;
 };
 }  // namespace openbeam

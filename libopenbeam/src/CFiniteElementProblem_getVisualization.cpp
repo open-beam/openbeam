@@ -470,11 +470,17 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
                 break;
 
             case 0x23:
+            {
                 // 2D fix:
                 sgms.emplace_back(PT3(-R, H, 0), PT3(-R, -H, 0));
 
-                lambdaAddGroundSymbol(-R, 0, 2 * W);
-                break;
+                double angX = 0, angY = 0, angZ = 0;
+                TRotation3D::matrix2angles(
+                    m_nodeMainDirection.at(nodeId).getRot(), angX, angY, angZ);
+
+                lambdaAddGroundSymbol(-R, 0, 2 * W, angZ);
+            }
+            break;
 
             default:
                 throw std::runtime_error(mrpt::format(

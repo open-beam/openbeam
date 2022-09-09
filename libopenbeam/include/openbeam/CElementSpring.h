@@ -40,10 +40,10 @@ class CElementSpring : public CElement
     /** Return the stiffness submatrices between each pair of edges in this
      * element, for the current element state.
      */
-    virtual void getLocalStiffnessMatrices(
-        std::vector<TStiffnessSubmatrix>& outSubMats) const;
+    void getLocalStiffnessMatrices(
+        std::vector<TStiffnessSubmatrix>& outSubMats) const override;
 
-    virtual void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const;
+    void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const override;
 
     num_t K;  //!< Stiffness constant of the spring (N/m)
 
@@ -51,16 +51,16 @@ class CElementSpring : public CElement
      * values from them.
      *  Each element must document the supported parameters and their meaning.
      */
-    virtual void loadParamsFromSet(
-        const mrpt::containers::yaml& p, const EvaluationContext& ctx);
+    void loadParamsFromSet(
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx) override;
 
     /** Draws the element to a SVG Cairo context (a pointer to a
      * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
      * options */
-    virtual void drawSVG(
+    void drawSVG(
         void* _cairo_context, const DrawStructureOptions& options,
         const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
-        const MeshOutputInfo* meshing_info) const;
+        const MeshOutputInfo* meshing_info) const override;
     mrpt::opengl::CSetOfObjects::Ptr getVisualization(
         const DrawStructureOptions&   options,
         const DrawElementExtraParams& draw_el_params,
@@ -70,8 +70,8 @@ class CElementSpring : public CElement
     }
 
     /** Mesh this element into a set of (possibly) smaller ones */
-    virtual void do_mesh(
+    void do_mesh(
         const size_t my_idx, CStructureProblem& out_fem,
-        MeshOutputInfo& out_info, const MeshParams& params);
+        MeshOutputInfo& out_info, const MeshParams& params) override;
 };
 }  // namespace openbeam

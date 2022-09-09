@@ -210,6 +210,8 @@ num_t str2num(const std::string& s);
 using mrpt::format;
 using array6 = std::array<num_t, 6>;
 
+using element_index_t = std::size_t;
+
 struct DrawStructureOptions;
 struct RenderInitData;
 struct DrawElementExtraParams;

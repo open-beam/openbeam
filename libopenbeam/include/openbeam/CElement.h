@@ -96,11 +96,11 @@ class CElement
     virtual void getGlobalStiffnessMatrices(
         std::vector<TStiffnessSubmatrix>& outSubMats) const;
 
-    inline void setGlobalOrientation(const TRotation3D& new_orientation)
+    void setGlobalOrientation(const TRotation3D& new_orientation)
     {
         m_global_orientation = new_orientation;
     }
-    inline const TRotation3D& getGlobalOrientation() const
+    const TRotation3D& getGlobalOrientation() const
     {
         return m_global_orientation;
     }

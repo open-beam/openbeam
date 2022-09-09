@@ -37,9 +37,9 @@ class CElementBeam_2D_AA : public CBaseElementBeam
     /** Return the stiffness submatrices between each pair of edges in this
      * element, for the current element state.
      */
-    virtual void getLocalStiffnessMatrices(
-        std::vector<TStiffnessSubmatrix>& outSubMats) const;
+    void getLocalStiffnessMatrices(
+        std::vector<TStiffnessSubmatrix>& outSubMats) const override;
 
-    virtual void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const;
+    void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const override;
 };
 }  // namespace openbeam

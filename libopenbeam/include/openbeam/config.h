@@ -22,4 +22,4 @@
 
 #pragma once
 
-typedef double num_t;
+using num_t = double;

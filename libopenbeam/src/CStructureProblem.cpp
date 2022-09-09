@@ -30,7 +30,7 @@ using namespace Eigen;
 
 CStructureProblem::CStructureProblem() {}
 
-CStructureProblem::~CStructureProblem() { clear(); }
+CStructureProblem::~CStructureProblem() { CStructureProblem::clear(); }
 
 void CStructureProblem::clear()
 {

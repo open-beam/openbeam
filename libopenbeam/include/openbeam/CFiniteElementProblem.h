@@ -411,8 +411,9 @@ class CFiniteElementProblem
 
     /** Update all internal lists after changing the problem.
      * This actually calls:
-     *  - 	updateElementsOrientation()
-     *  - 	updateListDoFs()
+     *  - updateElementsOrientation()
+     *  - updateListDoFs()
+     *  - updateNodesMainOrientation()
      */
     virtual void updateAll();
 
@@ -528,8 +529,12 @@ class CFiniteElementProblem
     /** From the list of elements, update m_node_connections */
     void updateNodeConnections();
 
-    /** Call the "updateOrientationFromNodePositions" in each element */
+    /** Call the "updateOrientationFromNodePositions" in each element
+     */
     void updateElementsOrientation();
+
+    /** Fills up m_nodeMainDirection */
+    void updateNodesMainOrientation();
 
     /** Used in \a m_problem_DoFs_inverse_list  */
     struct TProblemDOFIndicesForNode
@@ -543,7 +548,7 @@ class CFiniteElementProblem
 
     /** The list of DoFs variables of my problem.
      *  Built by \a updateListDoFs()
-     *  \sa m_problem_DoFs_inverse_list, m_problem_DoF_type
+     *  \sa m_problem_DoFs_inverse_list
      */
     std::vector<NodeDoF> m_problem_DoFs;
 
@@ -555,19 +560,24 @@ class CFiniteElementProblem
 
     struct TNodeElementConnection
     {
-        unsigned char element_face_id;  //!< To which face in that element
+        unsigned char elementFaceId;  //!< To which face in that element
         used_DoFs_t   dofs;  //!< DoFs used by that face in that element
     };
 
-    typedef std::map<size_t, TNodeElementConnection>
-        TNodeConnections;  //!< For each node, this map has the list of
-                           //!< connected elements and the type of the
-                           //!< connection.
+    /// For each node, this map has the list of connected elements and the type
+    /// of the connection.
+    using TNodeConnections = std::map<element_index_t, TNodeElementConnection>;
 
     /**  A vector with an item for each node (list in \a m_node_poses)
      *  Each item is a map from element_id -> TNodeElementConnection
+     *  Length=number of nodes.
      */
     std::vector<TNodeConnections> m_node_connections;
+
+    /** For each node, the +X direction of the first element touching that node.
+     *  Filled by updateNodesMainOrientation()
+     */
+    std::vector<TRotation3D> m_nodeMainDirection;
 
     // Visualization subroutines:
     void internal_getVisualization_nodeLoads(

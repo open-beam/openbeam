@@ -205,11 +205,10 @@ void CFiniteElementProblem::solveStatic(
     // m_loads_at_each_dof_equivs: The vector of overall loads (F_L') on
     // each DoF due to distributed forces
     //  Map keys are indices of \a m_problem_DoFs
-    for (load_list_t::const_iterator it = m_loads_at_each_dof_equivs.begin();
-         it != m_loads_at_each_dof_equivs.end(); ++it)
+    for (const auto& kv : m_loads_at_each_dof_equivs)
     {
-        const size_t idx_dof = it->first;
-        const double F_value = it->second;
+        const size_t idx_dof = kv.first;
+        const double F_value = kv.second;
 
         const size_t idx_restricted =
             out_info.build_info.dof_types[idx_dof].bounded_index;
