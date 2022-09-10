@@ -506,7 +506,9 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
                 TRotation3D::matrix2angles(
                     m_nodeMainDirection.at(nodeId).getRot(), angX, angY, angZ);
 
-                lambdaAddGroundSymbol(-R, 0, 2 * W, angZ);
+                lambdaAddGroundSymbol(-R, 0, 2 * W);
+
+                lambdaRotateAllSegms(angZ);
             }
             break;
 
