@@ -35,5 +35,6 @@ void DrawStructureOptions::loadFromYaml(const mrpt::containers::yaml& d)
     MCP_LOAD_OPT(d, show_loads);
     MCP_LOAD_OPT(d, show_constraints);
     MCP_LOAD_OPT(d, deformed_scale_factor);
+    MCP_LOAD_OPT(d, deformed_scale_factor_for_bbox);
     MCP_LOAD_OPT(d, elements_original_alpha);
 }

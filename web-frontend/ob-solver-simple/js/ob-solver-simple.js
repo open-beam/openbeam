@@ -23,7 +23,7 @@ function buildStructure() {
     updateVisualization();
 }
 
-function updateVisualization() {
+function updateVisualization(deformationScale = -1) {
     if (!obApp.HasValidStructure())
         return;
 
@@ -44,6 +44,12 @@ function updateVisualization() {
         vizOpts += 'show_nodes_deformed: 1;\n';
         vizOpts += 'show_elements_deformed: 1;\n';
         vizOpts += 'elements_original_alpha: 0.4\n';
+    }
+
+    if (deformationScale>0)
+    {
+        vizOpts += 'deformed_scale_factor: ' +
+            deformationScale.toString() + '\n';
     }
 
     obApp.generateVisualization(vizOpts);
