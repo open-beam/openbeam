@@ -24,6 +24,9 @@ function buildStructure() {
 }
 
 function updateVisualization() {
+    if (!obApp.HasValidStructure())
+        return;
+
     // Render GL visualization:
     var vizOpts = '';
 

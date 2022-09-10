@@ -15,6 +15,8 @@ class AppOpenBeam
     /** Returns: error descriptions. Empty string if it was all good. */
     std::string LoadStructureDefinition(const std::string& def);
 
+    bool HasValidStructure() const { return builtOk_; }
+
     /** Returns: log messages
      *
      *  options, as YAML/JSON:
@@ -34,6 +36,7 @@ class AppOpenBeam
 
    private:
     openbeam::CStructureProblem structure_;
+    bool                        builtOk_ = false;
 
     openbeam::CStructureProblem      problem_mesh_;
     openbeam::MeshOutputInfo         mesh_out_info_;
@@ -57,5 +60,6 @@ EMSCRIPTEN_BINDINGS(EMTest)
         .function("GetReactionsAsHTML", &AppOpenBeam::GetReactionsAsHTML)
         .function(
             "GetDisplacementsAsHTML", &AppOpenBeam::GetDisplacementsAsHTML)
-        .function("GetStressAsHTML", &AppOpenBeam::GetStressAsHTML);
+        .function("GetStressAsHTML", &AppOpenBeam::GetStressAsHTML)
+        .function("HasValidStructure", &AppOpenBeam::HasValidStructure);
 }

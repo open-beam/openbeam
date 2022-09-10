@@ -148,8 +148,7 @@ std::string AppOpenBeam::LoadStructureDefinition(const std::string& def)
 
     try
     {
-        // std::ss << "[Debug] Parsing structure definition:\n" << def <<
-        // std::endl;
+        builtOk_ = false;
 
         // openbeam::setVerbosityLevel(arg_verbose_level.getValue());
 
@@ -157,7 +156,7 @@ std::string AppOpenBeam::LoadStructureDefinition(const std::string& def)
         openbeam::vector_string_t errMsg, warnMsg;
 
         std::stringstream ss(def);
-        structure_.loadFromStream(ss, errMsg, warnMsg);
+        builtOk_ = structure_.loadFromStream(ss, errMsg, warnMsg);
 
         // Return errors:
         for (const auto& m : errMsg)
@@ -165,6 +164,7 @@ std::string AppOpenBeam::LoadStructureDefinition(const std::string& def)
             retStr += "ERR: ";
             retStr += m;
             retStr += "\n";
+            builtOk_ = false;
         }
         for (const auto& m : warnMsg)
         {
@@ -178,6 +178,7 @@ std::string AppOpenBeam::LoadStructureDefinition(const std::string& def)
         std::cerr << e.what() << '\n';
         retStr += "ERR: ";
         retStr += e.what();
+        builtOk_ = false;
     }
 
     return retStr;
