@@ -34,14 +34,24 @@
 
 <body>
     <div id="top-toolbar">
+        <button title="Back to main project site" onclick="backHome()">↩</button>
+
+        &nbsp;
+
         <span id="examplesLabel">Examples:</span>
         <select id="demoSelect" onchange="loadDemoFile(this.value)"></select>
 
-        &nbsp;&nbsp;
+        &nbsp;
 
-        <button onclick="buildStructure()">Calculate</button>
+        <button title="Parse YAML and solve structure" onclick="buildStructure()">Solve</button>
+        <button title="Go to documentation" onclick="showHelp()">Help</button>
 
         <ul>
+            <li><abbr title="Node labels">
+                    <input type="checkbox" id="cbShowNodeLabels" onchange="updateVisualization()" checked />
+                    <label for="cbShowNodeLabels"><img src="imgs/cbShowNodeLabels.png" /></label>
+                </abbr>
+            </li>
             <li><abbr title="Show loads">
                     <input type="checkbox" id="cbShowLoads" onchange="updateVisualization()" checked />
                     <label for="cbShowLoads"><img src="imgs/cbShowLoads.png" /></label>

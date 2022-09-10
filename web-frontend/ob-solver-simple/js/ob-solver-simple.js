@@ -32,6 +32,11 @@ function updateVisualization() {
     else
         vizOpts += 'show_loads: 0;\n';
 
+    if (document.getElementById('cbShowNodeLabels').checked)
+        vizOpts += 'show_node_labels: 1;\n';
+    else
+        vizOpts += 'show_node_labels: 0;\n';
+
     if (document.getElementById('cbShowDeformed').checked) {
         vizOpts += 'show_nodes_deformed: 1;\n';
         vizOpts += 'show_elements_deformed: 1;\n';
@@ -40,4 +45,15 @@ function updateVisualization() {
 
     obApp.generateVisualization(vizOpts);
     obApp.repaintCanvas();
+}
+
+function showHelp()
+{
+    url = 'https://open-beam.github.io/openbeam/structure-definition-format.html';
+    window.open(url, '_blank').focus();
+}
+
+function backHome()
+{
+    window.location.href = 'https://open-beam.github.io/openbeam/';
 }

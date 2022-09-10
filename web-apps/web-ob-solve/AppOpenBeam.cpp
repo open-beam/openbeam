@@ -441,10 +441,9 @@ void AppOpenBeam::generateVisualization(const std::string& options)
     try
     {
         openbeam::DrawStructureOptions draw_options;
-        draw_options.show_nodes_original    = true;
-        draw_options.show_nodes_deformed    = false;
-        draw_options.show_node_labels       = true;
-        draw_options.show_element_labels    = true;
+        draw_options.show_nodes_original = true;
+        draw_options.show_nodes_deformed = false;
+        // draw_options.show_element_labels    = true;
         draw_options.show_elements_original = true;
         draw_options.show_elements_deformed = false;
 
