@@ -121,3 +121,16 @@ A torsion spring element in the rotation Z axis between two given nodes.
 
   * ``K``: Torsional stiffness constant in Z.
 
+8. All 2D degrees-of-freedom spring
+-------------------------------------------------
+
+Two linear and one torsion spring element between two given nodes.
+
+* Type name: ``CElementSpringDXDYRZ``
+* Number of nodes: 2
+* Required parameters:
+
+  * ``Kx``: Torsional stiffness constant in x.
+  * ``Ky``: Torsional stiffness constant in y.
+  * ``KRz``: Torsional stiffness constant in rotation around z.
+

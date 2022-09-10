@@ -28,5 +28,6 @@
 #include "CElementBeam_2D_RD.h"
 #include "CElementBeam_2D_RR.h"
 #include "CElementSpring.h"
+#include "CElementSpringDXDYRZ.h"
 #include "CElementSpringXY.h"
 #include "CElementTorsionSpring.h"

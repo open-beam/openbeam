@@ -59,9 +59,8 @@ void CElement::getGlobalStiffnessMatrices(
 
     // Rotate them
     // ======================================================
-    const Matrix33& R =
-        m_global_orientation
-            .getRot();  // Reference to the 3D rotation matrix (3x3)
+    // Reference to the 3D rotation matrix (3x3)
+    const Matrix33& R = m_global_orientation.getRot();
 
     for (size_t i = 0; i < outSubMats.size(); i++)
     {
@@ -258,6 +257,8 @@ CElement::Ptr CElement::createElementByName(const std::string& s)
     if (strCmpI("BEAM2D_RD", s)) return std::make_shared<CElementBeam_2D_RD>();
     if (strCmpI("SPRING_1D", s)) return std::make_shared<CElementSpring>();
     if (strCmpI("SPRING_XY", s)) return std::make_shared<CElementSpringXY>();
+    if (strCmpI("SPRING_DXDYRZ", s))
+        return std::make_shared<CElementSpringDXDYRZ>();
     if (strCmpI("SPRING_TORSION", s))
         return std::make_shared<CElementTorsionSpring>();
 
