@@ -22,21 +22,24 @@
 
 #pragma once
 
+#include <memory>
+
 #include "CElement.h"
 #include "types.h"
 
 namespace openbeam
 {
-/** A spring element with three elastic components in the local X, Y and Z
+/** A spring element with two elastic components in the local X and Y
  * directions between two given nodes.
  */
-class CElementSpringXYZ : public CElement
+class CElementSpringXY : public CElement,
+                         public std::enable_shared_from_this<CElementSpringXY>
 {
    public:
-    CElementSpringXYZ();
-    CElementSpringXYZ(
+    CElementSpringXY();
+    CElementSpringXY(
         const size_t from_node_id, const size_t to_node_id, const num_t Kx,
-        const num_t Ky, const num_t Kz);
+        const num_t Ky);
 
     /** Return the stiffness submatrices between each pair of edges in this
      * element, for the current element state.
@@ -46,7 +49,7 @@ class CElementSpringXYZ : public CElement
 
     void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const override;
 
-    num_t Kx, Ky, Kz;  //!< Stiffness constants of the spring (N/m)
+    num_t Kx, Ky;  //!< Stiffness constants of the spring (N/m)
 
     /** Parse a set of parameters by (casi insensitive) name and set the element
      * values from them.

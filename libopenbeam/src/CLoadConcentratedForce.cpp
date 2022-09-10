@@ -32,9 +32,9 @@ void CLoadConcentratedForce::computeStressAndEquivalentLoads(
     const CElement* el, ElementStress& stress, std::vector<array6>& loads)
 {
     // make sure director vector is unitary:
-    ASSERTDEB_(
+    ASSERT_(
         std::abs(1 - (dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2])) <
-        1e-6)
+        1e-6);
 
     const TRotationTrans3D& node0 =
         el->getParent()->getNodePose(el->conected_nodes_ids[0]);

@@ -1,0 +1,65 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#
+# Problem in section 5.4 from course textbook in 
+# University of Malaga.
+#        https://github.com/open-beam/openbeam
+# -------------------------------------------------------
+
+
+# -------------------------------------------------
+#  Parameters
+# -------------------------------------------------
+parameters:
+  G: 9.81
+  D: 2         # Dimensions of the problem
+  P: G * 1000  # External load
+  Q: G * 100   # External load
+
+
+# -------------------------------------------------
+# beam sections
+# -------------------------------------------------
+beam_sections:
+- name: IPE200
+  E: 2.1e11     # Young module
+  A: 28.5e-4    # Area
+  Iz: 1940e-8   # Second moment of area in z
+
+# -------------------------------------------------
+#  Geometry: nodes, elements & constraints
+# -------------------------------------------------
+nodes:
+- {id: 0, coords: [0   , 0], rot_z: 135}  # nodal coordinates
+- {id: 1, coords: [D   , D]}
+- {id: 2, coords: [2*D , D]}
+- {id: 3, coords: [3*D , D]}
+- {id: 4, coords: [0 , D]}
+- {id: 5, coords: [2*D , 0]}
+- {id: 6, coords: [2*D , D]}
+
+elements:
+- {type: BEAM2D_RR, nodes: [0, 1], section: IPE200}
+- {type: BEAM2D_RR, nodes: [1, 2], section: IPE200}
+- {type: BEAM2D_RR, nodes: [3, 6], section: IPE200}
+- {type: BEAM2D_AA, nodes: [5, 6], section: IPE200}
+- {type: BEAM2D_RR, nodes: [4, 1], section: IPE200}
+# Strings to emulate the joint conditions 2-6:
+- {type: SPRING_XY, nodes: [2, 6], Kx: 0, Ky: 1e20 }
+- {type: SPRING_TORSION, nodes: [2, 6], K: 1e20 }
+
+# Constraints
+constraints:
+- {node: 0, dof: DYRZ}
+- {node: 5, dof: DXDY}
+- {node: 3, dof: DX}
+
+# ----------------------------------------------
+# Loads
+# ----------------------------------------------
+node_loads:
+- {node: 6, dof: DX, value: -P}
+
+element_loads:
+- {element: 4, type: DISTRIB_UNIFORM, q: Q, DX: 0, DY: -1, DZ: 0}
+

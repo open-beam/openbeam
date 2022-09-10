@@ -323,8 +323,8 @@ void CFiniteElementProblem::internal_getVisualization_nodeLoads(
             o.show_nodes_deformed ? o.loads_deformed_alpha
                                   : o.loads_original_alpha);
         glNodeLoad->setHeadRatio(0.2f);
-        glNodeLoad->setSmallRadius(0.75 * o.NODE_RADIUS);
-        glNodeLoad->setLargeRadius(1.25 * o.NODE_RADIUS);
+        glNodeLoad->setSmallRadius(1.1 * o.BEAM_PINNED_RADIUS);
+        glNodeLoad->setLargeRadius(2.0 * o.BEAM_PINNED_RADIUS);
         glNodeLoad->setArrowEnds(
             seq_points_global.at(0), seq_points_global.at(1));
         gl.insert(glNodeLoad);
@@ -382,6 +382,15 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
         // Build list of lines to draw depending on constraint, in local coords:
         std::vector<mrpt::math::TSegment3D> sgms;
 
+        auto lambdaRotateAllSegms = [&sgms](double ang) {
+            const auto r = mrpt::poses::CPose3D::FromYawPitchRoll(ang, 0, 0);
+            for (auto& sg : sgms)
+            {
+                sg.point1 = r.rotateVector(sg.point1);
+                sg.point2 = r.rotateVector(sg.point2);
+            }
+        };
+
         // Add a "wheel" at the given top point (x,y):
         auto lambdaAddWheel = [&sgms](double x, double y, double R) {
             const size_t                      nPts = 10;
@@ -428,6 +437,7 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
         //  0b0000 0001  = 0x01 // DX
         //  0b0000 0010  = 0x02 // DY
         //  0b0010 0011  = 0x23 // DX DY ROTZ
+        //  0b0010 0010  = 0x22 // DY ROTZ
         //
 
         switch (constrBits)
@@ -442,6 +452,7 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
                 break;
 
             case 0x01:
+            {
                 // x only:
                 sgms.emplace_back(PT3(-R, 0, 0), PT3(-R - H, W, 0));
                 sgms.emplace_back(PT3(-R - H, W, 0), PT3(-R - H, -W, 0));
@@ -453,9 +464,18 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
                 lambdaAddWheel(-R - H - wR, -W * 0.8 + wR, wR);
 
                 lambdaAddGroundSymbol(-R - H - 2 * W / 3, 0, 2 * W, 0.0_deg);
-                break;
+
+                double angX = 0, angY = 0, angZ = 0;
+                TRotation3D::matrix2angles(
+                    m_nodeMainDirection.at(nodeId).getRot(), angX, angY, angZ);
+
+                // flip horizontally?
+                if (cos(angZ) < 0) lambdaRotateAllSegms(180.0_deg);
+            }
+            break;
 
             case 0x02:
+            {
                 // y only:
                 sgms.emplace_back(PT3(0, -R, 0), PT3(W, -R - H, 0));
                 sgms.emplace_back(PT3(W, -R - H, 0), PT3(-W, -R - H, 0));
@@ -467,7 +487,15 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
                 lambdaAddWheel(-W * 0.8, -R - H, wR);
 
                 lambdaAddGroundSymbol(0, -R - H - 2 * W / 3, 2 * W, 90.0_deg);
-                break;
+
+                double angX = 0, angY = 0, angZ = 0;
+                TRotation3D::matrix2angles(
+                    m_nodeMainDirection.at(nodeId).getRot(), angX, angY, angZ);
+
+                // flip vertically?
+                if (sin(angZ) < 0) lambdaRotateAllSegms(180.0_deg);
+            }
+            break;
 
             case 0x23:
             {
@@ -479,6 +507,22 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
                     m_nodeMainDirection.at(nodeId).getRot(), angX, angY, angZ);
 
                 lambdaAddGroundSymbol(-R, 0, 2 * W, angZ);
+            }
+            break;
+
+            case 0x22:
+            {
+                // Y and ROTZ:
+                sgms.emplace_back(PT3(-H, -R, 0), PT3(-H, -2 * R, 0));
+                sgms.emplace_back(PT3(-H, -2 * R, 0), PT3(H, -2 * R, 0));
+                sgms.emplace_back(PT3(H, -2 * R, 0), PT3(H, -R, 0));
+                sgms.emplace_back(PT3(H, -R, 0), PT3(-H, -R, 0));
+
+                lambdaAddWheel(W * 0.8, -2 * R, wR);
+                lambdaAddWheel(0, -2 * R, wR);
+                lambdaAddWheel(-W * 0.8, -2 * R, wR);
+
+                lambdaAddGroundSymbol(0, -2 * R - 2 * wR, 2 * H, 90.0_deg);
             }
             break;
 
@@ -520,6 +564,7 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
             ASSERT_(sgms.size() >= 2);
             glConstr->appendLines(sgms);
 
+            OB_TODO("Check nodal coordinates orientation?");
             glConstr->setPose(mrpt::poses::CPose3D::FromRotationAndTranslation(
                 node_pose.r.getRot(), node_pose.t));
 

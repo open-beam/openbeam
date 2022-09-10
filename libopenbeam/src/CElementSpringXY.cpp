@@ -20,25 +20,25 @@
    +---------------------------------------------------------------------------+
  */
 
-#include <openbeam/CElementSpringXYZ.h>
+#include <openbeam/CElementSpringXY.h>
 #include <openbeam/CStructureProblem.h>
 
 using namespace std;
 using namespace openbeam;
 
-CElementSpringXYZ::CElementSpringXYZ() : CElement(2), Kx(0), Ky(0), Kz(0) {}
+CElementSpringXY::CElementSpringXY() : CElement(2), Kx(0), Ky(0) {}
 
-CElementSpringXYZ::CElementSpringXYZ(
+CElementSpringXY::CElementSpringXY(
     const size_t from_node_id, const size_t to_node_id, const num_t Kx,
-    const num_t Ky, const num_t Kz)
-    : CElement(2, from_node_id, to_node_id), Kx(Kx), Ky(Ky), Kz(Kz)
+    const num_t Ky)
+    : CElement(2, from_node_id, to_node_id), Kx(Kx), Ky(Ky)
 {
 }
 
 /** Return the stiffness submatrices between each pair of edges in this element,
  * for the current element state.
  */
-void CElementSpringXYZ::getLocalStiffnessMatrices(
+void CElementSpringXY::getLocalStiffnessMatrices(
     std::vector<TStiffnessSubmatrix>& outSubMats) const
 {
     outSubMats.resize(3);
@@ -52,7 +52,6 @@ void CElementSpringXYZ::getLocalStiffnessMatrices(
     K11.matrix       = Matrix66::Zero();
     K11.matrix(0, 0) = Kx;
     K11.matrix(1, 1) = Ky;
-    K11.matrix(2, 2) = Kz;
 
     // k22 --------------
     K22.edge_in  = 1;
@@ -65,31 +64,29 @@ void CElementSpringXYZ::getLocalStiffnessMatrices(
     K12.matrix       = Matrix66::Zero();
     K12.matrix(0, 0) = -Kx;
     K12.matrix(1, 1) = -Ky;
-    K12.matrix(2, 2) = -Kz;
 }
 
-void CElementSpringXYZ::getLocalDoFs(std::vector<used_DoFs_t>& dofs) const
+void CElementSpringXY::getLocalDoFs(std::vector<used_DoFs_t>& dofs) const
 {
     dofs.resize(getNumberEdges());
 
-    used_DoFs_t sDofs = {Kx != 0, Ky != 0, Kz != 0, false, false, false};
+    used_DoFs_t sDofs = {Kx != 0, Ky != 0, false, false, false, false};
     dofs[0] = dofs[1] = sDofs;
 }
 
 /** Parse a set of parameters by (casi insensitive) name and set the element
  * values from them. */
-void CElementSpringXYZ::loadParamsFromSet(
+void CElementSpringXY::loadParamsFromSet(
     const mrpt::containers::yaml& p, const EvaluationContext& ctx)
 {
     if (p.has("Kx")) this->Kx = ctx.evaluate(p["Kx"]);
     if (p.has("Ky")) this->Ky = ctx.evaluate(p["Ky"]);
-    if (p.has("Kz")) this->Kz = ctx.evaluate(p["Kz"]);
 }
 
 /** Draws the element to a SVG Cairo context (a pointer to a
  * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
  * options */
-void CElementSpringXYZ::drawSVG(
+void CElementSpringXY::drawSVG(
     void* _cairo_context, const DrawStructureOptions& options,
     const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
     const MeshOutputInfo* meshing_info) const
@@ -100,9 +97,31 @@ void CElementSpringXYZ::drawSVG(
 }
 
 /** Mesh this element into a set of (possibly) smaller ones */
-void CElementSpringXYZ::do_mesh(
+void CElementSpringXY::do_mesh(
     const size_t my_idx, CStructureProblem& out_fem, MeshOutputInfo& out_info,
     const MeshParams& params)
 {
-    throw std::runtime_error("TO DO");
+    ASSERT_(conected_nodes_ids.size() == 2);
+    ASSERT_(m_parent != nullptr);
+
+    if (out_info.element2nodes.size() <= my_idx)
+        out_info.element2nodes.resize(my_idx + 1);
+
+    std::vector<size_t>& my_nodes = out_info.element2nodes.at(my_idx);
+    ASSERT_(my_nodes.empty());
+
+    my_nodes.push_back(conected_nodes_ids[0]);
+    my_nodes.push_back(conected_nodes_ids[1]);
+
+    if (out_info.element2elements.size() <= my_idx)
+        out_info.element2elements.resize(my_idx + 1);
+
+    std::vector<size_t>& my_elements = out_info.element2elements[my_idx];
+    ASSERT_(my_elements.empty());
+
+    // Mesh to myself:
+    auto new_el = shared_from_this();
+
+    size_t new_el_idx = out_fem.insertElement(new_el);
+    my_elements.push_back(new_el_idx);
 }

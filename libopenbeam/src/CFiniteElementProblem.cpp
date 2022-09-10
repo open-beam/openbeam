@@ -323,7 +323,7 @@ void CFiniteElementProblem::getNodeDeformedPosition(
     const StaticSolveProblemInfo& solver_info,
     const num_t                   exageration_factor) const
 {
-    ASSERTDEB_(i < m_node_poses.size())
+    ASSERT_(i < m_node_poses.size());
 
     Vector3 incr_pt;  // Increment in each (x,y,z) coordinate for this node:
 

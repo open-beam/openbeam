@@ -71,6 +71,10 @@ Example:
 Each node must be assigned a unique ``id`` number, coordinates (in 2D or 3D), 
 and an **optinal label**, for easy identification of node names in diagrams
 and animations.
+In case of tilted planes using nodal coordinates, additional entries ``rot_x``,
+``rot_y`` and ``rot_z`` may be added to especify the roll, pitch, and yaw
+rotation angles **in degrees**, respectively. Planar structures only need to 
+specify ``rot_z``.
 
 Example:
 
@@ -79,6 +83,7 @@ Example:
     nodes:
     - {id: 0, coords: [0   , 0], label: A}
     - {id: 1, coords: [2*L , 0], label: B}
+    - {id: 2, coords: [3*L , 0], label: C, rot_z: 45}
 
 
 4. Geometry: elements

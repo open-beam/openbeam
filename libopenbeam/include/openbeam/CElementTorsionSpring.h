@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "CElement.h"
 #include "types.h"
 
@@ -29,7 +31,9 @@ namespace openbeam
 {
 /** A torsion spring element in the rotation Z axis between two given nodes.
  */
-class CElementTorsionSpring : public CElement
+class CElementTorsionSpring
+    : public CElement,
+      public std::enable_shared_from_this<CElementTorsionSpring>
 {
    public:
     CElementTorsionSpring();

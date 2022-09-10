@@ -89,7 +89,7 @@ void CStructureProblem::internalComputeStressAndEquivalentLoads()
                 {
                     // Just in case: a load should NOT exists in a DOF which
                     // hasn't been included in the problem:
-                    ASSERTDEB_(std::abs(loads[p][d]) < 1e-9)
+                    ASSERT_(std::abs(loads[p][d]) < 1e-9);
                 }
             }
         }

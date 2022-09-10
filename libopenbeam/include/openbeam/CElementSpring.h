@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "CElement.h"
 #include "types.h"
 
@@ -29,7 +31,8 @@ namespace openbeam
 {
 /** A spring element in the local X direction between two given nodes.
  */
-class CElementSpring : public CElement
+class CElementSpring : public CElement,
+                       public std::enable_shared_from_this<CElementSpring>
 {
    public:
     CElementSpring();

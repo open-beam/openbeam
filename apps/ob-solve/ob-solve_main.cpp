@@ -330,6 +330,7 @@ int main_code(int argc, char** argv)
     else
     {
         // Don't mesh:
+        problem.updateAll();
         problem_to_solve = &problem;
     }
 

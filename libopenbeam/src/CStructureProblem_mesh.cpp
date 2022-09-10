@@ -79,10 +79,10 @@ void CStructureProblem::mesh(
         const size_t dof_idx          = itC->first;
         const num_t  constraint_value = itC->second;
 
-        ASSERTDEB_(dof_idx < m_problem_DoFs.size())
+        ASSERT_(dof_idx < m_problem_DoFs.size());
 
-        const NodeDoF&  dof              = m_problem_DoFs[dof_idx];
-        const size_t original_node_id = dof.nodeId;
+        const NodeDoF& dof              = m_problem_DoFs[dof_idx];
+        const size_t   original_node_id = dof.nodeId;
 
         // Insert into the new (meshed) FEM problem:
         const size_t globalIdxDOF = out_fem.getDOFIndex(
@@ -105,10 +105,10 @@ void CStructureProblem::mesh(
         const size_t dof_idx    = it->first;
         const num_t  load_value = it->second;
 
-        ASSERTDEB_(dof_idx < m_problem_DoFs.size())
+        ASSERT_(dof_idx < m_problem_DoFs.size());
 
-        const NodeDoF&  dof              = m_problem_DoFs[dof_idx];
-        const size_t original_node_id = dof.nodeId;
+        const NodeDoF& dof              = m_problem_DoFs[dof_idx];
+        const size_t   original_node_id = dof.nodeId;
 
         // Insert into the new (meshed) FEM problem:
         const size_t globalIdxDOF = out_fem.getDOFIndex(

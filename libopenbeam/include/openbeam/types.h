@@ -101,7 +101,7 @@ struct FaceStress
     template <class MAT>
     FaceStress& operator+=(const Eigen::MatrixBase<MAT>& o)
     {
-        ASSERTDEB_(o.size() == 6)
+        ASSERT_(o.size() == 6);
         N += o[0];
         Vy += o[1];
         Vz += o[2];

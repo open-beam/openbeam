@@ -343,14 +343,14 @@ class CFiniteElementProblem
      * coordinates) serves as a local frame for constraints. */
     TRotationTrans3D& getNodePose(size_t i)
     {
-        ASSERTDEB_(i < m_node_poses.size());
+        ASSERT_(i < m_node_poses.size());
         return m_node_poses[i];
     }
     /** The 3D location of a node; its orientation (if different than global
      * coordinates) serves as a local frame for constraints. */
     const TRotationTrans3D& getNodePose(size_t i) const
     {
-        ASSERTDEB_(i < m_node_poses.size());
+        ASSERT_(i < m_node_poses.size());
         return m_node_poses[i];
     }
 

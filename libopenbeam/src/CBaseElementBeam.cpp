@@ -320,8 +320,8 @@ void CBaseElementBeam::do_mesh(
 {
     // Compute my current length by getting the poses of the two nodes at each
     // end of the beam:
-    ASSERTDEB_(conected_nodes_ids.size() == 2)
-    ASSERTDEB_(m_parent != nullptr)
+    ASSERT_(conected_nodes_ids.size() == 2);
+    ASSERT_(m_parent != nullptr);
 
     const TRotationTrans3D& node0 =
         m_parent->getNodePose(conected_nodes_ids[0]);
@@ -346,7 +346,7 @@ void CBaseElementBeam::do_mesh(
         out_info.element2nodes.resize(my_idx + 1);
 
     std::vector<size_t>& my_nodes = out_info.element2nodes[my_idx];
-    ASSERTDEB_(my_nodes.empty())
+    ASSERT_(my_nodes.empty());
 
     my_nodes.reserve(nElements + 1);
     my_nodes.push_back(conected_nodes_ids[0]);
@@ -369,7 +369,7 @@ void CBaseElementBeam::do_mesh(
         out_info.element2elements.resize(my_idx + 1);
 
     std::vector<size_t>& my_elements = out_info.element2elements[my_idx];
-    ASSERTDEB_(my_elements.empty())
+    ASSERT_(my_elements.empty());
     my_elements.reserve(nElements);
 
     for (size_t idx_el = 0; idx_el < nElements; idx_el++)

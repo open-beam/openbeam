@@ -112,18 +112,18 @@ TRotation3D::TRotation3D(const num_t roll, const num_t pitch, const num_t yaw)
 void TRotation3D::matrix2angles(
     const Matrix33& R, num_t& roll, num_t& pitch, num_t& yaw)
 {
-    ASSERTDEB_(
+    ASSERT_(
         std::abs(
             sqrt(square(R(0, 0)) + square(R(1, 0)) + square(R(2, 0))) - 1) <
-        3e-3)
-    ASSERTDEB_(
+        3e-3);
+    ASSERT_(
         std::abs(
             sqrt(square(R(0, 1)) + square(R(1, 1)) + square(R(2, 1))) - 1) <
-        3e-3)
-    ASSERTDEB_(
+        3e-3);
+    ASSERT_(
         std::abs(
             sqrt(square(R(0, 2)) + square(R(1, 2)) + square(R(2, 2))) - 1) <
-        3e-3)
+        3e-3);
 
     // Pitch is in the range [-pi/2, pi/2 ], so this calculation is enough:
     pitch = atan2(-R(2, 0), hypot(R(0, 0), R(1, 0)));  // asin( - R(2,0) );
@@ -213,9 +213,7 @@ void CElement::getGlobalDoFs(std::vector<used_DoFs_t>& dofs) const
     {
         // If all 3 XYZ are used, don't even lose more time on this...
         if (local_dofs[i][0] && local_dofs[i][1] && local_dofs[i][2])
-        {
-            dofs[i][0] = dofs[i][1] = dofs[i][2] = true;
-        }
+        { dofs[i][0] = dofs[i][1] = dofs[i][2] = true; }
         else
         {
             // X Y Z
@@ -232,9 +230,7 @@ void CElement::getGlobalDoFs(std::vector<used_DoFs_t>& dofs) const
 
         // If all 3 rotation are used, don't even lose more time on this...
         if (local_dofs[i][3] && local_dofs[i][4] && local_dofs[i][5])
-        {
-            dofs[i][3] = dofs[i][4] = dofs[i][5] = true;
-        }
+        { dofs[i][3] = dofs[i][4] = dofs[i][5] = true; }
         else
         {
             // thX thY thZ
@@ -261,7 +257,7 @@ CElement::Ptr CElement::createElementByName(const std::string& s)
     if (strCmpI("BEAM2D_RR", s)) return std::make_shared<CElementBeam_2D_RR>();
     if (strCmpI("BEAM2D_RD", s)) return std::make_shared<CElementBeam_2D_RD>();
     if (strCmpI("SPRING_1D", s)) return std::make_shared<CElementSpring>();
-    if (strCmpI("SPRING_XYZ", s)) return std::make_shared<CElementSpringXYZ>();
+    if (strCmpI("SPRING_XY", s)) return std::make_shared<CElementSpringXY>();
     if (strCmpI("SPRING_TORSION", s))
         return std::make_shared<CElementTorsionSpring>();
 

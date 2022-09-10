@@ -178,5 +178,27 @@ void CElementSpring::do_mesh(
     const size_t my_idx, CStructureProblem& out_fem, MeshOutputInfo& out_info,
     const MeshParams& params)
 {
-    throw std::runtime_error("TO DO");
+    ASSERT_(conected_nodes_ids.size() == 2);
+    ASSERT_(m_parent != nullptr);
+
+    if (out_info.element2nodes.size() <= my_idx)
+        out_info.element2nodes.resize(my_idx + 1);
+
+    std::vector<size_t>& my_nodes = out_info.element2nodes.at(my_idx);
+    ASSERT_(my_nodes.empty());
+
+    my_nodes.push_back(conected_nodes_ids[0]);
+    my_nodes.push_back(conected_nodes_ids[1]);
+
+    if (out_info.element2elements.size() <= my_idx)
+        out_info.element2elements.resize(my_idx + 1);
+
+    std::vector<size_t>& my_elements = out_info.element2elements[my_idx];
+    ASSERT_(my_elements.empty());
+
+    // Mesh to myself:
+    auto new_el = shared_from_this();
+
+    size_t new_el_idx = out_fem.insertElement(new_el);
+    my_elements.push_back(new_el_idx);
 }

@@ -460,6 +460,10 @@ void CFiniteElementProblem::internal_parser3_nodes(
             if (seqCoords.size() >= 3)
                 z = ctx.evaluate(seqCoords.at(2).as<std::string>());
 
+            if (em.count("rot_x") != 0)
+                rot_x = DEG2RAD(ctx.evaluate(em.at("rot_x").as<std::string>()));
+            if (em.count("rot_y") != 0)
+                rot_y = DEG2RAD(ctx.evaluate(em.at("rot_y").as<std::string>()));
             if (em.count("rot_z") != 0)
                 rot_z = DEG2RAD(ctx.evaluate(em.at("rot_z").as<std::string>()));
 
@@ -558,19 +562,32 @@ void CFiniteElementProblem::internal_parser4_elements(
                     ctx.evaluate(seqNodes.at(i).as<std::string>());
 
             // And process the rest of params:
-            const std::string sectionName = em.at("section").as<std::string>();
-            if (ctx.beamSectionParameters.count(sectionName) == 0)
+            if (em.count("section") != 0)
             {
-                throw std::runtime_error(mrpt::format(
-                    "Line %i: Element of type '%s' uses section '%s' which "
-                    "was "
-                    "not defined.",
-                    e.marks.line + 1, eType.c_str(), sectionName.c_str()));
+                const std::string sectionName =
+                    em.at("section").as<std::string>();
+                if (ctx.beamSectionParameters.count(sectionName) == 0)
+                {
+                    throw std::runtime_error(mrpt::format(
+                        "Line %i: Element of type '%s' uses section '%s' which "
+                        "was "
+                        "not defined.",
+                        e.marks.line + 1, eType.c_str(), sectionName.c_str()));
+                }
+
+                auto& bsp = ctx.beamSectionParameters.at(sectionName);
+                el->loadParamsFromSet(bsp, ctx);
+            }
+            else
+            {
+                // Load directly from YAML params:
+                mrpt::containers::yaml ps = mrpt::containers::yaml::Map();
+                for (const auto& kv : em)
+                    ps[kv.first.as<std::string>()] = kv.second;
+
+                el->loadParamsFromSet(ps, ctx);
             }
 
-            auto& bsp = ctx.beamSectionParameters.at(sectionName);
-
-            el->loadParamsFromSet(bsp, ctx);
             insertElement(el);
 
             OB_MESSAGE(3) << "Adding element of type " << eType
