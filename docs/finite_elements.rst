@@ -97,19 +97,18 @@ A spring element in the local X direction between two given nodes.
 
   * ``K``: Stiffness constant.
 
-6. Two linear, one torsion spring
+6. Two linear springs
 -------------------------------------------------
 
-A spring element with three elastic components in the local X, Y and Z
+A spring element with two elastic components in the local X and Y
 directions between two given nodes.
 
-* Type name: ``SPRING_XYZ``
+* Type name: ``SPRING_XY``
 * Number of nodes: 2
 * Required parameters:
 
   * ``Kx``: Stiffness constant in X.
   * ``Ky``: Stiffness constant in Y.
-  * ``Kz``: Torsional stiffness constant in Z.
 
 7. Torsion spring
 -------------------------------------------------
