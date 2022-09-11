@@ -10,6 +10,35 @@ or test and edit them in the `online app <ob-solver-simple/>`_.
 Then, come back to this page when in doubt about how to define a particular
 element, load, or parameter.
 
+.. dropdown:: YAML format summary
+    :open:
+
+    You can learn more on the YAML format in its `Wikipedia article <https://en.wikipedia.org/wiki/YAML>`_
+    or directly in its `official site <https://yaml.org/>`_. Here we provide a quick cheatsheet only:
+
+    **Comments**: A ``#`` means that the rest of the line is a comment, so it is ignored by the YAML parser.
+
+    **Maps** or **Dictionaries**: It is the main data structure used in the OpenBeam problem definition files.
+    It defines a map between ``keys => values`` with this format:
+
+    .. code-block:: yaml
+
+        dictionary_name:
+          key1: 100e34
+          key2: 2.0
+          key3: 'a text can be defined like this'
+          key4: "or like this too"
+          key5: also_a_text_string
+
+    The short JSON-like version works too:
+
+    .. code-block:: yaml
+
+        dictionary_name: {key1: 100e34, key2: foo}
+
+    **IMPORTANT**: The space after the colon ``:`` is mandatory.
+
+
 1. Parameters
 ---------------
 
@@ -18,11 +47,15 @@ parameters, to easily parameterize a structure dimensions,
 loads, etc.
 Its format is just a YAML map, which each key being converted
 into a parameter. 
-Note that you can use mathematical expressions and formulas
-in all entries, including the parameters that have been defined
-formerly.
 
-Any line starting with ``#`` is a comment.
+.. note::
+
+    Mathematical expressions and formulas can be used in all entries,
+    including the parameters that have been defined
+    formerly. This is an extension of YAML implemented in OpenBeam, 
+    making use of `mrpt::expr::CRuntimeCompiledExpression <https://docs.mrpt.org/reference/latest/class_mrpt_expr_CRuntimeCompiledExpression.html>`_
+    which in turn uses the `exprtk language <https://github.com/ArashPartow/exprtk#readme>`_.
+
 
 Example:
 

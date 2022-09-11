@@ -60,8 +60,12 @@ master_doc = 'index'
 # ones.
 extensions = [
     'sphinx_rtd_theme',
-    'sphinx.ext.mathjax'
+    'sphinx.ext.imgmath',
+    'sphinx_panels'
 ]
+
+imgmath_latex_preamble = '\\usepackage{blkarray}'
+imgmath_image_format = 'png'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -37,9 +37,49 @@ A planar (XY) rod element capable of axial stress only.
 
     <div style="clear: both"></div>
 
+.. dropdown:: Stiffness matrices
 
-2. Single-pinned 2D element (beam)
+    .. math::
+      :nowrap:
+
+      \begin{equation*}
+      \mathbf{K}_{ii} = \mathbf{K}_{jj} =
+      \begin{blockarray}{ccccccc}
+      x & y & z & r_x & r_y & r_z \\
+      \begin{block}{(cccccc)c}
+        EA/L & 0 & 0 & 0 & 0 & 0 & x \\
+        0 & 0 & 0 & 0 & 0 & 0 &  y \\
+        0 & 0 & 0 & 0 & 0 & 0 &  z \\
+        0 & 0 & 0 & 0 & 0 & 0 &  r_x \\
+        0 & 0 & 0 & 0 & 0 & 0 &  r_y \\
+        0 & 0 & 0 & 0 & 0 & 0 &  r_z \\
+      \end{block}
+      \end{blockarray}
+      \end{equation*}
+
+      \begin{equation*}
+      \mathbf{K}_{ij} = 
+      \begin{blockarray}{ccccccc}
+      x & y & z & r_x & r_y & r_z \\
+      \begin{block}{(cccccc)c}
+        -EA/L & 0 & 0 & 0 & 0 & 0 & x \\
+        0 & 0 & 0 & 0 & 0 & 0 &  y \\
+        0 & 0 & 0 & 0 & 0 & 0 &  z \\
+        0 & 0 & 0 & 0 & 0 & 0 &  r_x \\
+        0 & 0 & 0 & 0 & 0 & 0 &  r_y \\
+        0 & 0 & 0 & 0 & 0 & 0 &  r_z \\
+      \end{block}
+      \end{blockarray}
+      \end{equation*}
+
+
+1. Single-pinned 2D element (beam)
 -------------------------------------------------
+
+.. image:: imgs/element_BEAM2D_RA.png
+  :width: 347
+  :align: right
+  :alt: BEAM2D_AR finite element definition
 
 A planar (XY) beam element with one pinned end (**no** bending moment)
 and one rigid end (**with** bending moment).
@@ -55,8 +95,17 @@ is the pinned one.
   * ``A``: Section area.
   * ``Iz``: Second moment of inertia in the `Z` axis.
 
+.. raw:: html
+
+    <div style="clear: both"></div>
+
 3. 2D beam element
 -------------------------------------------------
+
+.. image:: imgs/element_BEAM2D_RR.png
+  :width: 347
+  :align: right
+  :alt: BEAM2D_RR finite element definition
 
 A planar (XY) beam element with both ends able to 
 transmit bending moment.
@@ -70,8 +119,18 @@ transmit bending moment.
   * ``Iz``: Second moment of inertia in the `Z` axis.
 
 
+.. raw:: html
+
+    <div style="clear: both"></div>
+
+
 4. 2D beam element with slider
 -------------------------------------------------
+
+.. image:: imgs/element_BEAM2D_RD.png
+  :width: 347
+  :align: right
+  :alt: BEAM2D_RD finite element definition
 
 A planar (XY) beam element with both ends able to 
 transmit bending moment, and second node free 
@@ -85,9 +144,18 @@ to slide on the local Y axis.
   * ``A``: Section area.
   * ``Iz``: Second moment of inertia in the `Z` axis.
 
+.. raw:: html
+
+    <div style="clear: both"></div>
+
 
 5. Linear spring
 -------------------------------------------------
+
+.. image:: imgs/element_SPRING_1D.png
+  :width: 200
+  :align: right
+  :alt: SPRING_1D finite element definition
 
 A spring element in the local X direction between two given nodes.
 
@@ -97,11 +165,21 @@ A spring element in the local X direction between two given nodes.
 
   * ``K``: Stiffness constant.
 
+.. raw:: html
+
+    <div style="clear: both"></div>
+
 6. Two linear springs
 -------------------------------------------------
 
+.. image:: imgs/element_SPRING_DXDY.png
+  :width: 200
+  :align: right
+  :alt: SPRING_XY finite element definition
+
 A spring element with two elastic components in the local X and Y
-directions between two given nodes.
+directions between two given nodes. The picture shows one node being the ground
+but it can be any other problem node too.
 
 * Type name: ``SPRING_XY``
 * Number of nodes: 2
@@ -110,8 +188,17 @@ directions between two given nodes.
   * ``Kx``: Stiffness constant in X.
   * ``Ky``: Stiffness constant in Y.
 
+.. raw:: html
+
+    <div style="clear: both"></div>
+
 7. Torsion spring
 -------------------------------------------------
+
+.. image:: imgs/element_SPRING_TORSION.png
+  :width: 200
+  :align: right
+  :alt: SPRING_TORSION finite element definition
 
 A torsion spring element in the rotation Z axis between two given nodes.
 
@@ -121,12 +208,21 @@ A torsion spring element in the rotation Z axis between two given nodes.
 
   * ``K``: Torsional stiffness constant in Z.
 
+.. raw:: html
+
+    <div style="clear: both"></div>
+
 8. All 2D degrees-of-freedom spring
 -------------------------------------------------
 
+.. image:: imgs/element_SPRING_DXDYRZ.png
+  :width: 200
+  :align: right
+  :alt: SPRING_TORSION finite element definition
+
 Two linear and one torsion spring element between two given nodes.
 
-* Type name: ``CElementSpringDXDYRZ``
+* Type name: ``SPRING_DXDYRZ``
 * Number of nodes: 2
 * Required parameters:
 
@@ -134,3 +230,6 @@ Two linear and one torsion spring element between two given nodes.
   * ``Ky``: Torsional stiffness constant in y.
   * ``KRz``: Torsional stiffness constant in rotation around z.
 
+.. raw:: html
+
+    <div style="clear: both"></div>
