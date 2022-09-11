@@ -11,7 +11,7 @@ or by means of a `beam_sections` YAML entry to reuse sets of
 parameters for several elements.
 Note that defining more parameters than the minimum required ones
 is not an error, 
-e.g. you can define ``Iz`` for a `BEAM2D_AA` and it
+e.g. you can define ``Iz`` for a ``BEAM2D_AA`` and it
 will neither be used nor an error triggered.
 
 
@@ -37,13 +37,13 @@ A planar (XY) rod element capable of axial stress only.
 
     <div style="clear: both"></div>
 
-.. dropdown:: Stiffness matrices
+.. dropdown:: Local-coordinates stiffness matrices
 
     .. math::
       :nowrap:
 
       \begin{equation*}
-      \mathbf{K}_{ii} = \mathbf{K}_{jj} =
+      \hat{\mathbf{K}}_{ii} = \hat{\mathbf{K}}_{jj} =
       \begin{blockarray}{ccccccc}
       x & y & z & r_x & r_y & r_z \\
       \begin{block}{(cccccc)c}
@@ -58,7 +58,7 @@ A planar (XY) rod element capable of axial stress only.
       \end{equation*}
 
       \begin{equation*}
-      \mathbf{K}_{ij} = 
+      \hat{\mathbf{K}}_{ij} = 
       \begin{blockarray}{ccccccc}
       x & y & z & r_x & r_y & r_z \\
       \begin{block}{(cccccc)c}
