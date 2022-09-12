@@ -1,0 +1,29 @@
+{% extends "!layout.html" %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}
+
+
+{% block sidebartitle %}
+{{ super() }}
+
+{% endblock %}
+
+{% block footer %}
+{{ super() }}
+<!-- Default Statcounter code for Open-beam.sourceforge.net
+http://open-beam.sourceforge.net/ -->
+<script type="text/javascript">
+  var sc_project = 6918510;
+  var sc_invisible = 1;
+  var sc_security = "d4180ad8"; 
+</script>
+<script type="text/javascript" src="https://www.statcounter.com/counter/counter.js" async></script>
+<noscript>
+  <div class="statcounter"><a title="Web Analytics" href="https://statcounter.com/" target="_blank"><img
+        class="statcounter" src="https://c.statcounter.com/6918510/0/d4180ad8/1/" alt="Web Analytics"
+        referrerPolicy="no-referrer-when-downgrade"></a></div>
+</noscript>
+<!-- End of Statcounter Code -->
+{% endblock %}
