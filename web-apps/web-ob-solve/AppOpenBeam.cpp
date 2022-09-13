@@ -462,3 +462,20 @@ void AppOpenBeam::generateVisualization(const std::string& options)
         std::cerr << e.what();
     }
 }
+
+double AppOpenBeam::determineAutoDeformationScale()
+{
+    if (!problem_to_solve_) return 1.0;
+
+    const num_t MAX_DISPL =
+        problem_to_solve_->getMaximumDeformedDisplacement(sInfo_);
+
+    num_t min_x, max_x, min_y, max_y;
+    problem_to_solve_->getBoundingBox(min_x, max_x, min_y, max_y);
+    const num_t Ax                    = max_x - min_x;
+    const num_t Ay                    = max_y - min_y;
+    const num_t MAX_ABS_DEFORMATION   = std::max(Ax, Ay) * 0.05;
+    double      MAX_DEFORMATION_SCALE = MAX_ABS_DEFORMATION / MAX_DISPL;
+
+    return MAX_DEFORMATION_SCALE;
+}

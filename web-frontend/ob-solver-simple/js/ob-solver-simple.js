@@ -40,7 +40,8 @@ function updateVisualization(deformationScale = -1) {
     else
         vizOpts += 'show_node_labels: 0;\n';
 
-    if (document.getElementById('cbShowDeformed').checked) {
+    if (document.getElementById('cbShowDeformed').checked ||
+        document.getElementById('cbShowDeformedAnim').checked) {
         vizOpts += 'show_nodes_deformed: 1;\n';
         vizOpts += 'show_elements_deformed: 1;\n';
         vizOpts += 'elements_original_alpha: 0.4\n';
@@ -55,6 +56,74 @@ function updateVisualization(deformationScale = -1) {
     obApp.generateVisualization(vizOpts);
     obApp.repaintCanvas();
 }
+
+var animCurrentScale = 0;
+var animDirection = +1;
+var animAutoScale = 0;
+const animScaleIncr = 1.0 / 20;
+var animTimerId = 0;
+
+function onPlayAnimationClick()
+{
+    document.getElementById('cbShowDeformed').checked=false;
+
+    var animEnabled = document.getElementById('cbShowDeformedAnim').checked;
+    if (!animEnabled) 
+    {
+        onStopAnimation(); 
+        updateVisualization();
+        return;
+    }
+
+    if (animAutoScale==0)
+    {
+        animAutoScale = obApp.determineAutoDeformationScale();
+    }
+
+    // Reset animation loop:
+    animCurrentScale = 0;
+    animDirection = +1;
+
+    animTimerId = setInterval(
+        function() {
+            var animEnabled = document.getElementById('cbShowDeformedAnim').checked;
+            if (!animEnabled)
+            {
+                updateVisualization();
+                return;
+            }
+    
+            if (animDirection>0)
+                animCurrentScale+=animScaleIncr;
+            else
+                animCurrentScale-=animScaleIncr;
+    
+            if (animCurrentScale>=1.0)
+            {
+                animCurrentScale=1.0;
+                animDirection=-1;
+            }
+            else if (animCurrentScale<=0.0)
+            {
+                animCurrentScale=1e-6; // 0.0 means "auto determine scale"
+                animDirection=+1;
+            }
+    
+            updateVisualization(animCurrentScale*animAutoScale);
+    }, 100);
+}
+
+function onStopAnimation()
+{
+    document.getElementById('cbShowDeformedAnim').checked=false;
+    animAutoScale= 0;
+    if (animTimerId!=0)
+    {
+        clearInterval(animTimerId);
+        animTimerId=0;
+    }
+}
+
 
 function showHelp()
 {

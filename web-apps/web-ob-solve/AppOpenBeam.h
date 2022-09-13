@@ -34,6 +34,8 @@ class AppOpenBeam
     void generateVisualization(const std::string& options);
     void repaintCanvas();
 
+    double determineAutoDeformationScale();
+
    private:
     openbeam::CStructureProblem structure_;
     bool                        builtOk_ = false;
@@ -61,5 +63,8 @@ EMSCRIPTEN_BINDINGS(EMTest)
         .function(
             "GetDisplacementsAsHTML", &AppOpenBeam::GetDisplacementsAsHTML)
         .function("GetStressAsHTML", &AppOpenBeam::GetStressAsHTML)
-        .function("HasValidStructure", &AppOpenBeam::HasValidStructure);
+        .function("HasValidStructure", &AppOpenBeam::HasValidStructure)
+        .function(
+            "determineAutoDeformationScale",
+            &AppOpenBeam::determineAutoDeformationScale);
 }

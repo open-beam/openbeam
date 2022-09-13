@@ -1,6 +1,7 @@
 #top-toolbar {
     width: 100%;
     height: 60px;
+    margin-top: 2px;
 }
 
 #OutputArea {

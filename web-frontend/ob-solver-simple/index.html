@@ -58,8 +58,13 @@
                 </abbr>
             </li>
             <li><abbr title="Show deformed">
-                    <input type="checkbox" id="cbShowDeformed" onchange="updateVisualization()" />
+                    <input type="checkbox" id="cbShowDeformed" onchange="onStopAnimation(); updateVisualization()" />
                     <label for="cbShowDeformed"><img src="imgs/cbShowDeformed.png" /></label>
+                </abbr>
+            </li>
+            <li><abbr title="Play animation">
+                    <input type="checkbox" id="cbShowDeformedAnim" onchange="onPlayAnimationClick()" />
+                    <label for="cbShowDeformedAnim"><img src="imgs/cbShowDeformedAnim.png" /></label>
                 </abbr>
             </li>
         </ul>
