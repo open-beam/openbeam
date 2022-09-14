@@ -1,4 +1,6 @@
 function buildStructure() {
+    onStopAnimation();
+    
     // save text to textarea
     var s = editor.getValue();
 
@@ -60,8 +62,9 @@ function updateVisualization(deformationScale = -1) {
 var animCurrentScale = 0;
 var animDirection = +1;
 var animAutoScale = 0;
-const animScaleIncr = 1.0 / 20;
+const animScaleIncr = 1.0 / 1000;  // ratio per milliseconds
 var animTimerId = 0;
+var animLastTime = Date.now();
 
 function onPlayAnimationClick()
 {
@@ -83,6 +86,7 @@ function onPlayAnimationClick()
     // Reset animation loop:
     animCurrentScale = 0;
     animDirection = +1;
+    animLastTime = Date.now();
 
     animTimerId = setInterval(
         function() {
@@ -92,11 +96,14 @@ function onPlayAnimationClick()
                 updateVisualization();
                 return;
             }
+
+            var animDelta = Date.now() - animLastTime; // milliseconds
+            animLastTime = Date.now();
     
             if (animDirection>0)
-                animCurrentScale+=animScaleIncr;
+                animCurrentScale+=animDelta*animScaleIncr;
             else
-                animCurrentScale-=animScaleIncr;
+                animCurrentScale-=animDelta*animScaleIncr;
     
             if (animCurrentScale>=1.0)
             {
@@ -110,7 +117,7 @@ function onPlayAnimationClick()
             }
     
             updateVisualization(animCurrentScale*animAutoScale);
-    }, 100);
+    }, 50);
 }
 
 function onStopAnimation()
