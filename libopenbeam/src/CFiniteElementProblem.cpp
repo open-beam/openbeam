@@ -167,7 +167,7 @@ void CFiniteElementProblem::updateNodesMainOrientation()
         // If the element is connected to this node, but it is not the FIRST
         // element "port"/"face", we need to reverse the orientation:
         if (m_elements.at(elIdx)->conected_nodes_ids.at(0) != nodeIdx)
-            rot.setRot(rot.getRot().transpose());
+            rot.setRot(rot.getRot() * TRotation3D(0.0, 0.0, M_PI).getRot());
 
         m_nodeMainDirection.at(nodeIdx) = rot;
     }
