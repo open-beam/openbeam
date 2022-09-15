@@ -97,6 +97,12 @@ void AppOpenBeam::repaintCanvas()
         cam.setElevationDegrees(90);
         cam.setAzimuthDegrees(-90);
 
+        GLint vp[4];
+        glGetIntegerv(GL_VIEWPORT, vp);
+        const int    viewWidth = vp[2], viewHeight = vp[3];
+        const double viewAspectRatio =
+            static_cast<double>(viewWidth) / viewHeight;
+
         // get deformed bbox:
         {
             // Auto determine maximum deformation:
@@ -127,8 +133,18 @@ void AppOpenBeam::repaintCanvas()
             min_y -= marginRatio * Ay;
             max_y += marginRatio * Ay;
 
+            double verticalFov = 2 * Ay * (1.0 + marginRatio + 0.20);
+
+            // zoom out if horizontal width is too large:
+            {
+                double horizontalFov = 2 * Ax * (1.0 + marginRatio + 0.20);
+                double hzPredFov     = verticalFov * viewAspectRatio;
+                if (horizontalFov > hzPredFov)
+                    verticalFov *= horizontalFov / hzPredFov;
+            }
+
             cam.setPointingAt((min_x + max_x) * 0.5, (min_y + max_y) * 0.5, 0);
-            cam.setZoomDistance(2 * Ay * (1.0 + marginRatio + 0.10));
+            cam.setZoomDistance(verticalFov);
         }
 
         theScene_->render();
@@ -439,14 +455,27 @@ std::string AppOpenBeam::GetStressAsHTML()
 
 void AppOpenBeam::generateVisualization(const std::string& options)
 {
+    if (!builtOk_) return;
+
     try
     {
         openbeam::DrawStructureOptions draw_options;
-        draw_options.show_nodes_original = true;
-        draw_options.show_nodes_deformed = false;
-        // draw_options.show_element_labels    = true;
+        draw_options.show_nodes_original    = true;
+        draw_options.show_nodes_deformed    = false;
         draw_options.show_elements_original = true;
         draw_options.show_elements_deformed = false;
+
+        // Auto-scale with structure dimensions:
+        num_t min_x, max_x, min_y, max_y;
+        structure_.getBoundingBox(
+            min_x, max_x, min_y, max_y, false /*deformed*/, &sInfo_, 0);
+        const num_t Ax       = max_x - min_x;
+        const num_t Ay       = max_y - min_y;
+        const num_t MAX_DIMS = std::max(Ax, Ay);
+
+        draw_options.NODE_RADIUS        = MAX_DIMS * 0.0075;
+        draw_options.BEAM_PINNED_RADIUS = 1.5 * draw_options.NODE_RADIUS;
+        draw_options.EDGE_WIDTH         = 1.2 * draw_options.NODE_RADIUS;
 
         const auto o = mrpt::containers::yaml::FromText(options);
         draw_options.loadFromYaml(o);

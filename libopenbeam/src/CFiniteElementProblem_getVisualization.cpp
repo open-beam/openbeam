@@ -340,8 +340,8 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
     using namespace mrpt;
 
     // Dimensions of constraint plots:
-    const double R     = o.NODE_RADIUS;
-    const double SCALE = R * 5.0;
+    const double R     = o.BEAM_PINNED_RADIUS;
+    const double SCALE = R * 3.0;
     const double W     = SCALE * 1.2;
     const double H     = SCALE * 1.8;
     const double wR    = W / 3;  // Wheels radius

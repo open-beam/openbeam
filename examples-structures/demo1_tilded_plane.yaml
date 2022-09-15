@@ -44,5 +44,5 @@ constraints:
 # Loads
 # ----------------------------------------------
 node_loads:
-- {node: 2, dof: DX, value: +P}
+- {node: 1, dof: DX, value: +5*P}
 

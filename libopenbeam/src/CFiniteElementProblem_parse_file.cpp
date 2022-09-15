@@ -474,8 +474,7 @@ void CFiniteElementProblem::internal_parser3_nodes(
             // We have all the data, do insert the new node:
 
             // Set node pose:
-            TRotationTrans3D node_pose(
-                x, y, z, DEG2RAD(rot_x), DEG2RAD(rot_y), DEG2RAD(rot_z));
+            TRotationTrans3D node_pose(x, y, z, rot_x, rot_y, rot_z);
 
             setNodePose(id, node_pose);
             m_node_labels[id] = nodeLabel;
