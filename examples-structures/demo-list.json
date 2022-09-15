@@ -3,8 +3,7 @@
     "demo1_tilded_plane.yaml",
     "demo2.yaml",
     "demo2_bis.yaml",
-    "demo3.yaml",
-    "demo4_frame.yaml",
-    "demo4_frame_slider.yaml",
-    "demo4_frame_tilted_slider.yaml"
+    "demo3_frame.yaml",
+    "demo3_frame_slider.yaml",
+    "demo3_frame_tilted_slider.yaml"
 ]
