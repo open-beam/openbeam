@@ -25,6 +25,8 @@
 #include <mrpt/core/format.h>
 #include <mrpt/expr/CRuntimeCompiledExpression.h>
 
+#include <stdexcept>
+
 double openbeam::evaluate(
     const std::string& expr, const std::map<std::string, double>& userSymbols,
     int lineNumber)
