@@ -67,8 +67,7 @@ class CStructureProblem : public CFiniteElementProblem
 
     /** Mesh the structure into a set of small elements.
      */
-    void mesh(
-        CStructureProblem& out_fem, MeshOutputInfo& out_info,
+    void mesh(CStructureProblem& out_fem, MeshOutputInfo& mo,
         const MeshParams& params);
 
     /** @} */

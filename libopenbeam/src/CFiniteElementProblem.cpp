@@ -121,9 +121,9 @@ void CFiniteElementProblem::setNodePose(
     m_node_defined.at(idx).used = true;
 }
 
-size_t CFiniteElementProblem::insertNode(const TRotationTrans3D& p)
+node_index_t CFiniteElementProblem::insertNode(const TRotationTrans3D& p)
 {
-    const size_t idx = m_node_poses.size();
+    const node_index_t idx = m_node_poses.size();
     m_node_poses.push_back(p);
 
     if (m_node_defined.size() < idx + 1) m_node_defined.resize(idx + 1);

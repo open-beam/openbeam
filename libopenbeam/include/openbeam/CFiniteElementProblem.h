@@ -52,14 +52,16 @@ enum class DoF_index : uint8_t
 
 struct NodeDoF
 {
-    NodeDoF(size_t _node_id, DoF_index _dof) : nodeId(_node_id), dof(_dof) {}
-    NodeDoF(size_t _node_id, uint8_t _dof)
+    NodeDoF(node_index_t _node_id, DoF_index _dof) : nodeId(_node_id), dof(_dof)
+    {
+    }
+    NodeDoF(node_index_t _node_id, uint8_t _dof)
         : nodeId(_node_id), dof(static_cast<DoF_index>(_dof))
     {
     }
 
-    size_t    nodeId;
-    DoF_index dof;  //!< In the range [0-5]
+    node_index_t nodeId;
+    DoF_index    dof;  //!< In the range [0-5]
 
     uint8_t dofAsInt() const { return static_cast<uint8_t>(dof); }
 };
@@ -140,12 +142,16 @@ struct MeshOutputInfo
     /// structure before meshing. This variable holds that "N".
     size_t num_original_nodes = 0;
 
+    /// The first M nodes in the FEM correspond to the original elements in the
+    /// structure before meshing. This variable holds that "M".
+    size_t num_original_elements = 0;
+
     /// List of all intermediary nodes (incl the original ones) at which element
     /// [i] is connected.
-    std::deque<std::vector<size_t>> element2nodes;
+    std::deque<std::vector<node_index_t>> element2nodes;
 
     /// List of smaller element IDs resulting from meshing the element [i]
-    std::deque<std::vector<size_t>> element2elements;
+    std::deque<std::vector<element_index_t>> element2elements;
 };
 
 struct ImageSaveOutputInfo
@@ -260,7 +266,8 @@ class CFiniteElementProblem
     mrpt::opengl::CSetOfObjects::Ptr getVisualization(
         const DrawStructureOptions&   options,
         const StaticSolveProblemInfo& solver_info,
-        const MeshOutputInfo*         meshing_info = nullptr) const;
+        const MeshOutputInfo*         meshing_info = nullptr,
+        const StressInfo*             stressInfo   = nullptr) const;
 
     /**    @} */
     // ----------------------------------------------------------------------------
@@ -331,7 +338,7 @@ class CFiniteElementProblem
 
     /** Insert a new node to the problem with the given 6D pose, in global
      * coordinates. \return The index of this new node */
-    size_t insertNode(const TRotationTrans3D& p);
+    node_index_t insertNode(const TRotationTrans3D& p);
 
     /** Set the reference 6D pose of a node, in global coordinates */
     void setNodePose(size_t idx, const TRotationTrans3D& p);
@@ -591,9 +598,15 @@ class CFiniteElementProblem
         const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const;
 
     void internal_getVisualization_distributedLoads(
-        const CStructureProblem* str, mrpt::opengl::CSetOfObjects& gl,
+        const CStructureProblem& str, mrpt::opengl::CSetOfObjects& gl,
         const DrawStructureOptions&   options,
         const StaticSolveProblemInfo& solver_info,
         const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const;
+
+    void internal_getVisualization_stressDiagrams(
+        mrpt::opengl::CSetOfObjects& gl, const DrawStructureOptions& options,
+        const StaticSolveProblemInfo& solverInfo,
+        const MeshOutputInfo* meshingInfo, num_t DEFORMED_SCALE_FACTOR,
+        const StressInfo& stressInfo) const;
 };
 }  // namespace openbeam

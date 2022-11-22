@@ -233,7 +233,6 @@ std::string AppOpenBeam::Solve(const std::string& options)
         problem_to_solve_->solveStatic(sInfo_);
 
         BuildProblemInfo& info = sInfo_.build_info;
-        // problem_to_solve_->assembleProblem(info);
 
         problem_to_solve_->postProcCalcStress(stressInfo_, sInfo_);
 
@@ -481,7 +480,7 @@ void AppOpenBeam::generateVisualization(const std::string& options)
         draw_options.loadFromYaml(o);
 
         auto glObj = problem_to_solve_->getVisualization(
-            draw_options, sInfo_, mesh_info_);
+            draw_options, sInfo_, mesh_info_, &stressInfo_);
 
         theScene_->clear();
         theScene_->insert(glObj);

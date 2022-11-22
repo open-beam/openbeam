@@ -212,8 +212,8 @@ int main_code(int argc, char** argv)
 
     const std::string fil_to_load = arg_problemFile.getValue();
 
-    const bool calc_stress =
-        arg_stress.getValue() || arg_stress_plots.getValue();
+    const bool calc_stress = arg_stress.getValue() ||
+                             arg_stress_plots.getValue() || arg_3Dscene.isSet();
     const bool out_html         = arg_html.getValue();
     const bool out_html_no_head = false;
 
@@ -466,59 +466,6 @@ int main_code(int argc, char** argv)
     }  // end of "arg_out_animation"
 
     std::string scripts_before_body_end;
-
-    // Visualization:
-    if (out_3Dscene)
-    {
-        openbeam::DrawStructureOptions draw_options;
-        draw_options.image_width            = arg_out_images_width.getValue();
-        draw_options.show_nodes_original    = true;
-        draw_options.show_nodes_deformed    = false;
-        draw_options.show_node_labels       = true;
-        draw_options.show_element_labels    = true;
-        draw_options.show_elements_original = true;
-        draw_options.show_elements_deformed = false;
-        draw_options.loads_deformed_alpha   = 0;
-        draw_options.loads_original_alpha   = 1;
-
-        {
-            auto glObj = problem_to_solve->getVisualization(
-                draw_options, sInfo,
-                !arg_draw_mesh.isSet() ? mesh_info : nullptr);
-
-            mrpt::opengl::COpenGLScene scene;
-            scene.insert(glObj);
-            const auto sFil =
-                arg_svg_filename_prefix.getValue() + "_original.3Dscene"s;
-            std::cout << "Saving: " << sFil << std::endl;
-            scene.saveToFile(sFil);
-        }
-
-        draw_options.show_nodes_original     = true;
-        draw_options.nodes_original_alpha    = 0.2;
-        draw_options.show_nodes_deformed     = true;
-        draw_options.show_elements_original  = true;
-        draw_options.elements_original_alpha = 0.2;
-        draw_options.show_elements_deformed  = true;
-        draw_options.show_element_labels     = false;
-        draw_options.loads_deformed_alpha    = 1;
-        draw_options.loads_original_alpha    = 0;
-
-        draw_options.deformed_scale_factor = arg_svg_deformed_factor.getValue();
-
-        {
-            auto glObj = problem_to_solve->getVisualization(
-                draw_options, sInfo,
-                !arg_draw_mesh.isSet() ? mesh_info : nullptr);
-
-            mrpt::opengl::COpenGLScene scene;
-            scene.insert(glObj);
-            const auto sFil =
-                arg_svg_filename_prefix.getValue() + "_deformed.3Dscene"s;
-            std::cout << "Saving: " << sFil << std::endl;
-            scene.saveToFile(sFil);
-        }
-    }
 
     if (out_html && out_svg)
     {
@@ -943,6 +890,109 @@ int main_code(int argc, char** argv)
     if (calc_stress)
     { problem_to_solve->postProcCalcStress(stressInfo, sInfo); }
 
+    // Visualization:
+    if (out_3Dscene)
+    {
+        // Original structure:
+        openbeam::DrawStructureOptions dopts;
+        dopts.image_width            = arg_out_images_width.getValue();
+        dopts.show_nodes_original    = true;
+        dopts.show_nodes_deformed    = false;
+        dopts.show_node_labels       = true;
+        dopts.show_element_labels    = true;
+        dopts.show_elements_original = true;
+        dopts.show_elements_deformed = false;
+        dopts.loads_deformed_alpha   = 0;
+        dopts.loads_original_alpha   = 1;
+
+        {
+            auto glObj = problem_to_solve->getVisualization(
+                dopts, sInfo, !arg_draw_mesh.isSet() ? mesh_info : nullptr);
+
+            mrpt::opengl::COpenGLScene scene;
+            scene.insert(glObj);
+            const auto sFil =
+                arg_svg_filename_prefix.getValue() + "_original.3Dscene"s;
+            std::cout << "Saving: " << sFil << std::endl;
+            scene.saveToFile(sFil);
+        }
+
+        // Deformed structure:
+        auto doDef = dopts;
+
+        doDef.show_nodes_original     = true;
+        doDef.nodes_original_alpha    = 0.2;
+        doDef.show_nodes_deformed     = true;
+        doDef.show_elements_original  = true;
+        doDef.elements_original_alpha = 0.2;
+        doDef.show_elements_deformed  = true;
+        doDef.show_element_labels     = false;
+        doDef.loads_deformed_alpha    = 1;
+        doDef.loads_original_alpha    = 0;
+
+        doDef.deformed_scale_factor = arg_svg_deformed_factor.getValue();
+
+        {
+            auto glObj = problem_to_solve->getVisualization(
+                doDef, sInfo, !arg_draw_mesh.isSet() ? mesh_info : nullptr);
+
+            mrpt::opengl::COpenGLScene scene;
+            scene.insert(glObj);
+            const auto sFil =
+                arg_svg_filename_prefix.getValue() + "_deformed.3Dscene"s;
+            std::cout << "Saving: " << sFil << std::endl;
+            scene.saveToFile(sFil);
+        }
+
+        // The different stress plots:
+        {
+            const std::array<std::string, 6> stressNames = {"N",  "Vy", "Vz",
+                                                            "Mz", "My", "Mx"};
+
+            for (int i = 0; i < 6; i++)
+            {
+                auto doStr = dopts;
+
+                doStr.show_nodes_original    = true;
+                doStr.show_elements_original = true;
+                doStr.show_element_labels    = true;
+                doStr.loads_original_alpha   = 0;
+                switch (i)
+                {
+                    case 0:
+                        doStr.show_force_axial = true;
+                        break;
+                    case 1:
+                        doStr.show_force_shear_y = true;
+                        break;
+                    case 2:
+                        doStr.show_bending_moment_z = true;
+                        break;
+                    case 3:
+                        doStr.show_force_shear_z = true;
+                        break;
+                    case 4:
+                        doStr.show_bending_moment_y = true;
+                        break;
+                    case 5:
+                        doStr.show_torsion_moment = true;
+                        break;
+                };
+
+                auto glObj = problem_to_solve->getVisualization(
+                    doStr, sInfo, !arg_draw_mesh.isSet() ? mesh_info : nullptr,
+                    &stressInfo);
+
+                mrpt::opengl::COpenGLScene scene;
+                scene.insert(glObj);
+                const auto sFil = arg_svg_filename_prefix.getValue() +
+                                  "_stress_"s + stressNames.at(i) + ".3Dscene"s;
+                std::cout << "Saving: " << sFil << std::endl;
+                scene.saveToFile(sFil);
+            }
+        }
+    }
+
     // Stress: textual output:
     // ------------------------------
     if (arg_stress.isSet())
@@ -1141,7 +1191,7 @@ int main_code(int argc, char** argv)
             {
                 const size_t idx_el = idxs[k < nE ? k : nE - 1];
 
-                // We only have linear elements only yet!
+                // We only have linear elements yet!
                 ASSERT_(stressInfo.element_stress[idx_el].size() == 2);
 
                 unsigned int face = k < nE ? 0 : 1;

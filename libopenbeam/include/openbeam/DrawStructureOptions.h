@@ -46,6 +46,21 @@ struct DrawStructureOptions
     bool show_loads             = true;
     bool show_constraints       = true;
 
+    // Stress plots:
+    bool show_force_axial      = false;
+    bool show_force_shear_y    = false;
+    bool show_bending_moment_z = false;
+    bool show_force_shear_z    = false;
+    bool show_bending_moment_y = false;
+    bool show_torsion_moment   = false;
+
+    bool show_any_stress() const
+    {
+        return show_force_axial || show_force_shear_y ||
+               show_bending_moment_z || show_force_shear_z ||
+               show_bending_moment_y || show_torsion_moment;
+    }
+
     /// Default: 1024px (Height is automatically determined)
     double image_width = 1024;
 

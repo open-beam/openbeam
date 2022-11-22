@@ -30,15 +30,13 @@
 
 #include <set>
 
-#include "internals.h"
-
 using namespace std;
 using namespace openbeam;
 using namespace Eigen;
 
 mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
-    const DrawStructureOptions& o, const StaticSolveProblemInfo& solver_info,
-    const MeshOutputInfo* meshing_info) const
+    const DrawStructureOptions& o, const StaticSolveProblemInfo& solverInfo,
+    const MeshOutputInfo* meshingInfo, const StressInfo* stressInfo) const
 {
     auto gl = mrpt::opengl::CSetOfObjects::Create();
 
@@ -46,7 +44,7 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
     const size_t nEle   = getNumberOfElements();
 
     const size_t nNodesToDraw =
-        meshing_info ? meshing_info->num_original_nodes : nNodes;
+        meshingInfo ? meshingInfo->num_original_nodes : nNodes;
 
     num_t min_x, max_x, min_y, max_y;
     getBoundingBox(min_x, max_x, min_y, max_y);
@@ -71,7 +69,7 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
             el_params.color_alpha            = o.elements_original_alpha;
             el_params.draw_original_position = true;
 
-            gl->insert(el->getVisualization(opts2, el_params, meshing_info));
+            gl->insert(el->getVisualization(opts2, el_params, meshingInfo));
         }
     }
 
@@ -113,7 +111,7 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
             o.deformed_scale_auto_max_image_ratio *
             std::max(max_x - min_x, max_y - min_y);
         const num_t max_real_deformation =
-            this->getMaximumDeformedDisplacement(solver_info);
+            this->getMaximumDeformedDisplacement(solverInfo);
         DEFORMED_SCALE_FACTOR =
             max_real_deformation == 0
                 ? 1
@@ -132,10 +130,10 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
             el_params.element_index          = i;
             el_params.color_alpha            = o.elements_deformed_alpha;
             el_params.draw_original_position = false;  // Draw deformed
-            el_params.solver_info            = &solver_info;
+            el_params.solver_info            = &solverInfo;
             el_params.deformed_scale_factor  = DEFORMED_SCALE_FACTOR;
 
-            gl->insert(el->getVisualization(o, el_params, meshing_info));
+            gl->insert(el->getVisualization(o, el_params, meshingInfo));
         }
     }
 
@@ -146,7 +144,7 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
         {
             Vector3 pt;
             this->getNodeDeformedPosition(
-                i, pt, solver_info, DEFORMED_SCALE_FACTOR);
+                i, pt, solverInfo, DEFORMED_SCALE_FACTOR);
 
             {
                 auto glNode = mrpt::opengl::CSphere::Create();
@@ -175,22 +173,30 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
     if (o.show_constraints)
     {
         internal_getVisualization_constraints(
-            *gl, o, solver_info, meshing_info, DEFORMED_SCALE_FACTOR);
+            *gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR);
     }
 
     // Draw concentrated loads =========================================
     if (o.show_loads)
     {
         internal_getVisualization_nodeLoads(
-            *gl, o, solver_info, meshing_info, DEFORMED_SCALE_FACTOR);
+            *gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR);
     }
 
     // Draw distributed loads on elements ==============================
-    if (auto str = dynamic_cast<const CStructureProblem*>(this);
-        str && o.show_loads)
+    auto str = dynamic_cast<const CStructureProblem*>(this);
+    if (str && o.show_loads)
     {
         internal_getVisualization_distributedLoads(
-            str, *gl, o, solver_info, meshing_info, DEFORMED_SCALE_FACTOR);
+            *str, *gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR);
+    }
+
+    // Draw stress diagrams on elements ==============================
+    if (stressInfo && o.show_any_stress())
+    {
+        internal_getVisualization_stressDiagrams(
+            *gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR,
+            *stressInfo);
     }
 
     return gl;
@@ -576,7 +582,7 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
 }
 
 void CFiniteElementProblem::internal_getVisualization_distributedLoads(
-    const CStructureProblem* str, mrpt::opengl::CSetOfObjects& gl,
+    const CStructureProblem& str, mrpt::opengl::CSetOfObjects& gl,
     const DrawStructureOptions& o, const StaticSolveProblemInfo& solver_info,
     const MeshOutputInfo* meshing, num_t DEFORMED_SCALE_FACTOR) const
 {
@@ -589,7 +595,7 @@ void CFiniteElementProblem::internal_getVisualization_distributedLoads(
 
     for (int stage = 0; stage < 3; stage++)
     {
-        for (const auto& eLoadKV : str->loadsOnBeams())
+        for (const auto& eLoadKV : str.loadsOnBeams())
         {
             const auto [beamId, eLoad] = eLoadKV;
             if (!eLoad) continue;
@@ -609,4 +615,44 @@ void CFiniteElementProblem::internal_getVisualization_distributedLoads(
             }
         }
     }
+}
+
+void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
+    mrpt::opengl::CSetOfObjects& gl, const DrawStructureOptions& options,
+    const StaticSolveProblemInfo& solverInfo, const MeshOutputInfo* meshingInfo,
+    num_t DEFORMED_SCALE_FACTOR, const StressInfo& stressInfo) const
+{
+    ASSERTMSG_(
+        meshingInfo,
+        "Doing meshing is required at present for drawing stress diagrams.");
+
+    // The max. absolute value value for each stress:
+    std::array<double, 6> maxAbsStress = {0, 0, 0, 0, 0, 0};
+
+    for (element_index_t elIdx = 0;
+         elIdx < meshingInfo->element2elements.size(); elIdx++)
+    {
+        const auto& elEls   = meshingInfo->element2elements[elIdx];
+        const auto& elNodes = meshingInfo->element2nodes[elIdx];
+
+        // Note the "<=" below: we draw the last element twice, once to draw
+        // its first face, another for the second face:
+        for (size_t iSubEl = 0; iSubEl <= elEls.size(); iSubEl++)
+        {
+            const auto  subElIdx = elEls.at(std::min(iSubEl, elEls.size() - 1));
+            const auto& stress   = stressInfo.element_stress.at(subElIdx);
+
+            // We only have linear elements yet!
+            ASSERT_(stress.size() == 2);
+
+            // Draw the "left" (first) face for all
+            unsigned int face = iSubEl + 1 < elEls.size() ? 0 : 1;
+
+            const FaceStress& es = stressInfo.element_stress[subElIdx][face];
+            std::cout << "subElIdx=" << subElIdx
+                      << " numNodes=" << elNodes.size() << " N=" << es.N
+                      << "\n";
+        }
+
+    }  // for each elIdx
 }

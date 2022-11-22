@@ -35,26 +35,26 @@ using namespace Eigen;
 MeshParams::MeshParams() : max_element_length(50e-3) {}
 
 void CStructureProblem::mesh(
-    CStructureProblem& out_fem, MeshOutputInfo& out_info,
-    const MeshParams& params)
+    CStructureProblem& out_fem, MeshOutputInfo& mo, const MeshParams& params)
 {
     out_fem.clear();
-    out_info = MeshOutputInfo();
+    mo = MeshOutputInfo();
 
     // ------------------------------
     // (1) NODES: Original ones
     // ------------------------------
-    const size_t nOrigNodes     = m_node_poses.size();
-    out_info.num_original_nodes = nOrigNodes;
-    out_fem.m_node_poses        = this->m_node_poses;
-    out_fem.m_node_labels       = this->m_node_labels;
+    const size_t nOrigNodes = m_node_poses.size();
+    mo.num_original_nodes   = nOrigNodes;
+    out_fem.m_node_poses    = this->m_node_poses;
+    out_fem.m_node_labels   = this->m_node_labels;
 
     // ------------------------------
     // (2) NODES: intermediary ones
     // ------------------------------
     const size_t nOrigElements = this->m_elements.size();
+    mo.num_original_elements   = nOrigElements;
     for (size_t i = 0; i < nOrigElements; i++)
-        this->m_elements[i]->do_mesh(i, out_fem, out_info, params);
+        this->m_elements[i]->do_mesh(i, out_fem, mo, params);
 
     // ------------------------------
     // (3) Rebuild DOFs lists:
@@ -127,7 +127,6 @@ void CStructureProblem::mesh(
         const auto&  load        = barLoadPair.second;
 
         load->meshLoad(
-            out_fem, out_info.element2elements[org_bar_idx], org_bar_idx,
-            *this);
+            out_fem, mo.element2elements[org_bar_idx], org_bar_idx, *this);
     }
 }

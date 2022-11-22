@@ -1,4 +1,4 @@
-/* +---------------------------------------------------------------------------+
+﻿/* +---------------------------------------------------------------------------+
    |              OpenBeam - C++ Finite Element Analysis library               |
    |                                                                           |
    |   Copyright (C) 2010-2021  Jose Luis Blanco Claraco                       |
@@ -211,6 +211,7 @@ using mrpt::format;
 using array6 = std::array<num_t, 6>;
 
 using element_index_t = std::size_t;
+using node_index_t    = std::size_t;
 
 struct DrawStructureOptions;
 struct RenderInitData;
