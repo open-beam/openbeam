@@ -37,4 +37,11 @@ void DrawStructureOptions::loadFromYaml(const mrpt::containers::yaml& d)
     MCP_LOAD_OPT(d, deformed_scale_factor);
     MCP_LOAD_OPT(d, deformed_scale_factor_for_bbox);
     MCP_LOAD_OPT(d, elements_original_alpha);
+
+    MCP_LOAD_OPT(d, show_force_axial);
+    MCP_LOAD_OPT(d, show_force_shear_y);
+    MCP_LOAD_OPT(d, show_bending_moment_z);
+    MCP_LOAD_OPT(d, show_force_shear_z);
+    MCP_LOAD_OPT(d, show_bending_moment_y);
+    MCP_LOAD_OPT(d, show_torsion_moment);
 }

@@ -49,6 +49,19 @@ function updateVisualization(deformationScale = -1) {
         vizOpts += 'elements_original_alpha: 0.4\n';
     }
 
+    if (document.getElementById('cbShowN').checked)
+        vizOpts += 'show_force_axial: 1;\n';
+    if (document.getElementById('cbShowVy').checked)
+        vizOpts += 'show_force_shear_y: 1;\n';
+    if (document.getElementById('cbShowVz').checked)
+        vizOpts += 'show_force_shear_z: 1;\n';
+    if (document.getElementById('cbShowMz').checked)
+        vizOpts += 'show_bending_moment_z: 1;\n';
+    if (document.getElementById('cbShowMy').checked)
+        vizOpts += 'show_bending_moment_y: 1;\n';
+    if (document.getElementById('cbShowMx').checked)
+        vizOpts += 'show_torsion_moment: 1;\n';
+
     if (deformationScale>0)
     {
         vizOpts += 'deformed_scale_factor: ' +

@@ -133,7 +133,7 @@ void AppOpenBeam::repaintCanvas()
             min_y -= marginRatio * Ay;
             max_y += marginRatio * Ay;
 
-            double verticalFov = 2 * Ay * (1.0 + marginRatio + 0.20);
+            double verticalFov = 2 * Ay * (1.0 + marginRatio + 0.20 + 0.40);
 
             // zoom out if horizontal width is too large:
             {

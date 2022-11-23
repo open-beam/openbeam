@@ -626,7 +626,7 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
         meshingInfo,
         "Doing meshing is required at present for drawing stress diagrams.");
 
-    const double MAX_RELATIVE_DIAG_SIZE = 1.0;
+    const double MAX_RELATIVE_DIAG_SIZE = 0.35;
 
     // The max. absolute value value for each stress:
     FaceStress maxAbsStress;
@@ -664,8 +664,8 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
                 }
             }
 
-            bool minMaxSupression[6] = {false, false, false,
-                                        false, false, false};
+            bool minMaxSuppression[6] = {false, false, false,
+                                         false, false, false};
 
             // Note the "<=" below: we draw the last element twice, once to draw
             // its first face, another for the second face:
@@ -745,21 +745,20 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
 
                             if (!(iSubEl == 0 || isLast || isMaxMinPoint))
                             {
-                                minMaxSupression[i] = false;
+                                minMaxSuppression[i] = false;
                                 continue;
                             }
 
-                            if (minMaxSupression[i]) continue;
+                            if (minMaxSuppression[i]) continue;
 
                             // Yes: draw it:
                             auto glLb = mrpt::opengl::CText::Create();
                             glLb->setColor_u8(0x00, 0x00, 0xd0);
                             glLb->setLocation(
-                                pp0 +
-                                TPoint3D(0, 1.0, 0) * options.NODE_RADIUS);
+                                pp0 + 3 * uv * options.NODE_RADIUS);
                             glLb->setString(mrpt::format("%.03g", es[i]));
                             gl.insert(glLb);
-                            minMaxSupression[i] = true;
+                            minMaxSuppression[i] = true;
                         }
                     }
                     break;
@@ -767,6 +766,14 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
 
             }  // for each iSubEl
 
+            if (pass == 0)
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    // These are numerical noise, discard them:
+                    if (maxAbsStress[i] < 1e-5) maxAbsStress[i] = 1;
+                }
+            }
             if (pass == 1)
             {
                 for (int i = 0; i < 6; i++)
