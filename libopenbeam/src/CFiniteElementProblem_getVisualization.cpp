@@ -626,21 +626,27 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
         meshingInfo,
         "Doing meshing is required at present for drawing stress diagrams.");
 
+    const double MAX_RELATIVE_DIAG_SIZE = 1.0;
+
     // The max. absolute value value for each stress:
     FaceStress maxAbsStress;
+
+    const auto numOrgElements = meshingInfo->element2elements.size();
+    std::vector<FaceStress> minDiagPerElement, maxDiagPerElement;
+    minDiagPerElement.resize(numOrgElements);
+    maxDiagPerElement.resize(numOrgElements);
 
     std::array<bool, 6> diagEnabled = {
         options.show_force_axial,      options.show_force_shear_y,
         options.show_bending_moment_z, options.show_force_shear_z,
         options.show_bending_moment_y, options.show_torsion_moment};
 
-    for (int pass = 0; pass < 2; pass)
+    for (int pass = 0; pass < 2; pass++)
     {
         // pass #0: find out absolute maximums
         // pass #1: Draw them
 
-        for (element_index_t elIdx = 0;
-             elIdx < meshingInfo->element2elements.size(); elIdx++)
+        for (element_index_t elIdx = 0; elIdx < numOrgElements; elIdx++)
         {
             const auto& elEls   = meshingInfo->element2elements[elIdx];
             const auto& elNodes = meshingInfo->element2nodes[elIdx];
@@ -658,10 +664,14 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
                 }
             }
 
+            bool minMaxSupression[6] = {false, false, false,
+                                        false, false, false};
+
             // Note the "<=" below: we draw the last element twice, once to draw
             // its first face, another for the second face:
             for (size_t iSubEl = 0; iSubEl <= elEls.size(); iSubEl++)
             {
+                const bool isLast = iSubEl == elEls.size();
                 const auto subElIdx =
                     elEls.at(std::min(iSubEl, elEls.size() - 1));
                 const auto& stress = stressInfo.element_stress.at(subElIdx);
@@ -670,7 +680,7 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
                 ASSERT_(stress.size() == 2);
 
                 // Draw the "left" (first) face for all
-                unsigned int face = iSubEl + 1 < elEls.size() ? 0 : 1;
+                unsigned int face = isLast ? 1 : 0;
 
                 const FaceStress& es =
                     stressInfo.element_stress[subElIdx][face];
@@ -679,38 +689,77 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
                 {
                     case 0:
                         for (int i = 0; i < 6; i++)
+                        {
                             mrpt::keep_max(maxAbsStress[i], std::abs(es[i]));
+
+                            mrpt::keep_max(maxDiagPerElement[elIdx][i], es[i]);
+                            mrpt::keep_min(minDiagPerElement[elIdx][i], es[i]);
+                        }
                         break;
 
                     case 1:  // Draw them:
                     {
                         for (int i = 0; i < 6; i++)
                         {
-                            if (auto glLine = glDiag[i]; glLine)
-                            {
-                                // get coords of the two ends of the
-                                // sub-element:
-                                const auto n0 =
-                                    getElement(subElIdx)->conected_nodes_ids.at(
-                                        0);
-                                const auto n1 =
-                                    getElement(subElIdx)->conected_nodes_ids.at(
-                                        1);
-                                const auto p0 = getNodePose(n0);
-                                const auto p1 = getNodePose(n1);
-                                const auto u  = (p1.t - p0.t).unitarize();
-                                const mrpt::math::TPoint2D uv = {u.y, -u.x};
+                            auto glLine = glDiag[i];
+                            if (!glLine) continue;
 
-                                const double s =
-                                    1 * es[i] /
-                                    (maxAbsStress[i] != 0 ? maxAbsStress[i]
-                                                          : 1.0);
+                            // get coords of the two ends of the
+                            // sub-element:
+                            const auto n0 =
+                                getElement(subElIdx)->conected_nodes_ids.at(0);
+                            const auto n1 =
+                                getElement(subElIdx)->conected_nodes_ids.at(1);
+                            const auto p0 = getNodePose(n0);
+                            const auto p1 = getNodePose(n1);
+                            const auto u  = (p1.t - p0.t).unitarize();
+                            const mrpt::math::TPoint2D uv = {u.y, -u.x};
 
-                                const auto pp0 = p0.t + uv * s;
-                                const auto pp1 = p1.t + uv * s;
+                            const double s =
+                                MAX_RELATIVE_DIAG_SIZE * es[i] /
+                                (maxAbsStress[i] != 0 ? maxAbsStress[i] : 1.0);
+
+                            const auto pp0 = (isLast ? p1.t : p0.t) + uv * s;
+                            if (glLine->empty())
                                 glLine->appendLine(
-                                    pp0.x, pp0.y, 0, pp1.x, pp1.y, 0);
+                                    p0.t.x, p0.t.y, 0, pp0.x, pp0.y, 0);
+                            else
+                                glLine->appendLineStrip(pp0.x, pp0.y, 0);
+
+                            if (isLast) glLine->appendLineStrip(p1.t);
+
+                            // Draw a text label with the value?
+                            bool isMaxMinPoint = false;
+                            if (auto diagSpan = maxDiagPerElement[elIdx][i] -
+                                                minDiagPerElement[elIdx][i];
+                                diagSpan > 0.01)
+                            {
+                                isMaxMinPoint =
+                                    (std::abs(
+                                         maxDiagPerElement[elIdx][i] - es[i]) <
+                                     1e-6 * diagSpan) ||
+                                    (std::abs(
+                                         minDiagPerElement[elIdx][i] - es[i]) <
+                                     1e-6 * diagSpan);
                             }
+
+                            if (!(iSubEl == 0 || isLast || isMaxMinPoint))
+                            {
+                                minMaxSupression[i] = false;
+                                continue;
+                            }
+
+                            if (minMaxSupression[i]) continue;
+
+                            // Yes: draw it:
+                            auto glLb = mrpt::opengl::CText::Create();
+                            glLb->setColor_u8(0x00, 0x00, 0xd0);
+                            glLb->setLocation(
+                                pp0 +
+                                TPoint3D(0, 1.0, 0) * options.NODE_RADIUS);
+                            glLb->setString(mrpt::format("%.03g", es[i]));
+                            gl.insert(glLb);
+                            minMaxSupression[i] = true;
                         }
                     }
                     break;
