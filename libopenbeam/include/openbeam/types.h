@@ -87,6 +87,47 @@ struct FaceStress
     num_t My = 0;  //!< Moment Y
     num_t Mz = 0;  //!< Moment Z
 
+    num_t operator[](const int idx) const
+    {
+        switch (idx)
+        {
+            case 0:
+                return N;
+            case 1:
+                return Vy;
+            case 2:
+                return Mz;
+            case 3:
+                return Vz;
+            case 4:
+                return My;
+            case 5:
+                return Mx;
+            default:
+                THROW_EXCEPTION("out of range");
+        };
+    }
+    num_t& operator[](const int idx)
+    {
+        switch (idx)
+        {
+            case 0:
+                return N;
+            case 1:
+                return Vy;
+            case 2:
+                return Mz;
+            case 3:
+                return Vz;
+            case 4:
+                return My;
+            case 5:
+                return Mx;
+            default:
+                THROW_EXCEPTION("out of range");
+        };
+    }
+
     FaceStress& operator+=(const FaceStress& o)
     {
         N += o.N;

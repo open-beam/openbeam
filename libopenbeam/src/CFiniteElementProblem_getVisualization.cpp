@@ -627,32 +627,103 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
         "Doing meshing is required at present for drawing stress diagrams.");
 
     // The max. absolute value value for each stress:
-    std::array<double, 6> maxAbsStress = {0, 0, 0, 0, 0, 0};
+    FaceStress maxAbsStress;
 
-    for (element_index_t elIdx = 0;
-         elIdx < meshingInfo->element2elements.size(); elIdx++)
+    std::array<bool, 6> diagEnabled = {
+        options.show_force_axial,      options.show_force_shear_y,
+        options.show_bending_moment_z, options.show_force_shear_z,
+        options.show_bending_moment_y, options.show_torsion_moment};
+
+    for (int pass = 0; pass < 2; pass)
     {
-        const auto& elEls   = meshingInfo->element2elements[elIdx];
-        const auto& elNodes = meshingInfo->element2nodes[elIdx];
+        // pass #0: find out absolute maximums
+        // pass #1: Draw them
 
-        // Note the "<=" below: we draw the last element twice, once to draw
-        // its first face, another for the second face:
-        for (size_t iSubEl = 0; iSubEl <= elEls.size(); iSubEl++)
+        for (element_index_t elIdx = 0;
+             elIdx < meshingInfo->element2elements.size(); elIdx++)
         {
-            const auto  subElIdx = elEls.at(std::min(iSubEl, elEls.size() - 1));
-            const auto& stress   = stressInfo.element_stress.at(subElIdx);
+            const auto& elEls   = meshingInfo->element2elements[elIdx];
+            const auto& elNodes = meshingInfo->element2nodes[elIdx];
 
-            // We only have linear elements yet!
-            ASSERT_(stress.size() == 2);
+            mrpt::opengl::CSetOfLines::Ptr glDiag[6];
+            if (pass == 1)
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    if (diagEnabled[i])
+                    {
+                        glDiag[i] = mrpt::opengl::CSetOfLines::Create();
+                        glDiag[i]->setColor_u8(mrpt::img::TColor::blue());
+                    }
+                }
+            }
 
-            // Draw the "left" (first) face for all
-            unsigned int face = iSubEl + 1 < elEls.size() ? 0 : 1;
+            // Note the "<=" below: we draw the last element twice, once to draw
+            // its first face, another for the second face:
+            for (size_t iSubEl = 0; iSubEl <= elEls.size(); iSubEl++)
+            {
+                const auto subElIdx =
+                    elEls.at(std::min(iSubEl, elEls.size() - 1));
+                const auto& stress = stressInfo.element_stress.at(subElIdx);
 
-            const FaceStress& es = stressInfo.element_stress[subElIdx][face];
-            std::cout << "subElIdx=" << subElIdx
-                      << " numNodes=" << elNodes.size() << " N=" << es.N
-                      << "\n";
-        }
+                // We only have linear elements yet!
+                ASSERT_(stress.size() == 2);
 
-    }  // for each elIdx
+                // Draw the "left" (first) face for all
+                unsigned int face = iSubEl + 1 < elEls.size() ? 0 : 1;
+
+                const FaceStress& es =
+                    stressInfo.element_stress[subElIdx][face];
+
+                switch (pass)
+                {
+                    case 0:
+                        for (int i = 0; i < 6; i++)
+                            mrpt::keep_max(maxAbsStress[i], std::abs(es[i]));
+                        break;
+
+                    case 1:  // Draw them:
+                    {
+                        for (int i = 0; i < 6; i++)
+                        {
+                            if (auto glLine = glDiag[i]; glLine)
+                            {
+                                // get coords of the two ends of the
+                                // sub-element:
+                                const auto n0 =
+                                    getElement(subElIdx)->conected_nodes_ids.at(
+                                        0);
+                                const auto n1 =
+                                    getElement(subElIdx)->conected_nodes_ids.at(
+                                        1);
+                                const auto p0 = getNodePose(n0);
+                                const auto p1 = getNodePose(n1);
+                                const auto u  = (p1.t - p0.t).unitarize();
+                                const mrpt::math::TPoint2D uv = {u.y, -u.x};
+
+                                const double s =
+                                    1 * es[i] /
+                                    (maxAbsStress[i] != 0 ? maxAbsStress[i]
+                                                          : 1.0);
+
+                                const auto pp0 = p0.t + uv * s;
+                                const auto pp1 = p1.t + uv * s;
+                                glLine->appendLine(
+                                    pp0.x, pp0.y, 0, pp1.x, pp1.y, 0);
+                            }
+                        }
+                    }
+                    break;
+                };
+
+            }  // for each iSubEl
+
+            if (pass == 1)
+            {
+                for (int i = 0; i < 6; i++)
+                    if (diagEnabled[i]) gl.insert(glDiag[i]);
+            }
+
+        }  // for each elIdx
+    }  // for each pass
 }
