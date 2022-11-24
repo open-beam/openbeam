@@ -1,0 +1,50 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#
+# Problem #1 in exam July 2021, University of Almería.
+#
+#        https://github.com/open-beam/openbeam
+# -------------------------------------------------------
+
+# -------------------------------------------------
+#  Parameters
+# -------------------------------------------------
+parameters:
+  G: 10         # Newtons (approx 9.8 ~=10)
+  P: 6*1000*G   # Load in tons
+
+# -------------------------------------------------
+# beam sections
+# -------------------------------------------------
+beam_sections:
+- name: MY_BAR
+  E: 2.0e11     # Young module
+  A: 6e-4       # Area
+  Iz: 1940e-8   # Second moment of area in z
+
+# -------------------------------------------------
+#  Geometry: nodes, elements & constraints
+# -------------------------------------------------
+nodes:
+- {id: 0, coords: [0  ,  0], label: A}
+- {id: 1, coords: [2  ,  0], label: B}
+- {id: 2, coords: [7  ,  0], label: C}
+- {id: 3, coords: [2  ,  2], label: D}
+- {id: 4, coords: [2.5,  2], label: E}
+
+elements:
+- {type: BEAM2D_RR, nodes: [0, 1], section: MY_BAR}
+- {type: BEAM2D_RR, nodes: [1, 2], section: MY_BAR}
+- {type: BEAM2D_RR, nodes: [1, 3], section: MY_BAR}
+- {type: BEAM2D_RR, nodes: [3, 4], section: MY_BAR}
+
+# Constraints
+constraints:
+- {node: 0, dof: DXDYRZ}
+- {node: 2, dof: DY}
+
+# ----------------------------------------------
+# Loads
+# ----------------------------------------------
+node_loads:
+- {node: 4, dof: DY, value: -P}
