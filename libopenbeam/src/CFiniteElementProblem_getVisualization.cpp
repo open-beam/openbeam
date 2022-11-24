@@ -755,7 +755,9 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
                             auto glLb = mrpt::opengl::CText::Create();
                             glLb->setColor_u8(0x00, 0x00, 0xd0);
                             glLb->setLocation(
-                                pp0 + 3 * uv * options.NODE_RADIUS);
+                                pp0 + 3 * uv * options.NODE_RADIUS +
+                                mrpt::math::TPoint3D(
+                                    0, 0, 4 * options.NODE_RADIUS));
                             glLb->setString(mrpt::format("%.03g", es[i]));
                             gl.insert(glLb);
                             minMaxSuppression[i] = true;
