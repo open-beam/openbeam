@@ -156,3 +156,21 @@ window.onerror = function (event) {
         if (text) Module.printErr('[post-exception status] ' + text);
     };
 };
+
+function onWinResize() {
+    // Get the canvas element
+    var canvas = document.getElementById('canvas');
+
+    // Get the new width and height
+    var w = canvas.width;
+    var h = canvas.height;
+
+    // Resize the canvas
+    Module.canvas.width = canvas.width;
+    Module.canvas.height = canvas.height;
+
+    // Resize the canvas viewport
+    Module.setCanvasSize(canvas.width, canvas.height);
+}
+
+window.onresize = onWinResize;
