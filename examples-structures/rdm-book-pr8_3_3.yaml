@@ -1,0 +1,51 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#
+# Problem 8.3.3 in our Strength of Materials book
+#
+#        https://github.com/open-beam/openbeam
+# -------------------------------------------------------
+
+# -------------------------------------------------
+#  Parameters
+# -------------------------------------------------
+#parameters:
+#  G: 10         # Newtons (approx 9.8 ~=10)
+
+# -------------------------------------------------
+# beam sections
+# -------------------------------------------------
+beam_sections:
+- name: IPE100
+  E: 2.0e11     # Young module
+  A: 6e-2       # Area (not real value, since it's not used anyway)
+  Iz: 171e-8   # Second moment of area in z
+
+# -------------------------------------------------
+#  Geometry: nodes, elements & constraints
+# -------------------------------------------------
+nodes:
+- {id: 0, coords: [0,  0], label: A}
+- {id: 1, coords: [2,  0], label: C}
+- {id: 2, coords: [4,  0], label: B}
+- {id: 3, coords: [5.5,  0], label: D}
+
+elements:
+- {type: BEAM2D_RR, nodes: [0, 1], section: IPE100}
+- {type: BEAM2D_RR, nodes: [1, 2], section: IPE100}
+- {type: BEAM2D_RR, nodes: [2, 3], section: IPE100}
+
+# Constraints
+constraints:
+- {node: 0, dof: DXDYRZ}
+- {node: 2, dof: DY}
+
+# ----------------------------------------------
+# Loads
+# ----------------------------------------------
+node_loads:
+- {node: 1, dof: DY, value: -4000}
+
+#element_loads:
+#- {element: 0, type: DISTRIB_UNIFORM, q: 4000/sqrt(2), DX: 1, DY: 0, DZ: 0}
+
