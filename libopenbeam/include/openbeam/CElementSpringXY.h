@@ -65,7 +65,7 @@ class CElementSpringXY : public CElement,
         void* _cairo_context, const DrawStructureOptions& options,
         const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo* meshing_info) const override;
-    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+    mrpt::viz::CSetOfObjects::Ptr getVisualization(
         const DrawStructureOptions&   options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const override

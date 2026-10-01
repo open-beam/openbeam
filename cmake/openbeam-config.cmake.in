@@ -1,0 +1,16 @@
+@PACKAGE_INIT@
+
+# Usage from an external project:
+#   find_package(openbeam REQUIRED)
+#   target_link_libraries(my_target openbeam::openbeam)
+
+include(CMakeFindDependencyMacro)
+find_dependency(Eigen3 NO_MODULE)
+find_dependency(mrpt_containers)
+find_dependency(mrpt_core)
+find_dependency(mrpt_math)
+find_dependency(mrpt_system)
+find_dependency(mrpt_viz)
+
+include("${CMAKE_CURRENT_LIST_DIR}/openbeam-targets.cmake")
+check_required_components(openbeam)

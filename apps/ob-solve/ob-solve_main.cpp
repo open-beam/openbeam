@@ -30,7 +30,7 @@
 // ---
 #include <mrpt/system/CConsoleRedirector.h>
 //
-#include <mrpt/opengl/COpenGLScene.h>
+#include <mrpt/viz/Scene.h>
 #include <mrpt/system/string_utils.h>
 #include <openbeam/openbeam.h>
 #include <openbeam/print_html_matrix.h>
@@ -909,7 +909,7 @@ int main_code(int argc, char** argv)
             auto glObj = problem_to_solve->getVisualization(
                 dopts, sInfo, !arg_draw_mesh.isSet() ? mesh_info : nullptr);
 
-            mrpt::opengl::COpenGLScene scene;
+            mrpt::viz::Scene scene;
             scene.insert(glObj);
             const auto sFil =
                 arg_svg_filename_prefix.getValue() + "_original.3Dscene"s;
@@ -936,7 +936,7 @@ int main_code(int argc, char** argv)
             auto glObj = problem_to_solve->getVisualization(
                 doDef, sInfo, !arg_draw_mesh.isSet() ? mesh_info : nullptr);
 
-            mrpt::opengl::COpenGLScene scene;
+            mrpt::viz::Scene scene;
             scene.insert(glObj);
             const auto sFil =
                 arg_svg_filename_prefix.getValue() + "_deformed.3Dscene"s;
@@ -983,7 +983,7 @@ int main_code(int argc, char** argv)
                     doStr, sInfo, !arg_draw_mesh.isSet() ? mesh_info : nullptr,
                     &stressInfo);
 
-                mrpt::opengl::COpenGLScene scene;
+                mrpt::viz::Scene scene;
                 scene.insert(glObj);
                 const auto sFil = arg_svg_filename_prefix.getValue() +
                                   "_stress_"s + stressNames.at(i) + ".3Dscene"s;

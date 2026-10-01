@@ -170,6 +170,11 @@ struct EvaluationContext
     {
         return evaluate(proxy.node().as<std::string>());
     }
+    /// for use with `evaluate(p["K"])` on a const yaml object
+    num_t evaluate(const mrpt::containers::yaml_cref& proxy) const
+    {
+        return evaluate(proxy.node().as<std::string>());
+    }
 
     std::map<std::string, double> parameters;
 

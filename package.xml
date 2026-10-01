@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>openbeam</name>
+  <version>0.9.9</version>
+  <description>
+    C++ library for static analysis of structures with the finite element method:
+    a structure definition language, parser, linear static solver, internal forces
+    post-processing and visualization.
+  </description>
+
+  <maintainer email="joseluisblancoc@gmail.com">Jose-Luis Blanco-Claraco</maintainer>
+  <license file="COPYING">GPL-3.0-or-later</license>
+
+  <url type="website">https://github.com/open-beam/openbeam</url>
+  <url type="repository">https://github.com/open-beam/openbeam</url>
+  <url type="bugtracker">https://github.com/open-beam/openbeam/issues</url>
+
+  <buildtool_depend>cmake</buildtool_depend>
+
+  <depend>eigen</depend>
+  <depend>mrpt_containers</depend>
+  <depend>mrpt_core</depend>
+  <depend>mrpt_expr</depend>
+  <depend>mrpt_math</depend>
+  <depend>mrpt_system</depend>
+  <depend>mrpt_viz</depend>
+
+  <test_depend>gtest</test_depend>
+
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+</package>

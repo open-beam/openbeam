@@ -20,7 +20,7 @@
    +---------------------------------------------------------------------------+
  */
 
-#include <mrpt/opengl/CSetOfLines.h>
+#include <mrpt/viz/CSetOfLines.h>
 #include <openbeam/CFiniteElementProblem.h>
 #include <openbeam/CStructureProblem.h>
 #include <openbeam/DrawStructureOptions.h>
@@ -186,7 +186,7 @@ void CLoadDistributedUniform::meshLoad(
 // maximum load density in all distributed loads
 static double max_distributed_q = .0;
 
-mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedUniform::getVisualization(
+mrpt::viz::CSetOfObjects::Ptr CLoadDistributedUniform::getVisualization(
     const CFiniteElementProblem& fem, const DrawStructureOptions& o,
     const DrawElementExtraParams& draw_el_params,
     const MeshOutputInfo*         meshing_info) const
@@ -195,7 +195,7 @@ mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedUniform::getVisualization(
 
     // num_t q;
     // num_t dir[3];  Director vector, in GLOBAL coordinates.
-    auto glObjs = mrpt::opengl::CSetOfObjects::Create();
+    auto glObjs = mrpt::viz::CSetOfObjects::Create();
 
     const auto elIdx = draw_el_params.element_index;
 
@@ -236,7 +236,7 @@ mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedUniform::getVisualization(
                              std::max<double>(max_distributed_q, 1e-6);
         const double forceSize = this->q * scale;
 
-        auto glLins = mrpt::opengl::CSetOfLines::Create();
+        auto glLins = mrpt::viz::CSetOfLines::Create();
 
         glLins->setColor(0, 0, 1, draw_el_params.color_alpha);
 

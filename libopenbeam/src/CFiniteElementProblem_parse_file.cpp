@@ -22,89 +22,138 @@
 
 #include <mrpt/containers/printf_vector.h>
 #include <mrpt/core/round.h>
-#include <mrpt/io/CTextFileLinesParser.h>
-#include <mrpt/system/string_utils.h>
 #include <openbeam/CFiniteElementProblem.h>
 #include <openbeam/CStructureProblem.h>
 
+#include <array>
+#include <optional>
+
 #include "ExpressionEvaluator.h"
 
-using namespace std;
 using namespace openbeam;
-using namespace Eigen;
+using mrpt::containers::yaml;
 
-#if 0
-/** Used to parse "k1=v1,k2=v2,a,b,c" with \a parseParams() */
-struct TParsedParams
+namespace
 {
-    bool hasKey(const std::string& key) const
-    {
-        return key_vals.end() != key_vals.find(key);
-    }
-
-    mrpt::containers::yaml key_vals;
-    vector_string_t        rest_values;
-};
-#endif
-
-struct TAuxListDofNames
+/** Names accepted in "dof:" fields, and the DoFs (DX DY DZ RX RY RZ) each one
+ * refers to. */
+struct DofName
 {
-    const char* name;
-    bool        dofs[6];
+    const char*         name;
+    std::array<bool, 6> dofs;
 };
-const TAuxListDofNames listDofNames[] = {
-    {"DX", {1, 0, 0, 0, 0, 0}},       {"DY", {0, 1, 0, 0, 0, 0}},
-    {"DZ", {0, 0, 1, 0, 0, 0}},       {"RX", {0, 0, 0, 1, 0, 0}},
-    {"RY", {0, 0, 0, 0, 1, 0}},       {"RZ", {0, 0, 0, 0, 0, 1}},
-    {"ALL", {1, 1, 1, 1, 1, 1}},      {"DXDYDZRXRYRZ", {1, 1, 1, 1, 1, 1}},
-    {"DXDYDZ", {1, 1, 1, 0, 0, 0}},   {"RXRYRZ", {0, 0, 0, 1, 1, 1}},
-    {"DXDY", {1, 1, 0, 0, 0, 0}},     {"DXDZ", {1, 0, 1, 0, 0, 0}},
-    {"DYDZ", {0, 1, 1, 0, 0, 0}},     {"DXDYRZ", {1, 1, 0, 0, 0, 1}},
-    {"DXRZ", {1, 0, 0, 0, 0, 1}},     {"DYRZ", {0, 1, 0, 0, 0, 1}},
+
+const DofName DOF_NAMES[] = {
+    {"DX", {1, 0, 0, 0, 0, 0}},           {"DY", {0, 1, 0, 0, 0, 0}},
+    {"DZ", {0, 0, 1, 0, 0, 0}},           {"RX", {0, 0, 0, 1, 0, 0}},
+    {"RY", {0, 0, 0, 0, 1, 0}},           {"RZ", {0, 0, 0, 0, 0, 1}},
+    {"ALL", {1, 1, 1, 1, 1, 1}},          {"DXDYDZRXRYRZ", {1, 1, 1, 1, 1, 1}},
+    {"DXDYDZ", {1, 1, 1, 0, 0, 0}},       {"RXRYRZ", {0, 0, 0, 1, 1, 1}},
+    {"DXDY", {1, 1, 0, 0, 0, 0}},         {"DXDZ", {1, 0, 1, 0, 0, 0}},
+    {"DYDZ", {0, 1, 1, 0, 0, 0}},         {"DXDYRZ", {1, 1, 0, 0, 0, 1}},
+    {"DXRZ", {1, 0, 0, 0, 0, 1}},         {"DYRZ", {0, 1, 0, 0, 0, 1}},
     {"DXDYRXRZ", {1, 1, 0, 1, 0, 1}},
 };
-const size_t listDofNamesCount = sizeof(listDofNames) / sizeof(listDofNames[0]);
 
-// Fwd decl:
-#if 0
-void parseParams(
-    const vector_string_t& tokens, TParsedParams& params, size_t first_idx = 1);
-bool replace_paramsets(
-    mrpt::containers::yaml&                              inout_params,
-    const std::map<std::string, mrpt::containers::yaml>& user_param_sets,
-    const EvaluationContext&                             eval_context);
-#endif
-
-#define REPORT_ERROR(_MSG)                                           \
-    if (ctx.err_msgs)                                                \
-    {                                                                \
-        ctx.err_msgs->push_back(openbeam::format(                    \
-            "Line %u: %s", ctx.lin_num, std::string(_MSG).c_str())); \
-    }                                                                \
-    else                                                             \
-    {                                                                \
-        std::cerr << openbeam::format(                               \
-            "Line %u: %s", ctx.lin_num, std::string(_MSG).c_str());  \
-        return false;                                                \
+std::optional<std::array<bool, 6>> parseDofName(const std::string& s)
+{
+    for (const auto& d : DOF_NAMES)
+    {
+        if (strCmpI(d.name, s))
+        {
+            return d.dofs;
+        }
     }
+    return std::nullopt;
+}
 
-#define REPORT_WARNING(_MSG)                                                   \
-    if (ctx.warn_msgs)                                                         \
-    {                                                                          \
-        ctx.warn_msgs->push_back(openbeam::format(                             \
-            "Line %u: (Warning) %s", ctx.lin_num, std::string(_MSG).c_str())); \
-    }                                                                          \
-    else                                                                       \
-    {                                                                          \
-        std::cerr << openbeam::format(                                         \
-            "Line %u: (Warning) %s", ctx.lin_num, std::string(_MSG).c_str());  \
+/// 1-based line number of a YAML node, for error messages.
+int lineOf(const yaml::node_t& n) { return n.marks.line + 1; }
+
+/** Throws if any of the given keys is missing in a YAML map. */
+void requireKeys(
+    const yaml& item, const yaml::node_t& node,
+    std::initializer_list<const char*> keys)
+{
+    for (const char* k : keys)
+    {
+        if (!item.has(k))
+        {
+            throw std::runtime_error(mrpt::format(
+                "Line %i: Missing required '%s' entry", lineOf(node), k));
+        }
     }
+}
 
-#define EVALUATE_EXPRESSION(_IN_EXPR, _OUT_VAL) \
-    eval_context.evaluate(_IN_EXPR, _OUT_VAL)
+/** Returns the sequence of YAML map entries under the given top-level key, or
+ * an empty sequence if the key is optional and missing. */
+yaml::sequence_t getSequenceOfMaps(
+    const yaml& f, const char* key, bool required, bool allowEmpty)
+{
+    if (!f.has(key))
+    {
+        if (required)
+        {
+            throw std::runtime_error(mrpt::format(
+                "Cannot find mandatory '%s' section in YAML file", key));
+        }
+        return {};
+    }
+    const auto& p = f[key];
+    if (!p.isSequence())
+    {
+        throw std::runtime_error(
+            mrpt::format("The '%s' section must be a sequence", key));
+    }
+    const auto& seq = p.asSequence();
+    if (seq.empty() && !allowEmpty)
+    {
+        throw std::runtime_error(
+            mrpt::format("The '%s' section must not be empty", key));
+    }
+    for (const auto& e : seq)
+    {
+        if (!e.isMap())
+        {
+            throw std::runtime_error(mrpt::format(
+                "Line %i: each entry in '%s' must be a map/dictionary",
+                lineOf(e), key));
+        }
+    }
+    return seq;
+}
 
-#define REPLACE_PARAMSETS(_PARAMS) \
-    replace_paramsets(_PARAMS, user_param_sets, eval_context)
+/** Stores the error of a parser section and re-throws a summary. */
+[[noreturn]] void failSection(
+    EvaluationContext& ctx, const std::exception& e, const char* section)
+{
+    if (ctx.err_msgs)
+    {
+        ctx.err_msgs->push_back(e.what());
+    }
+    else
+    {
+        std::cerr << e.what() << "\n";
+    }
+    throw std::runtime_error(
+        mrpt::format("Errors found in '%s' section, aborting.", section));
+}
+
+void reportWarning(const EvaluationContext& ctx, const std::string& msg)
+{
+    const auto s =
+        mrpt::format("Line %u: (Warning) %s", ctx.lin_num + 1, msg.c_str());
+    if (ctx.warn_msgs)
+    {
+        ctx.warn_msgs->push_back(s);
+    }
+    else
+    {
+        std::cerr << s << "\n";
+    }
+}
+
+}  // namespace
 
 // -------------------------------------------------
 //              loadFromStream
@@ -115,13 +164,19 @@ bool CFiniteElementProblem::loadFromStream(
 {
     try
     {
-        auto f = mrpt::containers::yaml::FromStream(is);
+        const auto f = yaml::FromStream(is);
         return internal_loadFromYaml(f, errMsg, warnMsg);
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what();
-        if (errMsg) errMsg.value().get().push_back(e.what());
+        if (errMsg)
+        {
+            errMsg.value().get().push_back(e.what());
+        }
+        else
+        {
+            std::cerr << e.what() << "\n";
+        }
         return false;
     }
 }
@@ -135,8 +190,7 @@ bool CFiniteElementProblem::loadFromFile(
 {
     try
     {
-        mrpt::containers::yaml f;
-
+        yaml f;
         if (file == "-")
         {
             // File "-" means: console input
@@ -146,13 +200,18 @@ bool CFiniteElementProblem::loadFromFile(
         {
             f.loadFromFile(file);
         }
-
         return internal_loadFromYaml(f, errMsg, warnMsg);
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what();
-        if (errMsg) errMsg.value().get().push_back(e.what());
+        if (errMsg)
+        {
+            errMsg.value().get().push_back(e.what());
+        }
+        else
+        {
+            std::cerr << e.what() << "\n";
+        }
         return false;
     }
 }
@@ -161,31 +220,21 @@ bool CFiniteElementProblem::loadFromFile(
 //              internal_loadFromYaml
 // -------------------------------------------------
 bool CFiniteElementProblem::internal_loadFromYaml(
-    const mrpt::containers::yaml&              f,
-    const mrpt::optional_ref<vector_string_t>& err_msgs,
+    const yaml& f, const mrpt::optional_ref<vector_string_t>& err_msgs,
     const mrpt::optional_ref<vector_string_t>& warn_msgs)
 {
     mrpt::system::CTimeLoggerEntry tle(openbeam::timelog, "parseFile");
 
-    // Clear msgs, if any:
-    if (err_msgs) err_msgs->get().clear();
-    if (warn_msgs) warn_msgs->get().clear();
-
-    // Clear previous contents:
-    this->clear();
-
-    // Open OK: go and parse the file:
-    // -------------------------------------------
-    enum TSection
+    if (err_msgs)
     {
-        sNone = 0,
-        sGeometry,
-        sLoads
-    };
+        err_msgs->get().clear();
+    }
+    if (warn_msgs)
+    {
+        warn_msgs->get().clear();
+    }
 
-    // List of existing user variables declared in the script:
-    // ------------------------------------------------------------
-    std::map<std::string, mrpt::containers::yaml> user_param_sets;
+    this->clear();
 
     EvaluationContext ctx;
     ctx.warn_msgs = warn_msgs ? &warn_msgs->get() : nullptr;
@@ -196,63 +245,39 @@ bool CFiniteElementProblem::internal_loadFromYaml(
         ASSERTMSG_(
             f.isMap(), "YAML file root element must be a map/dictionary");
 
-        // ---------------------------
-        // Parameters
-        // ---------------------------
         internal_parser1_Parameters(f, ctx);
-
-        // ---------------------------
-        // Beam sections
-        // ---------------------------
         internal_parser2_BeamSections(f, ctx);
-
-        // ----------------------------------------
-        // Geometry: nodes, elements, constraints
-        // ----------------------------------------
         internal_parser3_nodes(f, ctx);
         internal_parser4_elements(f, ctx);
 
-        // Before adding constrains, we must analyze the list of DoFs in the
-        // problem:
+        // Constraints refer to the list of DoFs in the problem, so build it
+        // first:
         OB_MESSAGE(4)
             << "Computing list of DoFs before introducing constraints.\n";
         updateElementsOrientation();
         updateListDoFs();
 
         internal_parser5_constraints(f, ctx);
-
-        // ----------------------------------------
-        // Loads: on nodes, on elements
-        // ----------------------------------------
         internal_parser6_node_loads(f, ctx);
         internal_parser7_element_loads(f, ctx);
 
-        // Return OK only if no error messages were emmitted:
-        if (err_msgs)
-            return err_msgs->get().empty();
-        else
-            // Otherwise, if we're here it's because all was OK:
-            return true;
+        return err_msgs ? err_msgs->get().empty() : true;
     }
     catch (const std::exception& e)
     {
         const std::string sErr(e.what());
-        if (sErr.empty())
-        {
-            // If we catch an exception is because err_msgs=nullptr but we
-            // found an error, which was already dumped to cerr. So just
-            // return false and we're done.
-            return false;
-        }
-        else
+        if (!sErr.empty())
         {
             if (err_msgs)
+            {
                 err_msgs->get().push_back(sErr);
+            }
             else
+            {
                 std::cerr << sErr << std::endl;
-
-            return false;
+            }
         }
+        return false;
     }
 }
 
@@ -261,147 +286,91 @@ num_t EvaluationContext::evaluate(const std::string& sVarVal) const
     OB_MESSAGE(5) << "[evaluate] Line: " << lin_num
                   << " Expression: " << sVarVal << "..." << std::endl;
 
-    num_t val = openbeam::evaluate(sVarVal, parameters, lin_num);
+    const num_t val = openbeam::evaluate(sVarVal, parameters, lin_num);
 
     OB_MESSAGE(5) << " ==> " << val << std::endl;
     return val;
 }
 
-#if 0
-/** Parse and classify "k1=v1,k2=v2,a,b,c"
- */
-void parseParams(
-    const vector_string_t& tokens, TParsedParams& params, size_t idx)
-{
-    const size_t N = tokens.size();
-
-    params.key_vals.clear();
-    params.rest_values.clear();
-
-    for (; idx < N; ++idx)
-    {
-        vector_string_t parts;
-        mrpt::system::tokenize(tokens[idx], "=", parts);
-        if (parts.size() == 2)
-            params.key_vals[parts[0]] = parts[1];
-        else
-            params.rest_values.push_back(tokens[idx]);
-    }
-}
-
-/** Search for an entry "paramset=<id>" in \a inout_params and in that case
- * replace it by the corresponding entry
- * Return false only if there was an error if there's not "err_msgs".
- * Should only process the case of returning true and do nothing else on return
- * false to handle the error.
- */
-bool replace_paramsets(
-    mrpt::containers::yaml&                              inout_params,
-    const std::map<std::string, mrpt::containers::yaml>& user_param_sets,
-    const EvaluationContext&                             eval_context)
-{
-    mrpt::containers::yaml::iterator it = inout_params.find("paramset");
-    if (it == inout_params.end()) return true;  // No paramset, go on.
-
-    auto itPar = user_param_sets.find(it->second);
-    if (itPar == user_param_sets.end())
-    {
-        REPORT_ERROR("Usage of undefined PARAMSET id.");
-        if (!eval_context.err_msgs)
-            throw std::runtime_error("");
-        else
-            return false;
-    }
-    else
-    {
-        // OK, replace:
-        inout_params.erase(it);
-        inout_params.insert(itPar->second.begin(), itPar->second.end());
-        return true;
-    }
-}
-#endif
-
 void CFiniteElementProblem::internal_parser1_Parameters(
-    const mrpt::containers::yaml& f, EvaluationContext& ctx) const
+    const yaml& f, EvaluationContext& ctx) const
 {
     try
     {
-        if (!f.has("parameters")) return;  // none.
-
-        auto p = f["parameters"];
-        ASSERT_(p.isMap());
-
-        for (const auto& kv : p.asMap())
+        if (!f.has("parameters"))
         {
-            const auto name   = kv.first.as<std::string>();
-            const auto k      = kv.first.as<std::string>();
-            const auto valStr = kv.second.as<std::string>();
+            return;
+        }
 
+        const auto& p = f["parameters"];
+        if (!p.isMap())
+        {
+            throw std::runtime_error("'parameters' must be a map");
+        }
+
+        // Parameters are evaluated in order, so each one may use the previous
+        // ones:
+        for (const auto& kv : p.node().asMap())
+        {
+            const auto k = kv.first.as<std::string>();
             if (ctx.parameters.count(k) != 0)
+            {
                 throw std::runtime_error(mrpt::format(
-                    "[Line: %i] parameter with name '%s' was already "
-                    "defined.",
-                    kv.first.marks.line + 1, k.c_str()));
+                    "Line %i: parameter with name '%s' was already defined.",
+                    lineOf(kv.first), k.c_str()));
+            }
 
             ctx.lin_num       = kv.second.marks.line;
-            ctx.parameters[k] = ctx.evaluate(valStr);
+            ctx.parameters[k] = ctx.evaluate(kv.second.as<std::string>());
             OB_MESSAGE(4) << "[parser1] Defined new parameter: " << k << "="
                           << ctx.parameters[k] << std::endl;
         }
     }
     catch (const std::exception& e)
     {
-        if (ctx.err_msgs)
-            ctx.err_msgs->push_back(e.what());
-        else
-            std::cerr << e.what();
-        throw std::runtime_error(
-            "Errors found in 'parameters' section, aborting.");
+        failSection(ctx, e, "parameters");
     }
 }
 
 void CFiniteElementProblem::internal_parser2_BeamSections(
-    const mrpt::containers::yaml& f, EvaluationContext& ctx) const
+    const yaml& f, EvaluationContext& ctx) const
 {
     try
     {
-        if (!f.has("beam_sections"))
-            throw std::runtime_error(
-                "Cannot find mandatory 'beam_sections' section in YAML "
-                "file");
+        const auto seq = getSequenceOfMaps(
+            f, "beam_sections", true /*required*/, true /*allow empty*/);
 
-        auto p = f["beam_sections"];
-        ASSERT_(p.isSequence());
-
-        for (const auto& e : p.asSequence())
+        for (const auto& e : seq)
         {
-            if (!e.isMap())
-                throw std::runtime_error(
-                    "Each entry in the 'beam_sections' section must be a "
-                    "map/dictionary");
+            const yaml item(e);
+            requireKeys(item, e, {"name"});
 
-            const auto& ne = e.asMap();
-
-            const auto sectionName = ne.at("name").as<std::string>();
+            const auto sectionName = item["name"].as<std::string>();
+            if (ctx.beamSectionParameters.count(sectionName) != 0)
+            {
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: beam section '%s' was already defined.",
+                    lineOf(e), sectionName.c_str()));
+            }
 
             auto& bsp = ctx.beamSectionParameters[sectionName];
-            bsp       = mrpt::containers::yaml::Map();
+            bsp       = yaml::Map();
 
-            for (const auto& kv : ne)
+            for (const auto& kv : e.asMap())
             {
                 const auto k = kv.first.as<std::string>();
-                if (k == "name") continue;
-
+                if (k == "name")
+                {
+                    continue;
+                }
                 if (bsp.has(k))
+                {
                     throw std::runtime_error(mrpt::format(
-                        "[Line: %i] beam parameter with name '%s' was "
-                        "already "
-                        "defined.",
-                        kv.first.marks.line + 1, k.c_str()));
-
-                const double val = ctx.evaluate(kv.second.as<std::string>());
-                bsp[k]           = val;
+                        "Line %i: beam parameter '%s' was already defined.",
+                        lineOf(kv.first), k.c_str()));
+                }
+                ctx.lin_num = kv.second.marks.line;
+                bsp[k]      = ctx.evaluate(kv.second.as<std::string>());
             }
 
             OB_MESSAGE(4) << "[parser2] Defined new beamSection named '"
@@ -411,72 +380,87 @@ void CFiniteElementProblem::internal_parser2_BeamSections(
     }
     catch (const std::exception& e)
     {
-        if (ctx.err_msgs)
-            ctx.err_msgs->push_back(e.what());
-        else
-            std::cerr << e.what();
-        throw std::runtime_error(
-            "Errors found in 'beam_sections' section, aborting.");
+        failSection(ctx, e, "beam_sections");
     }
 }
 
 void CFiniteElementProblem::internal_parser3_nodes(
-    const mrpt::containers::yaml& f, EvaluationContext& ctx)
+    const yaml& f, EvaluationContext& ctx)
 {
     try
     {
-        if (!f.has("nodes"))
-            throw std::runtime_error(
-                "Cannot find mandatory 'nodes' section in YAML file");
+        const auto seq = getSequenceOfMaps(
+            f, "nodes", true /*required*/, false /*allow empty*/);
 
-        auto p = f["nodes"];
-        ASSERT_(p.isSequence());
-        ASSERT_(!p.asSequence().empty());
-
-        for (const auto& e : p.asSequence())
+        for (const auto& e : seq)
         {
-            ASSERT_(e.isMap());
-            const auto& em = e.asMap();
+            // - {id: 0, coords: [0, 0], rot_z: 30, label: A}
+            const yaml item(e);
+            requireKeys(item, e, {"id", "coords"});
+            ctx.lin_num = e.marks.line;
 
-            // - {id: 0, coords: [0   ,  0], rot_z=30, label: A}
-
-            const double dID = ctx.evaluate(em.at("id").as<std::string>());
-            const auto   id  = mrpt::round(dID);
+            const double dID = ctx.evaluate(item["id"]);
+            if (dID < 0)
+            {
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: node IDs must not be negative", lineOf(e)));
+            }
+            const auto id = static_cast<size_t>(mrpt::round(dID));
 
             // auto-grow list of nodes:
-            if (id >= getNumberOfNodes()) setNumberOfNodes(id + 1);
+            if (id >= getNumberOfNodes())
+            {
+                setNumberOfNodes(id + 1);
+            }
+            else if (m_node_defined[id].used)
+            {
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: node ID %u was already defined", lineOf(e),
+                    static_cast<unsigned>(id)));
+            }
 
-            const auto& seqCoords = em.at("coords").asSequence();
-            ASSERTMSG_(
-                seqCoords.size() == 2 || seqCoords.size() == 3,
-                mrpt::format(
-                    "Near line %i: `coords` of node must have 2 [x,y] or 3 "
+            const auto& coords = item["coords"];
+            if (!coords.isSequence() ||
+                (coords.size() != 2 && coords.size() != 3))
+            {
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: `coords` of node must have 2 [x,y] or 3 "
                     "[x,y,z] numbers",
-                    e.marks.line + 1));
+                    lineOf(e)));
+            }
+            const auto& seqCoords = coords.asSequence();
 
-            num_t x = 0, y = 0, z = 0, rot_x = 0, rot_y = 0, rot_z = 0;
-            x = ctx.evaluate(seqCoords.at(0).as<std::string>());
-            y = ctx.evaluate(seqCoords.at(1).as<std::string>());
+            num_t x = ctx.evaluate(seqCoords.at(0).as<std::string>());
+            num_t y = ctx.evaluate(seqCoords.at(1).as<std::string>());
+            num_t z = 0;
             if (seqCoords.size() >= 3)
+            {
                 z = ctx.evaluate(seqCoords.at(2).as<std::string>());
+            }
 
-            if (em.count("rot_x") != 0)
-                rot_x = DEG2RAD(ctx.evaluate(em.at("rot_x").as<std::string>()));
-            if (em.count("rot_y") != 0)
-                rot_y = DEG2RAD(ctx.evaluate(em.at("rot_y").as<std::string>()));
-            if (em.count("rot_z") != 0)
-                rot_z = DEG2RAD(ctx.evaluate(em.at("rot_z").as<std::string>()));
+            num_t rot_x = 0;
+            num_t rot_y = 0;
+            num_t rot_z = 0;
+            if (item.has("rot_x"))
+            {
+                rot_x = DEG2RAD(ctx.evaluate(item["rot_x"]));
+            }
+            if (item.has("rot_y"))
+            {
+                rot_y = DEG2RAD(ctx.evaluate(item["rot_y"]));
+            }
+            if (item.has("rot_z"))
+            {
+                rot_z = DEG2RAD(ctx.evaluate(item["rot_z"]));
+            }
 
             std::string nodeLabel;
-            if (em.count("label") != 0)
-                nodeLabel = em.at("label").as<std::string>();
+            if (item.has("label"))
+            {
+                nodeLabel = item["label"].as<std::string>();
+            }
 
-            // We have all the data, do insert the new node:
-
-            // Set node pose:
-            TRotationTrans3D node_pose(x, y, z, rot_x, rot_y, rot_z);
-
-            setNodePose(id, node_pose);
+            setNodePose(id, TRotationTrans3D(x, y, z, rot_x, rot_y, rot_z));
             m_node_labels[id] = nodeLabel;
 
             OB_MESSAGE(3) << "Adding node #" << id << " at (" << x << "," << y
@@ -484,107 +468,96 @@ void CFiniteElementProblem::internal_parser3_nodes(
                           << rot_z << ") label='" << nodeLabel << "'\n";
         }
 
-        // check no undefined node IDs:
-        std::string unusedNodesErrorMsg;
+        // Check there are no gaps in the node IDs:
+        std::string undefinedIds;
         for (size_t i = 0; i < m_node_defined.size(); i++)
         {
             if (!m_node_defined[i].used)
             {
-                unusedNodesErrorMsg += std::to_string(i);
-                unusedNodesErrorMsg += " ";
+                undefinedIds += std::to_string(i);
+                undefinedIds += " ";
             }
         }
-        if (!unusedNodesErrorMsg.empty())
+        if (!undefinedIds.empty())
         {
-            throw std::runtime_error(mrpt::format(
-                "Undefined node IDs: %s", unusedNodesErrorMsg.c_str()));
+            throw std::runtime_error(
+                mrpt::format("Undefined node IDs: %s", undefinedIds.c_str()));
         }
     }
     catch (const std::exception& e)
     {
-        if (ctx.err_msgs)
-            ctx.err_msgs->push_back(e.what());
-        else
-            std::cerr << e.what();
-        throw std::runtime_error("Errors found in 'nodes' section, aborting.");
+        failSection(ctx, e, "nodes");
     }
 }
 
 void CFiniteElementProblem::internal_parser4_elements(
-    const mrpt::containers::yaml& f, EvaluationContext& ctx)
+    const yaml& f, EvaluationContext& ctx)
 {
     try
     {
-        if (!f.has("elements"))
-            throw std::runtime_error(
-                "Cannot find mandatory 'elements' section in YAML file");
+        const auto seq = getSequenceOfMaps(
+            f, "elements", true /*required*/, false /*allow empty*/);
 
-        auto p = f["elements"];
-        ASSERT_(p.isSequence());
-        ASSERT_(!p.asSequence().empty());
-
-        for (const auto& e : p.asSequence())
+        for (const auto& e : seq)
         {
-            ASSERT_(e.isMap());
-            const auto& em = e.asMap();
-
             // - {type: BEAM2D_AA, nodes: [0, 1], section: MY_BAR}
+            const yaml item(e);
+            requireKeys(item, e, {"type", "nodes"});
+            ctx.lin_num = e.marks.line;
 
-            // Element type:
-            const std::string eType = em.at("type").as<std::string>();
+            const std::string eType = item["type"].as<std::string>();
 
             auto el = CElement::createElementByName(eType);
             if (!el)
             {
                 throw std::runtime_error(mrpt::format(
-                    "Line %i: Unknown element type '%s'", e.marks.line + 1,
+                    "Line %i: Unknown element type '%s'", lineOf(e),
                     eType.c_str()));
             }
 
-            // connected nodes:
-            ASSERT_(em.at("nodes").isSequence());
-            ASSERT_GE_(em.at("nodes").asSequence().size(), 2U);
-
-            const auto seqNodes = em.at("nodes").asSequence();
-            if (seqNodes.size() != el->conected_nodes_ids.size())
+            // Connected nodes:
+            const auto& nodes = item["nodes"];
+            if (!nodes.isSequence() ||
+                nodes.size() != el->conected_nodes_ids.size())
             {
                 throw std::runtime_error(mrpt::format(
-                    "Line %i: Element of type '%s' expects %u connected "
-                    "nodes, "
-                    "but %u provided",
-                    e.marks.line + 1, eType.c_str(),
-                    static_cast<unsigned int>(seqNodes.size()),
+                    "Line %i: Element of type '%s' expects a list of %u "
+                    "connected nodes",
+                    lineOf(e), eType.c_str(),
                     static_cast<unsigned int>(el->conected_nodes_ids.size())));
             }
+            const auto& seqNodes = nodes.asSequence();
             for (size_t i = 0; i < el->conected_nodes_ids.size(); i++)
-                el->conected_nodes_ids.at(i) =
-                    ctx.evaluate(seqNodes.at(i).as<std::string>());
-
-            // And process the rest of params:
-            if (em.count("section") != 0)
             {
-                const std::string sectionName =
-                    em.at("section").as<std::string>();
+                const double n =
+                    ctx.evaluate(seqNodes.at(i).as<std::string>());
+                if (n < 0 || n >= getNumberOfNodes())
+                {
+                    throw std::runtime_error(mrpt::format(
+                        "Line %i: Element connected to undefined node ID %g",
+                        lineOf(e), n));
+                }
+                el->conected_nodes_ids.at(i) =
+                    static_cast<size_t>(mrpt::round(n));
+            }
+
+            // Element properties, either from a beam section or inline:
+            if (item.has("section"))
+            {
+                const auto sectionName = item["section"].as<std::string>();
                 if (ctx.beamSectionParameters.count(sectionName) == 0)
                 {
                     throw std::runtime_error(mrpt::format(
-                        "Line %i: Element of type '%s' uses section '%s' which "
-                        "was "
-                        "not defined.",
-                        e.marks.line + 1, eType.c_str(), sectionName.c_str()));
+                        "Line %i: Element of type '%s' uses section '%s' "
+                        "which was not defined.",
+                        lineOf(e), eType.c_str(), sectionName.c_str()));
                 }
-
-                auto& bsp = ctx.beamSectionParameters.at(sectionName);
-                el->loadParamsFromSet(bsp, ctx);
+                el->loadParamsFromSet(
+                    ctx.beamSectionParameters.at(sectionName), ctx);
             }
             else
             {
-                // Load directly from YAML params:
-                mrpt::containers::yaml ps = mrpt::containers::yaml::Map();
-                for (const auto& kv : em)
-                    ps[kv.first.as<std::string>()] = kv.second;
-
-                el->loadParamsFromSet(ps, ctx);
+                el->loadParamsFromSet(item, ctx);
             }
 
             insertElement(el);
@@ -598,204 +571,160 @@ void CFiniteElementProblem::internal_parser4_elements(
     }
     catch (const std::exception& e)
     {
-        if (ctx.err_msgs)
-            ctx.err_msgs->push_back(e.what());
-        else
-            std::cerr << e.what();
-        throw std::runtime_error(
-            "Errors found in 'elements' section, aborting.");
+        failSection(ctx, e, "elements");
     }
 }
 
 void CFiniteElementProblem::internal_parser5_constraints(
-    const mrpt::containers::yaml& f, EvaluationContext& ctx)
+    const yaml& f, EvaluationContext& ctx)
 {
     try
     {
-        if (!f.has("constraints"))
-            throw std::runtime_error(
-                "Cannot find mandatory 'constraints' section in YAML file");
+        const auto seq = getSequenceOfMaps(
+            f, "constraints", true /*required*/, false /*allow empty*/);
 
-        auto p = f["constraints"];
-        ASSERT_(p.isSequence());
-        ASSERT_(!p.asSequence().empty());
-
-        for (const auto& e : p.asSequence())
+        for (const auto& e : seq)
         {
-            ASSERT_(e.isMap());
-            const auto& em = e.asMap();
-
-            const std::string reqFields[2] = {"node", "dof"};
-            for (const auto& f : reqFields)
-            {
-                if (!em.count(f))
-                {
-                    throw std::runtime_error(mrpt::format(
-                        "Line %i: Missing required '%s' entry",
-                        e.marks.line + 1, f.c_str()));
-                }
-            }
-
             // - {node: 0, dof: DXDY}
-            // - {node: 0, dof: DXDY, value=0.01}
-            const unsigned int nodeId =
-                mrpt::round(ctx.evaluate(em.at("node").as<std::string>()));
-            ASSERT_(nodeId < getNumberOfNodes());
+            // - {node: 0, dof: DXDY, value: 0.01}
+            const yaml item(e);
+            requireKeys(item, e, {"node", "dof"});
+            ctx.lin_num = e.marks.line;
 
-            const std::string sDof      = em.at("dof").as<std::string>();
-            num_t             constrVal = 0;
-            if (em.count("value") != 0)
-                constrVal = ctx.evaluate(em.at("value").as<std::string>());
-
-            bool found = false;
-            for (size_t i = 0; i < listDofNamesCount; i++)
+            const double nodeId = ctx.evaluate(item["node"]);
+            if (nodeId < 0 || nodeId >= getNumberOfNodes())
             {
-                if (strCmpI(listDofNames[i].name, sDof))
-                {
-                    for (int k = 0; k < 6; k++)
-                        if (listDofNames[i].dofs[k])
-                        {
-                            const size_t globalIdxDOF =
-                                this->getDOFIndex(nodeId, DoF_index(k));
-                            if (globalIdxDOF != string::npos)
-                            {
-                                this->insertConstraint(globalIdxDOF, constrVal);
-
-                                OB_MESSAGE(4)
-                                    << "Adding constraint in DoF=" << sDof
-                                    << " of node " << nodeId
-                                    << " value=" << constrVal << "\n";
-                            }
-                            else
-                            {
-                                if (ctx.warn_unused_constraints)
-                                {
-                                    ctx.lin_num = e.marks.line + 1;
-
-                                    REPORT_WARNING(mrpt::format(
-                                        "Constraint ignored since the DoF %i "
-                                        "is not considered in the problem "
-                                        "geometry.",
-                                        k));
-                                }
-                            }
-                        }
-                    found = true;
-                    break;
-                }
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: constraint on undefined node ID %g", lineOf(e),
+                    nodeId));
             }
 
-            if (!found)
+            const std::string sDof = item["dof"].as<std::string>();
+            num_t constrVal = 0;
+            if (item.has("value"))
+            {
+                constrVal = ctx.evaluate(item["value"]);
+            }
+
+            const auto dofs = parseDofName(sDof);
+            if (!dofs)
             {
                 throw std::runtime_error(mrpt::format(
                     "Line %i: Field 'dof' has an invalid value='%s'",
-                    e.marks.line + 1, sDof.c_str()));
+                    lineOf(e), sDof.c_str()));
+            }
+
+            for (int k = 0; k < 6; k++)
+            {
+                if (!(*dofs)[k])
+                {
+                    continue;
+                }
+                const size_t globalIdxDOF = this->getDOFIndex(
+                    static_cast<size_t>(mrpt::round(nodeId)), DoF_index(k));
+                if (globalIdxDOF != std::string::npos)
+                {
+                    this->insertConstraint(globalIdxDOF, constrVal);
+                    OB_MESSAGE(4) << "Adding constraint in DoF=" << sDof
+                                  << " of node " << nodeId
+                                  << " value=" << constrVal << "\n";
+                }
+                else if (ctx.warn_unused_constraints)
+                {
+                    reportWarning(
+                        ctx, mrpt::format(
+                                 "Constraint ignored since the DoF %i is not "
+                                 "considered in the problem geometry.",
+                                 k));
+                }
             }
         }
     }
     catch (const std::exception& e)
     {
-        if (ctx.err_msgs)
-            ctx.err_msgs->push_back(e.what());
-        else
-            std::cerr << e.what();
-        throw std::runtime_error(
-            "Errors found in 'constraints' section, aborting.");
+        failSection(ctx, e, "constraints");
     }
 }
 
 void CFiniteElementProblem::internal_parser6_node_loads(
-    const mrpt::containers::yaml& f, EvaluationContext& ctx)
+    const yaml& f, EvaluationContext& ctx)
 {
     try
     {
-        if (!f.has("node_loads")) return;
+        const auto seq = getSequenceOfMaps(
+            f, "node_loads", false /*required*/, true /*allow empty*/);
 
-        auto p = f["node_loads"];
-        ASSERT_(p.isSequence());
-
-        for (const auto& e : p.asSequence())
+        for (const auto& e : seq)
         {
-            ASSERT_(e.isMap());
-            const auto& em = e.asMap();
-
-            const std::string reqFields[3] = {"node", "dof", "value"};
-            for (const auto& f : reqFields)
-            {
-                if (!em.count(f))
-                {
-                    throw std::runtime_error(mrpt::format(
-                        "Line %i: Missing required '%s' entry",
-                        e.marks.line + 1, f.c_str()));
-                }
-            }
-
             // - {node: 2, dof: DX, value: +P}
-            const unsigned int nodeId =
-                mrpt::round(ctx.evaluate(em.at("node").as<std::string>()));
-            ASSERT_(nodeId < getNumberOfNodes());
+            const yaml item(e);
+            requireKeys(item, e, {"node", "dof", "value"});
+            ctx.lin_num = e.marks.line;
 
-            const std::string sDof = em.at("dof").as<std::string>();
-            num_t loadVal = ctx.evaluate(em.at("value").as<std::string>());
-
-            bool found = false;
-            for (size_t i = 0; i < listDofNamesCount; i++)
-            {
-                if (strCmpI(listDofNames[i].name, sDof))
-                {
-                    for (int k = 0; k < 6; k++)
-                        if (listDofNames[i].dofs[k])
-                        {
-                            const size_t globalIdxDOF =
-                                this->getDOFIndex(nodeId, DoF_index(k));
-                            if (globalIdxDOF != string::npos)
-                            {
-                                this->addLoadAtDOF(globalIdxDOF, loadVal);
-
-                                OB_MESSAGE(4) << "Adding node load on node "
-                                              << nodeId << " dof=" << sDof
-                                              << " value=" << loadVal << "\n";
-                            }
-                            else
-                            {
-                            }
-                        }
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
+            const double nodeId = ctx.evaluate(item["node"]);
+            if (nodeId < 0 || nodeId >= getNumberOfNodes())
             {
                 throw std::runtime_error(mrpt::format(
-                    "Line %i: Node load applied in dof='%s' which has not been "
-                    "included in the problem (is it a free degree of freedom?)",
-                    e.marks.line + 1, sDof.c_str()));
+                    "Line %i: load on undefined node ID %g", lineOf(e),
+                    nodeId));
+            }
+
+            const std::string sDof    = item["dof"].as<std::string>();
+            const num_t       loadVal = ctx.evaluate(item["value"]);
+
+            const auto dofs = parseDofName(sDof);
+            if (!dofs)
+            {
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: Field 'dof' has an invalid value='%s'",
+                    lineOf(e), sDof.c_str()));
+            }
+
+            for (int k = 0; k < 6; k++)
+            {
+                if (!(*dofs)[k])
+                {
+                    continue;
+                }
+                const size_t globalIdxDOF = this->getDOFIndex(
+                    static_cast<size_t>(mrpt::round(nodeId)), DoF_index(k));
+                if (globalIdxDOF != std::string::npos)
+                {
+                    this->addLoadAtDOF(globalIdxDOF, loadVal);
+                    OB_MESSAGE(4) << "Adding node load on node " << nodeId
+                                  << " dof=" << sDof << " value=" << loadVal
+                                  << "\n";
+                }
+                else
+                {
+                    reportWarning(
+                        ctx, mrpt::format(
+                                 "Load ignored since the DoF %i is not "
+                                 "considered in the problem geometry.",
+                                 k));
+                }
             }
         }
     }
     catch (const std::exception& e)
     {
-        if (ctx.err_msgs)
-            ctx.err_msgs->push_back(e.what());
-        else
-            std::cerr << e.what();
-        throw std::runtime_error(
-            "Errors found in 'node_loads' section, aborting.");
+        failSection(ctx, e, "node_loads");
     }
 }
 
 void CFiniteElementProblem::internal_parser7_element_loads(
-    const mrpt::containers::yaml& f, EvaluationContext& ctx)
+    const yaml& f, EvaluationContext& ctx)
 {
     try
     {
-        if (!f.has("element_loads")) return;
+        const auto seq = getSequenceOfMaps(
+            f, "element_loads", false /*required*/, true /*allow empty*/);
+        if (seq.empty())
+        {
+            return;
+        }
 
-        auto p = f["element_loads"];
-        ASSERT_(p.isSequence());
-
-        CStructureProblem* myObj = dynamic_cast<CStructureProblem*>(this);
+        auto* myObj = dynamic_cast<CStructureProblem*>(this);
         if (!myObj)
         {
             throw std::runtime_error(
@@ -803,54 +732,36 @@ void CFiniteElementProblem::internal_parser7_element_loads(
                 "openbeam::CStructureProblem objects");
         }
 
-        for (const auto& e : p.asSequence())
+        for (const auto& e : seq)
         {
-            ASSERT_(e.isMap());
-            const auto& em = e.asMap();
+            // - {element: 0, type: TEMPERATURE, deltaT: 20}
+            const yaml item(e);
+            requireKeys(item, e, {"element", "type"});
+            ctx.lin_num = e.marks.line;
 
-            const std::string reqFields[2] = {"element", "type"};
-            for (const auto& f : reqFields)
+            const double elementId = ctx.evaluate(item["element"]);
+            if (elementId < 0 || elementId >= getNumberOfElements())
             {
-                if (!em.count(f))
-                {
-                    throw std::runtime_error(mrpt::format(
-                        "Line %i: Missing required '%s' entry",
-                        e.marks.line + 1, f.c_str()));
-                }
+                throw std::runtime_error(mrpt::format(
+                    "Line %i: load on undefined element index %g", lineOf(e),
+                    elementId));
             }
 
-            // #- {element: 0, type: TEMPERATURE, deltaT: 20}
-            const unsigned int elementId =
-                mrpt::round(ctx.evaluate(em.at("element").as<std::string>()));
-            ASSERT_(elementId < getNumberOfElements());
-
-            const std::string sType = em.at("type").as<std::string>();
-
-            auto load = CLoadOnBeam::createLoadByName(sType);
+            const std::string sType = item["type"].as<std::string>();
+            auto              load  = CLoadOnBeam::createLoadByName(sType);
             if (!load)
             {
                 throw std::runtime_error(mrpt::format(
-                    "Line %i: Unknown element load type='%s'", e.marks.line + 1,
+                    "Line %i: Unknown element load type='%s'", lineOf(e),
                     sType.c_str()));
             }
-            else
-            {
-                // Process the rest of
-                // params:
-                load->loadParamsFromSet(e, ctx);
-
-                // And add:
-                myObj->addLoadAtBeam(elementId, load);
-            }
+            load->loadParamsFromSet(item, ctx);
+            myObj->addLoadAtBeam(
+                static_cast<size_t>(mrpt::round(elementId)), load);
         }
     }
     catch (const std::exception& e)
     {
-        if (ctx.err_msgs)
-            ctx.err_msgs->push_back(e.what());
-        else
-            std::cerr << e.what();
-        throw std::runtime_error(
-            "Errors found in 'element_loads' section, aborting.");
+        failSection(ctx, e, "element_loads");
     }
 }

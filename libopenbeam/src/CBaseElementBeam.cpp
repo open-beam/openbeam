@@ -20,10 +20,10 @@
    +---------------------------------------------------------------------------+
  */
 
-#include <mrpt/opengl/CArrow.h>
-#include <mrpt/opengl/CCylinder.h>
-#include <mrpt/opengl/CSphere.h>
-#include <mrpt/opengl/CText.h>
+#include <mrpt/viz/CArrow.h>
+#include <mrpt/viz/CCylinder.h>
+#include <mrpt/viz/CSphere.h>
+#include <mrpt/viz/CText.h>
 #include <openbeam/CBaseElementBeam.h>
 #include <openbeam/CElementBeam_2D_AA.h>
 #include <openbeam/CElementBeam_2D_AR.h>
@@ -84,11 +84,11 @@ std::string CBaseElementBeam::asString() const
     return ret;
 }
 
-mrpt::opengl::CSetOfObjects::Ptr CBaseElementBeam::getVisualization(
+mrpt::viz::CSetOfObjects::Ptr CBaseElementBeam::getVisualization(
     const DrawStructureOptions& o, const DrawElementExtraParams& draw_el_params,
     const MeshOutputInfo* meshing_info) const
 {
-    auto gl = mrpt::opengl::CSetOfObjects::Create();
+    auto gl = mrpt::viz::CSetOfObjects::Create();
 
     const size_t MAX_NODE_ID_TO_DRAW = meshing_info
                                            ? meshing_info->num_original_nodes
@@ -152,7 +152,7 @@ mrpt::opengl::CSetOfObjects::Ptr CBaseElementBeam::getVisualization(
     pt1_end -= o.NODE_RADIUS * dir;
 
     // beam cylinder:
-    auto glBody = mrpt::opengl::CArrow::Create();
+    auto glBody = mrpt::viz::CArrow::Create();
     glBody->setColor(0.4f, 0.4f, 0.4f, draw_el_params.color_alpha);
     glBody->setArrowEnds(pt0, pt1);
     glBody->setHeadRatio(0);
@@ -162,21 +162,19 @@ mrpt::opengl::CSetOfObjects::Ptr CBaseElementBeam::getVisualization(
     // And the "pinned ends circles":
     if (m_pinned_end0 && node0_is_to_draw)
     {
-        auto glPin = mrpt::opengl::CSphere::Create();
+        auto glPin = mrpt::viz::CSphere::Create();
         glPin->setRadius(o.BEAM_PINNED_RADIUS);
         glPin->setColor_u8(0xf0, 0xf0, 0xf0, 0xff);
-        glPin->setNumberDivsLatitude(o.PIN_SPHERE_DIVS);
-        glPin->setNumberDivsLongitude(o.PIN_SPHERE_DIVS);
+        glPin->setNumberDivs(o.PIN_SPHERE_DIVS);
         glPin->setLocation(pt0_end + dir * o.BEAM_PINNED_RADIUS);
         gl->insert(glPin);
     }
     if (m_pinned_end1 && node1_is_to_draw)
     {
-        auto glPin = mrpt::opengl::CSphere::Create();
+        auto glPin = mrpt::viz::CSphere::Create();
         glPin->setRadius(o.BEAM_PINNED_RADIUS);
         glPin->setColor_u8(0xf0, 0xf0, 0xf0, 0xff);
-        glPin->setNumberDivsLatitude(o.PIN_SPHERE_DIVS);
-        glPin->setNumberDivsLongitude(o.PIN_SPHERE_DIVS);
+        glPin->setNumberDivs(o.PIN_SPHERE_DIVS);
         glPin->setLocation(pt1_end - dir * o.BEAM_PINNED_RADIUS);
         gl->insert(glPin);
     }
@@ -186,7 +184,7 @@ mrpt::opengl::CSetOfObjects::Ptr CBaseElementBeam::getVisualization(
         const auto p =
             ((p0.t + p1.t) * 0.5) + 0.5 * o.NODE_RADIUS * TPoint3D(1, 1, 1);
 
-        auto glLb = mrpt::opengl::CText::Create();
+        auto glLb = mrpt::viz::CText::Create();
         glLb->setColor_u8(0x00, 0x00, 0xd0);
         glLb->setLocation(p);
         glLb->setString(mrpt::format(

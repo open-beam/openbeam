@@ -1,34 +1,51 @@
-project(openbeam)
+file(GLOB LIB_SOURCES CONFIGURE_DEPENDS
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/internationalization/*.cpp
+)
+file(GLOB LIB_PUBLIC_HEADERS CONFIGURE_DEPENDS
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/openbeam/*.h
+)
 
-file(GLOB SRCS_LIST "${openbeam_SOURCE_DIR}/src/*.cpp")
-file(GLOB HRDS_LIST "${openbeam_SOURCE_DIR}/include/openbeam/*.h")
-file(GLOB INTERNAL_HDRS_LIST "${openbeam_SOURCE_DIR}/src/*.h")
+add_library(openbeam ${LIB_SOURCES} ${LIB_PUBLIC_HEADERS})
+add_library(openbeam::openbeam ALIAS openbeam)
 
-file(GLOB INTERN_HS_LIST "${openbeam_SOURCE_DIR}/internationalization/*.h")
-file(GLOB INTERN_CPPS_LIST "${openbeam_SOURCE_DIR}/internationalization/*.cpp")
+set_target_properties(openbeam PROPERTIES
+  VERSION ${PROJECT_VERSION}
+  SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+)
 
-# Declare the target (a library)
-add_library(${PROJECT_NAME}
-	${SRCS_LIST}
-	${INTERNAL_HDRS_LIST}
-	${HRDS_LIST}
-	# Internalization code:
-	${INTERN_HS_LIST} ${INTERN_CPPS_LIST}
-	)
+target_include_directories(openbeam
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/internationalization>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
-target_link_libraries(${PROJECT_NAME}
-	${OPENBEAM_LINK_LIBS}
-	${Qt5Svg_LIBRARIES}
-	mrpt::opengl
-	${MRPT_STATIC_LINK_DEPS}
-	)
+target_link_libraries(openbeam
+  PUBLIC
+    Eigen3::Eigen
+    mrpt::mrpt_containers
+    mrpt::mrpt_core
+    mrpt::mrpt_math
+    mrpt::mrpt_system
+    mrpt::mrpt_viz
+  PRIVATE
+    mrpt::mrpt_expr
+)
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
-	target_link_options(${PROJECT_NAME} PRIVATE
-		-sNO_DISABLE_EXCEPTION_CATCHING
-	)
-	target_compile_options(${PROJECT_NAME} PRIVATE
-		-sNO_DISABLE_EXCEPTION_CATCHING
-	)
-
+target_compile_definitions(openbeam PRIVATE OPENBEAM_HAS_CAIRO=${OPENBEAM_HAS_CAIRO})
+if(OPENBEAM_HAS_CAIRO)
+  target_link_libraries(openbeam PRIVATE PkgConfig::CAIROMM)
 endif()
+
+include(GNUInstallDirs)
+install(
+  TARGETS openbeam
+  EXPORT openbeam-targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+install(DIRECTORY include/openbeam DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

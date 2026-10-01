@@ -24,7 +24,7 @@
 
 #include <mrpt/containers/yaml.h>
 #include <mrpt/core/optional_ref.h>
-#include <mrpt/opengl/CSetOfObjects.h>
+#include <mrpt/viz/CSetOfObjects.h>
 #include <mrpt/system/CTimeLogger.h>
 #include <openbeam/CElement.h>
 #include <openbeam/types.h>
@@ -263,7 +263,7 @@ class CFiniteElementProblem
         const StaticSolveProblemInfo* solver_info,
         const MeshOutputInfo*         meshing_info) const;
 
-    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+    mrpt::viz::CSetOfObjects::Ptr getVisualization(
         const DrawStructureOptions&   options,
         const StaticSolveProblemInfo& solver_info,
         const MeshOutputInfo*         meshing_info = nullptr,
@@ -588,23 +588,23 @@ class CFiniteElementProblem
 
     // Visualization subroutines:
     void internal_getVisualization_nodeLoads(
-        mrpt::opengl::CSetOfObjects& gl, const DrawStructureOptions& options,
+        mrpt::viz::CSetOfObjects& gl, const DrawStructureOptions& options,
         const StaticSolveProblemInfo& solver_info,
         const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const;
 
     void internal_getVisualization_constraints(
-        mrpt::opengl::CSetOfObjects& gl, const DrawStructureOptions& options,
+        mrpt::viz::CSetOfObjects& gl, const DrawStructureOptions& options,
         const StaticSolveProblemInfo& solver_info,
         const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const;
 
     void internal_getVisualization_distributedLoads(
-        const CStructureProblem& str, mrpt::opengl::CSetOfObjects& gl,
+        const CStructureProblem& str, mrpt::viz::CSetOfObjects& gl,
         const DrawStructureOptions&   options,
         const StaticSolveProblemInfo& solver_info,
         const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const;
 
     void internal_getVisualization_stressDiagrams(
-        mrpt::opengl::CSetOfObjects& gl, const DrawStructureOptions& options,
+        mrpt::viz::CSetOfObjects& gl, const DrawStructureOptions& options,
         const StaticSolveProblemInfo& solverInfo,
         const MeshOutputInfo* meshingInfo, num_t DEFORMED_SCALE_FACTOR,
         const StressInfo& stressInfo) const;

@@ -67,7 +67,7 @@ struct CLoadOnBeam
         const size_t               original_bar_idx,
         const CStructureProblem&   original_fem) const = 0;
 
-    virtual mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+    virtual mrpt::viz::CSetOfObjects::Ptr getVisualization(
         const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const = 0;
@@ -111,7 +111,7 @@ struct CLoadConstTemperature : public CLoadOnBeam
         const size_t               original_bar_idx,
         const CStructureProblem&   original_fem) const override;
 
-    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+    mrpt::viz::CSetOfObjects::Ptr getVisualization(
         const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const override;
@@ -154,7 +154,7 @@ struct CLoadDistributedUniform : public CLoadOnBeam
         const size_t               original_bar_idx,
         const CStructureProblem&   original_fem) const override;
 
-    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+    mrpt::viz::CSetOfObjects::Ptr getVisualization(
         const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const override;
@@ -212,7 +212,7 @@ struct CLoadDistributedTriangular : public CLoadOnBeam
         const size_t               original_bar_idx,
         const CStructureProblem&   original_fem) const override;
 
-    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+    mrpt::viz::CSetOfObjects::Ptr getVisualization(
         const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const override;
@@ -264,7 +264,7 @@ struct CLoadConcentratedForce : public CLoadOnBeam
         const size_t               original_bar_idx,
         const CStructureProblem&   original_fem) const override;
 
-    mrpt::opengl::CSetOfObjects::Ptr getVisualization(
+    mrpt::viz::CSetOfObjects::Ptr getVisualization(
         const CFiniteElementProblem& fem, const DrawStructureOptions& options,
         const DrawElementExtraParams& draw_el_params,
         const MeshOutputInfo*         meshing_info) const override;

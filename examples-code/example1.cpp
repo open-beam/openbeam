@@ -121,14 +121,14 @@ int main_code()
 			mrpt::gui::CDisplayWindow3D  win("test",800,600);
 
 
-			mrpt::opengl::COpenGLScenePtr &scene = win.get3DSceneAndLock();
+			mrpt::viz::Scene::Ptr &scene = win.get3DSceneAndLock();
 
-			scene->insert( mrpt::opengl::CGridPlaneXY::Create() );
-			scene->insert( mrpt::opengl::stock_objects::CornerXYZSimple(0.5,2.0) );
+			scene->insert( mrpt::viz::CGridPlaneXY::Create() );
+			scene->insert( mrpt::viz::stock_objects::CornerXYZSimple(0.5,2.0) );
 
-			scene->insert( mrpt::opengl::CSimpleLine::Create(0,0,1, R(0,0),R(0,1),1+R(0,2), 20.0) );
-			scene->insert( mrpt::opengl::CSimpleLine::Create(0,0,1, R(1,0),R(1,1),1+R(1,2), 10.0) );
-			scene->insert( mrpt::opengl::CSimpleLine::Create(0,0,1, R(2,0),R(2,1),1+R(2,2), 2.0) );
+			scene->insert( mrpt::viz::CSimpleLine::Create(0,0,1, R(0,0),R(0,1),1+R(0,2), 20.0) );
+			scene->insert( mrpt::viz::CSimpleLine::Create(0,0,1, R(1,0),R(1,1),1+R(1,2), 10.0) );
+			scene->insert( mrpt::viz::CSimpleLine::Create(0,0,1, R(2,0),R(2,1),1+R(2,2), 2.0) );
 
 			win.setCameraZoom(4);
 			win.unlockAccess3DScene();

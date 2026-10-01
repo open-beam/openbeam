@@ -114,7 +114,7 @@ void CLoadConstTemperature::meshLoad(
             std::make_shared<CLoadConstTemperature>(m_incr_temp));
 }
 
-mrpt::opengl::CSetOfObjects::Ptr CLoadConstTemperature::getVisualization(
+mrpt::viz::CSetOfObjects::Ptr CLoadConstTemperature::getVisualization(
     const CFiniteElementProblem& fem, const DrawStructureOptions& options,
     const DrawElementExtraParams& draw_el_params,
     const MeshOutputInfo*         meshing_info) const

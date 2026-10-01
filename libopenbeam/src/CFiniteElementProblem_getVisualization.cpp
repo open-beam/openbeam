@@ -20,10 +20,10 @@
    +---------------------------------------------------------------------------+
  */
 
-#include <mrpt/opengl/CArrow.h>
-#include <mrpt/opengl/CSetOfLines.h>
-#include <mrpt/opengl/CSphere.h>
-#include <mrpt/opengl/CText.h>
+#include <mrpt/viz/CArrow.h>
+#include <mrpt/viz/CSetOfLines.h>
+#include <mrpt/viz/CSphere.h>
+#include <mrpt/viz/CText.h>
 #include <openbeam/CFiniteElementProblem.h>
 #include <openbeam/CStructureProblem.h>
 #include <openbeam/DrawStructureOptions.h>
@@ -34,11 +34,11 @@ using namespace std;
 using namespace openbeam;
 using namespace Eigen;
 
-mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
+mrpt::viz::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
     const DrawStructureOptions& o, const StaticSolveProblemInfo& solverInfo,
     const MeshOutputInfo* meshingInfo, const StressInfo* stressInfo) const
 {
-    auto gl = mrpt::opengl::CSetOfObjects::Create();
+    auto gl = mrpt::viz::CSetOfObjects::Create();
 
     const size_t nNodes = getNumberOfNodes();
     const size_t nEle   = getNumberOfElements();
@@ -81,18 +81,17 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
             const TRotationTrans3D& p = this->getNodePose(i);
 
             {
-                auto glNode = mrpt::opengl::CSphere::Create();
+                auto glNode = mrpt::viz::CSphere::Create();
                 glNode->setRadius(o.NODE_RADIUS);
                 glNode->setColor(0, 0, 0, o.nodes_original_alpha);
-                glNode->setNumberDivsLatitude(o.NODE_SPHERE_DIVS);
-                glNode->setNumberDivsLongitude(o.NODE_SPHERE_DIVS);
+                glNode->setNumberDivs(o.NODE_SPHERE_DIVS);
                 glNode->setLocation(p.t);
                 gl->insert(glNode);
             }
 
             if (o.show_node_labels && !o.show_nodes_deformed)
             {
-                auto glLb = mrpt::opengl::CText::Create();
+                auto glLb = mrpt::viz::CText::Create();
                 glLb->setColor_u8(0x00, 0x00, 0xd0);
                 glLb->setLocation(p.t + TPoint3D(1.3, 0.8, 0) * o.NODE_RADIUS);
                 glLb->setString(getNodeLabel(i));
@@ -147,18 +146,17 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
                 i, pt, solverInfo, DEFORMED_SCALE_FACTOR);
 
             {
-                auto glNode = mrpt::opengl::CSphere::Create();
+                auto glNode = mrpt::viz::CSphere::Create();
                 glNode->setRadius(o.NODE_RADIUS);
                 glNode->setColor(0, 0, 0, o.nodes_deformed_alpha);
-                glNode->setNumberDivsLatitude(o.NODE_SPHERE_DIVS);
-                glNode->setNumberDivsLongitude(o.NODE_SPHERE_DIVS);
+                glNode->setNumberDivs(o.NODE_SPHERE_DIVS);
                 glNode->setLocation(pt.x(), pt.y(), pt.z());
                 gl->insert(glNode);
             }
 
             if (o.show_node_labels)
             {
-                auto glLb = mrpt::opengl::CText::Create();
+                auto glLb = mrpt::viz::CText::Create();
                 glLb->setColor_u8(0x00, 0x00, 0xd0);
                 glLb->setLocation(
                     TPoint3D(pt.x(), pt.y(), pt.z()) +
@@ -203,7 +201,7 @@ mrpt::opengl::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
 }
 
 void CFiniteElementProblem::internal_getVisualization_nodeLoads(
-    mrpt::opengl::CSetOfObjects& gl, const DrawStructureOptions& o,
+    mrpt::viz::CSetOfObjects& gl, const DrawStructureOptions& o,
     const StaticSolveProblemInfo& solver_info,
     const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const
 {
@@ -323,7 +321,7 @@ void CFiniteElementProblem::internal_getVisualization_nodeLoads(
             }
         }
 
-        auto glNodeLoad = mrpt::opengl::CArrow::Create();
+        auto glNodeLoad = mrpt::viz::CArrow::Create();
         glNodeLoad->setColor(
             0, 0, 1,
             o.show_nodes_deformed ? o.loads_deformed_alpha
@@ -338,7 +336,7 @@ void CFiniteElementProblem::internal_getVisualization_nodeLoads(
 }
 
 void CFiniteElementProblem::internal_getVisualization_constraints(
-    mrpt::opengl::CSetOfObjects& gl, const DrawStructureOptions& o,
+    mrpt::viz::CSetOfObjects& gl, const DrawStructureOptions& o,
     const StaticSolveProblemInfo& solver_info,
     const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const
 {
@@ -545,7 +543,7 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
         {
             TRotationTrans3D node_pose;
 
-            auto glConstr = mrpt::opengl::CSetOfLines::Create();
+            auto glConstr = mrpt::viz::CSetOfLines::Create();
 
             if (pass == 0)
             {  // original:
@@ -582,7 +580,7 @@ void CFiniteElementProblem::internal_getVisualization_constraints(
 }
 
 void CFiniteElementProblem::internal_getVisualization_distributedLoads(
-    const CStructureProblem& str, mrpt::opengl::CSetOfObjects& gl,
+    const CStructureProblem& str, mrpt::viz::CSetOfObjects& gl,
     const DrawStructureOptions& o, const StaticSolveProblemInfo& solver_info,
     const MeshOutputInfo* meshing, num_t DEFORMED_SCALE_FACTOR) const
 {
@@ -618,7 +616,7 @@ void CFiniteElementProblem::internal_getVisualization_distributedLoads(
 }
 
 void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
-    mrpt::opengl::CSetOfObjects& gl, const DrawStructureOptions& options,
+    mrpt::viz::CSetOfObjects& gl, const DrawStructureOptions& options,
     const StaticSolveProblemInfo& solverInfo, const MeshOutputInfo* meshingInfo,
     num_t DEFORMED_SCALE_FACTOR, const StressInfo& stressInfo) const
 {
@@ -651,14 +649,14 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
             const auto& elEls   = meshingInfo->element2elements[elIdx];
             const auto& elNodes = meshingInfo->element2nodes[elIdx];
 
-            mrpt::opengl::CSetOfLines::Ptr glDiag[6];
+            mrpt::viz::CSetOfLines::Ptr glDiag[6];
             if (pass == 1)
             {
                 for (int i = 0; i < 6; i++)
                 {
                     if (diagEnabled[i])
                     {
-                        glDiag[i] = mrpt::opengl::CSetOfLines::Create();
+                        glDiag[i] = mrpt::viz::CSetOfLines::Create();
                         glDiag[i]->setColor_u8(mrpt::img::TColor::blue());
                     }
                 }
@@ -713,7 +711,7 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
                             const auto p0 = getNodePose(n0);
                             const auto p1 = getNodePose(n1);
                             const auto u  = (p1.t - p0.t).unitarize();
-                            const mrpt::math::TPoint2D uv = {u.y, -u.x};
+                            const TPoint3D uv = {u.y, -u.x, 0};
 
                             const double s =
                                 MAX_RELATIVE_DIAG_SIZE * es[i] /
@@ -752,7 +750,7 @@ void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
                             if (minMaxSuppression[i]) continue;
 
                             // Yes: draw it:
-                            auto glLb = mrpt::opengl::CText::Create();
+                            auto glLb = mrpt::viz::CText::Create();
                             glLb->setColor_u8(0x00, 0x00, 0xd0);
                             glLb->setLocation(
                                 pp0 + 3 * uv * options.NODE_RADIUS +

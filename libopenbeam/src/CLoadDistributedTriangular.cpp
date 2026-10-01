@@ -201,7 +201,7 @@ void CLoadDistributedTriangular::meshLoad(
     }
 }
 
-mrpt::opengl::CSetOfObjects::Ptr CLoadDistributedTriangular::getVisualization(
+mrpt::viz::CSetOfObjects::Ptr CLoadDistributedTriangular::getVisualization(
     const CFiniteElementProblem& fem, const DrawStructureOptions& options,
     const DrawElementExtraParams& draw_el_params,
     const MeshOutputInfo*         meshing_info) const
