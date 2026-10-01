@@ -26,22 +26,22 @@ using namespace openbeam;
 
 void DrawStructureOptions::loadFromYaml(const mrpt::containers::yaml& d)
 {
-    MCP_LOAD_OPT(d, show_nodes_original);
-    MCP_LOAD_OPT(d, show_nodes_deformed);
-    MCP_LOAD_OPT(d, show_node_labels);
-    MCP_LOAD_OPT(d, show_elements_original);
-    MCP_LOAD_OPT(d, show_elements_deformed);
-    MCP_LOAD_OPT(d, show_element_labels);
-    MCP_LOAD_OPT(d, show_loads);
-    MCP_LOAD_OPT(d, show_constraints);
-    MCP_LOAD_OPT(d, deformed_scale_factor);
-    MCP_LOAD_OPT(d, deformed_scale_factor_for_bbox);
-    MCP_LOAD_OPT(d, elements_original_alpha);
+  MCP_LOAD_OPT(d, show_nodes_original);
+  MCP_LOAD_OPT(d, show_nodes_deformed);
+  MCP_LOAD_OPT(d, show_node_labels);
+  MCP_LOAD_OPT(d, show_elements_original);
+  MCP_LOAD_OPT(d, show_elements_deformed);
+  MCP_LOAD_OPT(d, show_element_labels);
+  MCP_LOAD_OPT(d, show_loads);
+  MCP_LOAD_OPT(d, show_constraints);
+  MCP_LOAD_OPT(d, deformed_scale_factor);
+  MCP_LOAD_OPT(d, deformed_scale_factor_for_bbox);
+  MCP_LOAD_OPT(d, elements_original_alpha);
 
-    MCP_LOAD_OPT(d, show_force_axial);
-    MCP_LOAD_OPT(d, show_force_shear_y);
-    MCP_LOAD_OPT(d, show_bending_moment_z);
-    MCP_LOAD_OPT(d, show_force_shear_z);
-    MCP_LOAD_OPT(d, show_bending_moment_y);
-    MCP_LOAD_OPT(d, show_torsion_moment);
+  MCP_LOAD_OPT(d, show_force_axial);
+  MCP_LOAD_OPT(d, show_force_shear_y);
+  MCP_LOAD_OPT(d, show_bending_moment_z);
+  MCP_LOAD_OPT(d, show_force_shear_z);
+  MCP_LOAD_OPT(d, show_bending_moment_y);
+  MCP_LOAD_OPT(d, show_torsion_moment);
 }

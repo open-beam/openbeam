@@ -36,34 +36,29 @@ OB_TODO("It seems to be a bug with simple shafts with torsional loads")
  */
 CLoadOnBeam::Ptr CLoadOnBeam::createLoadByName(const std::string& s)
 {
-    if (strCmpI("TEMPERATURE", s))
-        return std::make_shared<CLoadConstTemperature>();
-    if (strCmpI("DISTRIB_UNIFORM", s))
-        return std::make_shared<CLoadDistributedUniform>();
-    if (strCmpI("CONCENTRATED", s))
-        return std::make_shared<CLoadConcentratedForce>();
-    if (strCmpI("TRIANGULAR", s))
-        return std::make_shared<CLoadDistributedTriangular>();
+  if (strCmpI("TEMPERATURE", s)) return std::make_shared<CLoadConstTemperature>();
+  if (strCmpI("DISTRIB_UNIFORM", s)) return std::make_shared<CLoadDistributedUniform>();
+  if (strCmpI("CONCENTRATED", s)) return std::make_shared<CLoadConcentratedForce>();
+  if (strCmpI("TRIANGULAR", s)) return std::make_shared<CLoadDistributedTriangular>();
 
-    return nullptr;
+  return nullptr;
 }
 
 void CLoadOnBeam::readDirection(
     const mrpt::containers::yaml& p, const EvaluationContext& ctx, num_t dir[3])
 {
-    dir[0] = ctx.evaluate(p["DX"]);
-    dir[1] = ctx.evaluate(p["DY"]);
-    dir[2] = p.has("DZ") ? ctx.evaluate(p["DZ"]) : num_t(0);
+  dir[0] = ctx.evaluate(p["DX"]);
+  dir[1] = ctx.evaluate(p["DY"]);
+  dir[2] = p.has("DZ") ? ctx.evaluate(p["DZ"]) : num_t(0);
 
-    const num_t norm = std::sqrt(square(dir[0]) + square(dir[1]) + square(dir[2]));
-    if (!(norm > 0) || !std::isfinite(norm))
-    {
-        throw std::runtime_error(mrpt::format(
-            "Line %u: load direction (DX, DY, DZ) must be a non-null vector",
-            ctx.lin_num + 1));
-    }
-    for (int i = 0; i < 3; i++)
-    {
-        dir[i] /= norm;
-    }
+  const num_t norm = std::sqrt(square(dir[0]) + square(dir[1]) + square(dir[2]));
+  if (!(norm > 0) || !std::isfinite(norm))
+  {
+    throw std::runtime_error(mrpt::format(
+        "Line %u: load direction (DX, DY, DZ) must be a non-null vector", ctx.lin_num + 1));
+  }
+  for (int i = 0; i < 3; i++)
+  {
+    dir[i] /= norm;
+  }
 }

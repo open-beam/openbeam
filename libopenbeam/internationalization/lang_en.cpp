@@ -27,19 +27,19 @@
  * Make sure this file is encoded in UTF-8
  */
 const char* openbeam::localization::strs_en[] = {
-    "Constraints",  // STR_Constraints
-    "constraint",  // STR_constraint
-    "Loads",  // STR_Loads
-    "load",  // STR_load
-    "Displacements",  // STR_Displacements
-    "displacement",  // STR_displacement
-    "Reactions",  // STR_Reactions
-    "reaction",  // STR_reaction
-    "DOF",  // STR_dof
-    "node",  // STR_node
-    "and",  // STR_and
-    "Click to enlarge",  // STR_click_to_enlarge
-    "Global stiffness matrix",  // STR_GlobalStiffnessMatrix
+    "Constraints",                      // STR_Constraints
+    "constraint",                       // STR_constraint
+    "Loads",                            // STR_Loads
+    "load",                             // STR_load
+    "Displacements",                    // STR_Displacements
+    "displacement",                     // STR_displacement
+    "Reactions",                        // STR_Reactions
+    "reaction",                         // STR_reaction
+    "DOF",                              // STR_dof
+    "node",                             // STR_node
+    "and",                              // STR_and
+    "Click to enlarge",                 // STR_click_to_enlarge
+    "Global stiffness matrix",          // STR_GlobalStiffnessMatrix
     "All elements stiffness matrices",  // STR_AllElementsStiffnessMatrices
-    "Bar",  // STR_Bar
+    "Bar",                              // STR_Bar
 };

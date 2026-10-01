@@ -26,7 +26,7 @@
 //
 #include <mrpt/containers/yaml.h>
 #include <mrpt/core/exceptions.h>  // ASSERT_(), etc.
-#include <mrpt/core/format.h>  // mrpt::format()
+#include <mrpt/core/format.h>      // mrpt::format()
 #include <mrpt/math/TPoint3D.h>
 #include <mrpt/system/CTimeLogger.h>
 
@@ -42,9 +42,8 @@
  *  Where num is the minimum OpenBeam verbose level for the message to actually
  * be emitted to std::cout. \sa openbeam::setVerbosityLevel
  */
-#define OB_MESSAGE(VERBOSE_LEVEL)                       \
-    if (openbeam::getVerbosityLevel() >= VERBOSE_LEVEL) \
-    std::cout << "[" << __func__ << "] "
+#define OB_MESSAGE(VERBOSE_LEVEL) \
+  if (openbeam::getVerbosityLevel() >= VERBOSE_LEVEL) std::cout << "[" << __func__ << "] "
 
 #define OB_TODO(x__) MRPT_TODO(x__)
 
@@ -58,7 +57,7 @@ constexpr num_t UNINITIALIZED_VALUE = (std::numeric_limits<num_t>::max());
 template <typename T>
 inline T square(T x)
 {
-    return x * x;
+  return x * x;
 }
 
 extern mrpt::system::CTimeLogger timelog;  //!< A global timelogger for openbeam
@@ -67,90 +66,90 @@ extern mrpt::system::CTimeLogger timelog;  //!< A global timelogger for openbeam
     @{ */
 
 using DynMatrix = Eigen::Matrix<num_t, Eigen::Dynamic, Eigen::Dynamic>;
-using Matrix66  = Eigen::Matrix<num_t, 6, 6>;
-using Matrix33  = Eigen::Matrix<num_t, 3, 3>;
-using Vector6   = Eigen::Matrix<num_t, 6, 1>;
-using Vector3   = Eigen::Matrix<num_t, 3, 1>;
+using Matrix66 = Eigen::Matrix<num_t, 6, 6>;
+using Matrix33 = Eigen::Matrix<num_t, 3, 3>;
+using Vector6 = Eigen::Matrix<num_t, 6, 1>;
+using Vector3 = Eigen::Matrix<num_t, 3, 1>;
 
 using vector_string_t = std::vector<std::string>;
 
 /** Stress tensor for a 3D element */
 struct FaceStress
 {
-    FaceStress()  = default;
-    ~FaceStress() = default;
+  FaceStress() = default;
+  ~FaceStress() = default;
 
-    num_t N  = 0;  //!< Axial
-    num_t Vy = 0;  //!< Shear Y
-    num_t Vz = 0;  //!< Shear Z
-    num_t Mx = 0;  //!< Moment X
-    num_t My = 0;  //!< Moment Y
-    num_t Mz = 0;  //!< Moment Z
+  num_t N = 0;   //!< Axial
+  num_t Vy = 0;  //!< Shear Y
+  num_t Vz = 0;  //!< Shear Z
+  num_t Mx = 0;  //!< Moment X
+  num_t My = 0;  //!< Moment Y
+  num_t Mz = 0;  //!< Moment Z
 
-    num_t operator[](const int idx) const
+  num_t operator[](const int idx) const
+  {
+    switch (idx)
     {
-        switch (idx)
-        {
-            case 0:
-                return N;
-            case 1:
-                return Vy;
-            case 2:
-                return Mz;
-            case 3:
-                return Vz;
-            case 4:
-                return My;
-            case 5:
-                return Mx;
-            default:
-                THROW_EXCEPTION("out of range");
-        };
-    }
-    num_t& operator[](const int idx)
+      case 0:
+        return N;
+      case 1:
+        return Vy;
+      case 2:
+        return Mz;
+      case 3:
+        return Vz;
+      case 4:
+        return My;
+      case 5:
+        return Mx;
+      default:
+        THROW_EXCEPTION("out of range");
+    };
+  }
+  num_t& operator[](const int idx)
+  {
+    switch (idx)
     {
-        switch (idx)
-        {
-            case 0:
-                return N;
-            case 1:
-                return Vy;
-            case 2:
-                return Mz;
-            case 3:
-                return Vz;
-            case 4:
-                return My;
-            case 5:
-                return Mx;
-            default:
-                THROW_EXCEPTION("out of range");
-        };
-    }
+      case 0:
+        return N;
+      case 1:
+        return Vy;
+      case 2:
+        return Mz;
+      case 3:
+        return Vz;
+      case 4:
+        return My;
+      case 5:
+        return Mx;
+      default:
+        THROW_EXCEPTION("out of range");
+    };
+  }
 
-    FaceStress& operator+=(const FaceStress& o)
-    {
-        N += o.N;
-        Vy += o.Vy;
-        Vz += o.Vz;
-        Mx += o.Mx;
-        My += o.My;
-        Mz += o.Mz;
-        return *this;
-    }
+  FaceStress& operator+=(const FaceStress& o)
+  {
+    N += o.N;
+    Vy += o.Vy;
+    Vz += o.Vz;
+    Mx += o.Mx;
+    My += o.My;
+    Mz += o.Mz;
+    return *this;
+  }
 
-    template <class MAT>
-    FaceStress& operator+=(const Eigen::MatrixBase<MAT>& o)
-    {
-        ASSERT_(o.size() == 6);
-        N += o[0];
-        Vy += o[1];
-        Vz += o[2];
-        Mx += o[3];
-        My += o[4];
-        Mz += o[5];
-        return *this;
-    }
+  template <class MAT>
+  FaceStress& operator+=(const Eigen::MatrixBase<MAT>& o)
+  {
+    ASSERT_(o.size() == 6);
+    N += o[0];
+    Vy += o[1];
+    Vz += o[2];
+    Mx += o[3];
+    My += o[4];
+    Mz += o[5];
+    return *this;
+  }
 };
 
 //!< One entry per element "face".
@@ -159,79 +158,71 @@ using ElementStress = std::vector<FaceStress>;
 // TODO: Move to its own header and put a forward decl here.
 struct EvaluationContext
 {
-    EvaluationContext() = default;
+  EvaluationContext() = default;
 
-    /** Throws on error, after saving the error message to err_msgs and/or to
-     * std::cerr */
-    num_t evaluate(const std::string& sVarVal) const;
+  /** Throws on error, after saving the error message to err_msgs and/or to
+   * std::cerr */
+  num_t evaluate(const std::string& sVarVal) const;
 
-    /// for use with `evaluate(p["K"])`
-    num_t evaluate(const mrpt::containers::yaml& proxy) const
-    {
-        return evaluate(proxy.node().as<std::string>());
-    }
-    /// for use with `evaluate(p["K"])` on a const yaml object
-    num_t evaluate(const mrpt::containers::yaml_cref& proxy) const
-    {
-        return evaluate(proxy.node().as<std::string>());
-    }
+  /// for use with `evaluate(p["K"])`
+  num_t evaluate(const mrpt::containers::yaml& proxy) const
+  {
+    return evaluate(proxy.node().as<std::string>());
+  }
+  /// for use with `evaluate(p["K"])` on a const yaml object
+  num_t evaluate(const mrpt::containers::yaml_cref& proxy) const
+  {
+    return evaluate(proxy.node().as<std::string>());
+  }
 
-    std::map<std::string, double> parameters;
+  std::map<std::string, double> parameters;
 
-    std::map<std::string, mrpt::containers::yaml> beamSectionParameters;
+  std::map<std::string, mrpt::containers::yaml> beamSectionParameters;
 
-    vector_string_t* err_msgs  = nullptr;
-    vector_string_t* warn_msgs = nullptr;
-    unsigned int     lin_num   = 0;
+  vector_string_t* err_msgs = nullptr;
+  vector_string_t* warn_msgs = nullptr;
+  unsigned int lin_num = 0;
 
-    // Warning switches:
-    const bool warn_unused_constraints = true;
+  // Warning switches:
+  const bool warn_unused_constraints = true;
 };
 
 struct TRotation3D
 {
-    inline TRotation3D() : rot(Matrix33::Identity()), m_is_pure_identity(true)
-    {
-    }
-    TRotation3D(const num_t ang_x, const num_t ang_y, const num_t ang_z);
+  inline TRotation3D() : rot(Matrix33::Identity()), m_is_pure_identity(true) {}
+  TRotation3D(const num_t ang_x, const num_t ang_y, const num_t ang_z);
 
-    inline const Matrix33& getRot() const { return rot; }
-    inline void            setRot(const Matrix33& r)
-    {
-        rot                = r;
-        m_is_pure_identity = false;
-    }
+  inline const Matrix33& getRot() const { return rot; }
+  inline void setRot(const Matrix33& r)
+  {
+    rot = r;
+    m_is_pure_identity = false;
+  }
 
-    static void matrix2angles(
-        const Matrix33& R, num_t& ang_x, num_t& ang_y, num_t& ang_z);
+  static void matrix2angles(const Matrix33& R, num_t& ang_x, num_t& ang_y, num_t& ang_z);
 
-    bool isIdentity()
-        const;  //!< Test for whether this 3x3 matrix is EXACTLY the identity
+  bool isIdentity() const;  //!< Test for whether this 3x3 matrix is EXACTLY the identity
 
-   private:
-    Matrix33 rot;
-    bool     m_is_pure_identity;
+ private:
+  Matrix33 rot;
+  bool m_is_pure_identity;
 };
 
 using TPoint3D = mrpt::math::TPoint3D_<num_t>;
 
 struct TRotationTrans3D
 {
-    TRotationTrans3D() = default;
+  TRotationTrans3D() = default;
 
-    TRotationTrans3D(
-        num_t x, num_t y, num_t z, num_t ang_x, num_t ang_y, num_t ang_z)
-        : t(x, y, z), r(ang_x, ang_y, ang_z)
-    {
-    }
+  TRotationTrans3D(num_t x, num_t y, num_t z, num_t ang_x, num_t ang_y, num_t ang_z) :
+      t(x, y, z), r(ang_x, ang_y, ang_z)
+  {
+  }
 
-    TPoint3D    t;  //!< Translation vector in 3D
-    TRotation3D r;  //!< Rotation in 3D
+  TPoint3D t;     //!< Translation vector in 3D
+  TRotation3D r;  //!< Rotation in 3D
 
-    num_t distanceTo(const TRotationTrans3D& o) const
-    {
-        return t.distanceTo(o.t);
-    }
+  num_t distanceTo(const TRotationTrans3D& o) const { return t.distanceTo(o.t); }
 };
 
 /** @} */
@@ -257,7 +248,7 @@ using mrpt::format;
 using array6 = std::array<num_t, 6>;
 
 using element_index_t = std::size_t;
-using node_index_t    = std::size_t;
+using node_index_t = std::size_t;
 
 struct DrawStructureOptions;
 struct RenderInitData;

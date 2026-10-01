@@ -31,16 +31,15 @@ namespace openbeam
  */
 class CElementBeam_2D_AR : public CBaseElementBeam
 {
-   public:
-    CElementBeam_2D_AR();
-    CElementBeam_2D_AR(const size_t from_node_id, const size_t to_node_id);
+ public:
+  CElementBeam_2D_AR();
+  CElementBeam_2D_AR(const size_t from_node_id, const size_t to_node_id);
 
-    /** Return the stiffness submatrices between each pair of edges in this
-     * element, for the current element state.
-     */
-    void getLocalStiffnessMatrices(
-        std::vector<TStiffnessSubmatrix>& outSubMats) const override;
+  /** Return the stiffness submatrices between each pair of edges in this
+   * element, for the current element state.
+   */
+  void getLocalStiffnessMatrices(std::vector<TStiffnessSubmatrix>& outSubMats) const override;
 
-    void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const override;
+  void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const override;
 };
 }  // namespace openbeam

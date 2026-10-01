@@ -32,90 +32,89 @@ struct StaticSolveProblemInfo;
  * CFiniteElementProblem::saveAsImageSVG */
 struct DrawStructureOptions
 {
-    DrawStructureOptions()  = default;
-    ~DrawStructureOptions() = default;
+  DrawStructureOptions() = default;
+  ~DrawStructureOptions() = default;
 
-    void loadFromYaml(const mrpt::containers::yaml& d);
+  void loadFromYaml(const mrpt::containers::yaml& d);
 
-    bool show_nodes_original    = true;
-    bool show_nodes_deformed    = false;
-    bool show_node_labels       = false;
-    bool show_elements_original = true;  //!< Draw original undeformed elements
-    bool show_elements_deformed = false;  //!< Draw final deformed elements
-    bool show_element_labels    = true;
-    bool show_loads             = true;
-    bool show_constraints       = true;
+  bool show_nodes_original = true;
+  bool show_nodes_deformed = false;
+  bool show_node_labels = false;
+  bool show_elements_original = true;   //!< Draw original undeformed elements
+  bool show_elements_deformed = false;  //!< Draw final deformed elements
+  bool show_element_labels = true;
+  bool show_loads = true;
+  bool show_constraints = true;
 
-    // Stress plots:
-    bool show_force_axial      = false;
-    bool show_force_shear_y    = false;
-    bool show_bending_moment_z = false;
-    bool show_force_shear_z    = false;
-    bool show_bending_moment_y = false;
-    bool show_torsion_moment   = false;
+  // Stress plots:
+  bool show_force_axial = false;
+  bool show_force_shear_y = false;
+  bool show_bending_moment_z = false;
+  bool show_force_shear_z = false;
+  bool show_bending_moment_y = false;
+  bool show_torsion_moment = false;
 
-    bool show_any_stress() const
-    {
-        return show_force_axial || show_force_shear_y ||
-               show_bending_moment_z || show_force_shear_z ||
-               show_bending_moment_y || show_torsion_moment;
-    }
+  bool show_any_stress() const
+  {
+    return show_force_axial || show_force_shear_y || show_bending_moment_z || show_force_shear_z ||
+           show_bending_moment_y || show_torsion_moment;
+  }
 
-    /// Default: 1024px (Height is automatically determined)
-    double image_width = 1024;
+  /// Default: 1024px (Height is automatically determined)
+  double image_width = 1024;
 
-    double       NODE_RADIUS        = 5e-3;
-    double       BEAM_PINNED_RADIUS = 10e-3;
-    double       EDGE_WIDTH         = 5e-3;
-    unsigned int PIN_SPHERE_DIVS    = 8;  // long and latitude sphere divisions
-    unsigned int NODE_SPHERE_DIVS   = 5;  // long and latitude sphere divisions
+  double NODE_RADIUS = 5e-3;
+  double BEAM_PINNED_RADIUS = 10e-3;
+  double EDGE_WIDTH = 5e-3;
+  unsigned int PIN_SPHERE_DIVS = 8;   // long and latitude sphere divisions
+  unsigned int NODE_SPHERE_DIVS = 5;  // long and latitude sphere divisions
 
-    /// Scale of deformed states (Default=0 means autodetermination from \a
-    /// deformed_scale_auto_max_image_ratio)
-    double deformed_scale_factor = 0;
+  /// Scale of deformed states (Default=0 means autodetermination from \a
+  /// deformed_scale_auto_max_image_ratio)
+  double deformed_scale_factor = 0;
 
-    double deformed_scale_factor_for_bbox = 0;
+  double deformed_scale_factor_for_bbox = 0;
 
-    /// Used to auto determinate \a deformed_scale_factor: the ratio of the
-    /// image size that will equal the maximum displacement of a deformed state.
-    /// Default=0.1 (10%)
-    double deformed_scale_auto_max_image_ratio = 0.1;
+  /// Used to auto determinate \a deformed_scale_factor: the ratio of the
+  /// image size that will equal the maximum displacement of a deformed state.
+  /// Default=0.1 (10%)
+  double deformed_scale_auto_max_image_ratio = 0.1;
 
-    /// Maximum size (in ratio wrt the largest structure dimension) of the
-    /// largest load on a node. Default: 0.1 (10%)
-    double node_loads_max_relative_size = 0.1;
+  /// Maximum size (in ratio wrt the largest structure dimension) of the
+  /// largest load on a node. Default: 0.1 (10%)
+  double node_loads_max_relative_size = 0.1;
 
-    double labels_size = 15.0;
+  double labels_size = 15.0;
 
-    /// In structure units.
-    double margin_left = 0, margin_right = 0, margin_top = 0, margin_bottom = 0;
+  /// In structure units.
+  double margin_left = 0, margin_right = 0, margin_top = 0, margin_bottom = 0;
 
-    //--- color params ---
-    double elements_original_alpha = 1, elements_deformed_alpha = 1;  //!< [0,1]
-    double nodes_original_alpha = 1, nodes_deformed_alpha = 1;  //!< [0,1]
-    double constraints_original_alpha = 1,
-           constraints_deformed_alpha = 1;  //!< [0,1]
-    double loads_original_alpha = 1, loads_deformed_alpha = 1;  //!< [0,1]
+  //--- color params ---
+  double elements_original_alpha = 1, elements_deformed_alpha = 1;  //!< [0,1]
+  double nodes_original_alpha = 1, nodes_deformed_alpha = 1;        //!< [0,1]
+  double constraints_original_alpha = 1,
+         constraints_deformed_alpha = 1;                      //!< [0,1]
+  double loads_original_alpha = 1, loads_deformed_alpha = 1;  //!< [0,1]
 
 };  // end of DrawStructureOptions
 
 struct DrawElementExtraParams
 {
-    DrawElementExtraParams() = default;
+  DrawElementExtraParams() = default;
 
-    /// If false, draw the final deformed position.
-    bool                          draw_original_position = true;
-    size_t                        element_index          = 0;
-    double                        color_alpha            = 1;
-    const StaticSolveProblemInfo* solver_info            = nullptr;
-    num_t                         deformed_scale_factor  = 1;
+  /// If false, draw the final deformed position.
+  bool draw_original_position = true;
+  size_t element_index = 0;
+  double color_alpha = 1;
+  const StaticSolveProblemInfo* solver_info = nullptr;
+  num_t deformed_scale_factor = 1;
 };
 
 struct RenderInitData
 {
-    num_t  min_x = 0, max_x = 0, min_y = 0, max_y = 0;
-    double width = 0, height = 0;
-    double scaleFactor = 1;
+  num_t min_x = 0, max_x = 0, min_y = 0, max_y = 0;
+  double width = 0, height = 0;
+  double scaleFactor = 1;
 };
 
 }  // namespace openbeam

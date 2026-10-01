@@ -120,7 +120,8 @@ TEST(Parser, Errors)
         std::string yaml;
         std::string expectedMsg;
     };
-    const Case cases[] = {
+    // clang-format off (clang-format-14 crashes aligning this table)
+  const Case cases[] = {
         {"[1, 2, 3]", "root element must be a map"},
         {validWith("beam_sections:", "sections:"), "beam_sections"},
         {validWith("{id: 1, coords: [L, H]}", "{id: 3, coords: [L, H]}"),
@@ -148,6 +149,7 @@ TEST(Parser, Errors)
         {validWith("{node: 1, dof: DY, value: -1000}", "{node: 1, dof: DY}"),
          "Missing required 'value'"},
     };
+  // clang-format on
 
     for (const auto& c : cases)
     {

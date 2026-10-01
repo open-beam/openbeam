@@ -31,94 +31,92 @@ using namespace openbeam;
 void CLoadConstTemperature::computeStressAndEquivalentLoads(
     const CElement* el, ElementStress& stress, std::vector<array6>& loads)
 {
-    // Stress -------------------------------------------
-    //  Axial only: N = E A alpha AT
-    num_t E, A, alpha;
+  // Stress -------------------------------------------
+  //  Axial only: N = E A alpha AT
+  num_t E, A, alpha;
 
-    if (dynamic_cast<const CBaseElementBeam*>(el) != nullptr)
-    {
-        const CBaseElementBeam* e = dynamic_cast<const CBaseElementBeam*>(el);
-        E                         = e->E;
-        A                         = e->A;
-        alpha                     = 12e-6;  // e->params.alpha;
-    }
-    else
-        throw std::runtime_error(
-            "Unsupported element type for load 'CLoadConstTemperature'");
+  if (dynamic_cast<const CBaseElementBeam*>(el) != nullptr)
+  {
+    const CBaseElementBeam* e = dynamic_cast<const CBaseElementBeam*>(el);
+    E = e->E;
+    A = e->A;
+    alpha = 12e-6;  // e->params.alpha;
+  }
+  else
+    throw std::runtime_error("Unsupported element type for load 'CLoadConstTemperature'");
 
-    //  Axial:
-    const num_t N = E * A * alpha * this->m_incr_temp;
-    stress.resize(2);
+  //  Axial:
+  const num_t N = E * A * alpha * this->m_incr_temp;
+  stress.resize(2);
 
-    // S1 = [-N, 0, 0 , 0, 0, 0]
-    stress[0].N = -N;
+  // S1 = [-N, 0, 0 , 0, 0, 0]
+  stress[0].N = -N;
 
-    // S2 = [-N, 0, 0 , 0, 0, 0]
-    stress[1].N = -N;
+  // S2 = [-N, 0, 0 , 0, 0, 0]
+  stress[1].N = -N;
 
-    // Equivalent load -------------------------------------------
-    loads.resize(2);
-    for (int i = 0; i < 6; i++)
-    {
-        loads[0][i] = 0;
-        loads[1][i] = 0;
-    }
+  // Equivalent load -------------------------------------------
+  loads.resize(2);
+  for (int i = 0; i < 6; i++)
+  {
+    loads[0][i] = 0;
+    loads[1][i] = 0;
+  }
 
-    const TRotationTrans3D& node0 =
-        el->getParent()->getNodePose(el->conected_nodes_ids[0]);
-    const TRotationTrans3D& node1 =
-        el->getParent()->getNodePose(el->conected_nodes_ids[1]);
+  const TRotationTrans3D& node0 = el->getParent()->getNodePose(el->conected_nodes_ids[0]);
+  const TRotationTrans3D& node1 = el->getParent()->getNodePose(el->conected_nodes_ids[1]);
 
-    num_t Ax = node1.t.x - node0.t.x;
-    num_t Ay = node1.t.y - node0.t.y;
-    num_t Az = node1.t.z - node0.t.z;
+  num_t Ax = node1.t.x - node0.t.x;
+  num_t Ay = node1.t.y - node0.t.y;
+  num_t Az = node1.t.z - node0.t.z;
 
-    const num_t L2 = square(Ax) + square(Ay) + square(Az);
-    const num_t L  = std::sqrt(L2);
-    ASSERT_(L > 0);
-    const num_t _1_L = 1 / L;
+  const num_t L2 = square(Ax) + square(Ay) + square(Az);
+  const num_t L = std::sqrt(L2);
+  ASSERT_(L > 0);
+  const num_t _1_L = 1 / L;
 
-    // Normalize direction vector:
-    Ax *= _1_L;
-    Ay *= _1_L;
-    Az *= _1_L;
+  // Normalize direction vector:
+  Ax *= _1_L;
+  Ay *= _1_L;
+  Az *= _1_L;
 
-    loads[0][0] = -N * Ax;
-    loads[0][1] = -N * Ay;
-    loads[0][2] = -N * Az;
+  loads[0][0] = -N * Ax;
+  loads[0][1] = -N * Ay;
+  loads[0][2] = -N * Az;
 
-    loads[1][0] = N * Ax;
-    loads[1][1] = N * Ay;
-    loads[1][2] = N * Az;
+  loads[1][0] = N * Ax;
+  loads[1][1] = N * Ay;
+  loads[1][2] = N * Az;
 }
 
 /** See declaration in base class */
 void CLoadConstTemperature::loadParamsFromSet(
     const mrpt::containers::yaml& p, const EvaluationContext& ctx)
 {
-    m_incr_temp = ctx.evaluate(p["deltaT"]);
+  m_incr_temp = ctx.evaluate(p["deltaT"]);
 }
 
 /** Decompose the distributed load as needed into the set of elements in which
  * the original element has been meshed */
 void CLoadConstTemperature::meshLoad(
-    CStructureProblem&         meshed_fem,
+    CStructureProblem& meshed_fem,
     const std::vector<size_t>& meshed_element_idxs,
-    const size_t original_bar_idx, const CStructureProblem& original_fem) const
+    const size_t original_bar_idx,
+    const CStructureProblem& original_fem) const
 {
-    // Temperature loads are just decomposed into identical loads at each
-    // element:
-    for (size_t i = 0; i < meshed_element_idxs.size(); i++)
-        meshed_fem.addLoadAtBeam(
-            meshed_element_idxs[i],
-            std::make_shared<CLoadConstTemperature>(m_incr_temp));
+  // Temperature loads are just decomposed into identical loads at each
+  // element:
+  for (size_t i = 0; i < meshed_element_idxs.size(); i++)
+    meshed_fem.addLoadAtBeam(
+        meshed_element_idxs[i], std::make_shared<CLoadConstTemperature>(m_incr_temp));
 }
 
 mrpt::viz::CSetOfObjects::Ptr CLoadConstTemperature::getVisualization(
-    const CFiniteElementProblem& fem, const DrawStructureOptions& options,
+    const CFiniteElementProblem& fem,
+    const DrawStructureOptions& options,
     const DrawElementExtraParams& draw_el_params,
-    const MeshOutputInfo*         meshing_info) const
+    const MeshOutputInfo* meshing_info) const
 {
-    //
-    return {};
+  //
+  return {};
 }

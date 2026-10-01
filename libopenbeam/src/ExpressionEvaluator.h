@@ -32,7 +32,6 @@ namespace openbeam
 /// Evaluate an expression using ExprTK language (via mrpt-expr).
 /// Throws an exception upon error.
 double evaluate(
-    const std::string& expr, const std::map<std::string, double>& userSymbols,
-    int lineNumber = 0);
+    const std::string& expr, const std::map<std::string, double>& userSymbols, int lineNumber = 0);
 
 }  // namespace openbeam

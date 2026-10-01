@@ -22,13 +22,11 @@
 
 #include <openbeam/types.h>
 
-mrpt::system::CTimeLogger
-    openbeam::timelog;  //!< A global timelogger for openbeam
+mrpt::system::CTimeLogger openbeam::timelog;  //!< A global timelogger for openbeam
 
-std::string rightPad(
-    const std::string& str, const size_t total_len, bool truncate_if_larger)
+std::string rightPad(const std::string& str, const size_t total_len, bool truncate_if_larger)
 {
-    std::string r = str;
-    if (r.size() < total_len || truncate_if_larger) r.resize(total_len, ' ');
-    return r;
+  std::string r = str;
+  if (r.size() < total_len || truncate_if_larger) r.resize(total_len, ' ');
+  return r;
 }

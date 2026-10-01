@@ -29,11 +29,11 @@ namespace localization
 // This list must be kept synch with "lang_names" in localization.cpp
 enum TLanguage
 {
-    LANG_EN = 0,
-    LANG_ES,
+  LANG_EN = 0,
+  LANG_ES,
 
-    // Always leave this as the last one
-    NUMBER_OF_LANGUAGES
+  // Always leave this as the last one
+  NUMBER_OF_LANGUAGES
 };
 
 // Add one declaration for each language declared above.

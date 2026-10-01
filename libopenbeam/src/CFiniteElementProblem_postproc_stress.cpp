@@ -32,76 +32,75 @@ using namespace Eigen;
 void CFiniteElementProblem::postProcCalcStress(
     StressInfo& out_stress, const StaticSolveProblemInfo& solver_info)
 {
-    timelog.enter("postProcCalcStress");
+  timelog.enter("postProcCalcStress");
 
-    const size_t nE = m_elements.size();
+  const size_t nE = m_elements.size();
 
-    // first, make sure we clear the output "element_stress":
+  // first, make sure we clear the output "element_stress":
+  {
+    std::vector<ElementStress> dumm;
+    out_stress.element_stress.swap(dumm);
+  }
+
+  out_stress.element_stress.resize(nE);
+
+  // For convenience, firstly build a simple list with the global displacement
+  // of all DOFs,
+  //  no matter being free or bounded:
+  const size_t nNodes = m_node_poses.size();
+  std::vector<Vector6> U(nNodes);
+  // First only the zeros (ignored DoFs)
+  for (size_t n = 0; n < nNodes; n++)
+  {
+    const TProblemDOFIndicesForNode& dofs = m_problem_DoFs_inverse_list[n];
+    for (size_t k = 0; k < 6; k++)
     {
-        std::vector<ElementStress> dumm;
-        out_stress.element_stress.swap(dumm);
+      const int dof_idx = dofs.dof_index[k];
+      if (dof_idx < 0)
+      {  // DOF not in the problem:
+        U[n][k] = 0;
+      }
     }
+  }
+  const size_t nRestrDOFs = solver_info.build_info.bounded_dof_indices.size();
+  for (size_t i = 0; i < nRestrDOFs; i++)
+  {
+    const size_t dof_idx = solver_info.build_info.bounded_dof_indices[i];
+    const NodeDoF& D = m_problem_DoFs[dof_idx];
+    U[D.nodeId][D.dofAsInt()] = solver_info.build_info.U_b[i];
+  }
+  const size_t nFreeDOFs = solver_info.build_info.free_dof_indices.size();
+  for (size_t i = 0; i < nFreeDOFs; i++)
+  {
+    const size_t dof_idx = solver_info.build_info.free_dof_indices[i];
+    const NodeDoF& D = m_problem_DoFs[dof_idx];
+    U[D.nodeId][D.dofAsInt()] = solver_info.U_f[i];
+  }
 
-    out_stress.element_stress.resize(nE);
+  // For each element, ask for its stiffness sub-matrices, gather the
+  //  global displacements of each edge and build a complete
+  //  global displacement vector for the element (Ue), then
+  //  convert it into local coordinates (Uel), and
+  //  left-multiply it appropriately by the stiffness matrices.
+  //
+  for (size_t i = 0; i < nE; i++)
+  {
+    auto el = m_elements[i];
+    const size_t nFaces = el->conected_nodes_ids.size();
 
-    // For convenience, firstly build a simple list with the global displacement
-    // of all DOFs,
-    //  no matter being free or bounded:
-    const size_t         nNodes = m_node_poses.size();
-    std::vector<Vector6> U(nNodes);
-    // First only the zeros (ignored DoFs)
-    for (size_t n = 0; n < nNodes; n++)
+    // For each face, get the computed displacements of
+    //  the corresponding node (Ue)
+    //   and convert them to local coords (Uel):
+    std::vector<Vector6> Uel(nFaces);
+    for (size_t f = 0; f < nFaces; f++)
     {
-        const TProblemDOFIndicesForNode& dofs = m_problem_DoFs_inverse_list[n];
-        for (size_t k = 0; k < 6; k++)
-        {
-            const int dof_idx = dofs.dof_index[k];
-            if (dof_idx < 0)
-            {  // DOF not in the problem:
-                U[n][k] = 0;
-            }
-        }
-    }
-    const size_t nRestrDOFs = solver_info.build_info.bounded_dof_indices.size();
-    for (size_t i = 0; i < nRestrDOFs; i++)
-    {
-        const size_t dof_idx = solver_info.build_info.bounded_dof_indices[i];
-        const NodeDoF&  D       = m_problem_DoFs[dof_idx];
-        U[D.nodeId][D.dofAsInt()] = solver_info.build_info.U_b[i];
-    }
-    const size_t nFreeDOFs = solver_info.build_info.free_dof_indices.size();
-    for (size_t i = 0; i < nFreeDOFs; i++)
-    {
-        const size_t dof_idx       = solver_info.build_info.free_dof_indices[i];
-        const NodeDoF&  D             = m_problem_DoFs[dof_idx];
-        U[D.nodeId][D.dofAsInt()] = solver_info.U_f[i];
-    }
+      const Vector6& Uf = U[el->conected_nodes_ids[f]];
 
-    // For each element, ask for its stiffness sub-matrices, gather the
-    //  global displacements of each edge and build a complete
-    //  global displacement vector for the element (Ue), then
-    //  convert it into local coordinates (Uel), and
-    //  left-multiply it appropriately by the stiffness matrices.
-    //
-    for (size_t i = 0; i < nE; i++)
-    {
-        auto         el     = m_elements[i];
-        const size_t nFaces = el->conected_nodes_ids.size();
+      // 3 translational elements: (x,y,z):
+      Uel[f].block(0, 0, 3, 1).noalias() =
+          el->getGlobalOrientation().getRot().transpose() * Uf.block(0, 0, 3, 1);
 
-        // For each face, get the computed displacements of
-        //  the corresponding node (Ue)
-        //   and convert them to local coords (Uel):
-        std::vector<Vector6> Uel(nFaces);
-        for (size_t f = 0; f < nFaces; f++)
-        {
-            const Vector6& Uf = U[el->conected_nodes_ids[f]];
-
-            // 3 translational elements: (x,y,z):
-            Uel[f].block(0, 0, 3, 1).noalias() =
-                el->getGlobalOrientation().getRot().transpose() *
-                Uf.block(0, 0, 3, 1);
-
-            // 3 rotational elements: (Rx,Ry,Rz):
+      // 3 rotational elements: (Rx,Ry,Rz):
 #if 0
 			const TRotation3D incr_rot(Uf[3],Uf[4],Uf[5]);
 			const TMatrix33 Rot_local = el->getGlobalOrientation().getRot().transpose() * incr_rot.getRot();
@@ -111,73 +110,74 @@ void CFiniteElementProblem::postProcCalcStress(
 				Uel[f][5] // Rz : roll
 				);
 #else
-            OB_TODO(
-                "This only works for planar (Z=0) structures!!! Debug formulas "
-                "above")
-            Uel[f][3] = Uf[3];
-            Uel[f][4] = 0;
-            Uel[f][5] = Uf[5];
+      OB_TODO(
+          "This only works for planar (Z=0) structures!!! Debug formulas "
+          "above")
+      Uel[f][3] = Uf[3];
+      Uel[f][4] = 0;
+      Uel[f][5] = Uf[5];
 #endif
-        }
-
-        // Get local stiffness matrices:
-        std::vector<TStiffnessSubmatrix> subMats;
-        el->getLocalStiffnessMatrices(subMats);
-
-        /*
-         * | f_0 |   | K00  K01 |  | u0l |
-         * | f_1 | = | K10  K11 |  | u1l |
-         *
-         */
-        ElementStress& es = out_stress.element_stress[i];
-        es.resize(nFaces);
-
-        for (size_t k = 0; k < subMats.size(); k++)
-        {
-            const TStiffnessSubmatrix& ss = subMats[k];
-
-            if (ss.edge_in == ss.edge_out)
-            { es[ss.edge_in] += ss.matrix * Uel[ss.edge_out]; }
-            else
-            {
-                es[ss.edge_in] += ss.matrix * Uel[ss.edge_out];
-                es[ss.edge_out] += ss.matrix.transpose() * Uel[ss.edge_in];
-            }
-        }
     }
 
-    // Change local coordinates to "strength of materials", with our sign
-    // conventions:
-    //
-    for (size_t i = 0; i < nE; i++)
+    // Get local stiffness matrices:
+    std::vector<TStiffnessSubmatrix> subMats;
+    el->getLocalStiffnessMatrices(subMats);
+
+    /*
+     * | f_0 |   | K00  K01 |  | u0l |
+     * | f_1 | = | K10  K11 |  | u1l |
+     *
+     */
+    ElementStress& es = out_stress.element_stress[i];
+    es.resize(nFaces);
+
+    for (size_t k = 0; k < subMats.size(); k++)
     {
-        ElementStress& es = out_stress.element_stress[i];
+      const TStiffnessSubmatrix& ss = subMats[k];
 
-        if (!es.empty())
-        {
-            es[0].N  = -es[0].N;
-            es[0].Vy = -es[0].Vy;
-            es[0].Vz = -es[0].Vz;
-            es[0].Mx = -es[0].Mx;
-            es[0].My = -es[0].My;
-            es[0].Mz = -es[0].Mz;
-        }
+      if (ss.edge_in == ss.edge_out)
+      {
+        es[ss.edge_in] += ss.matrix * Uel[ss.edge_out];
+      }
+      else
+      {
+        es[ss.edge_in] += ss.matrix * Uel[ss.edge_out];
+        es[ss.edge_out] += ss.matrix.transpose() * Uel[ss.edge_in];
+      }
     }
+  }
 
-    // Don't forget to add those stress values in
-    // "m_extra_stress_for_each_element;
-    for (std::map<size_t, ElementStress>::const_iterator it =
-             m_extra_stress_for_each_element.begin();
-         it != m_extra_stress_for_each_element.end(); ++it)
+  // Change local coordinates to "strength of materials", with our sign
+  // conventions:
+  //
+  for (size_t i = 0; i < nE; i++)
+  {
+    ElementStress& es = out_stress.element_stress[i];
+
+    if (!es.empty())
     {
-        ASSERT_(it->first < nE);
-        ElementStress& es = out_stress.element_stress[it->first];
-
-        const ElementStress& es2add = it->second;
-        ASSERT_(es.size() == es2add.size());
-
-        for (size_t i = 0; i < es.size(); ++i) es[i] += es2add[i];
+      es[0].N = -es[0].N;
+      es[0].Vy = -es[0].Vy;
+      es[0].Vz = -es[0].Vz;
+      es[0].Mx = -es[0].Mx;
+      es[0].My = -es[0].My;
+      es[0].Mz = -es[0].Mz;
     }
+  }
 
-    timelog.leave("postProcCalcStress");
+  // Don't forget to add those stress values in
+  // "m_extra_stress_for_each_element;
+  for (std::map<size_t, ElementStress>::const_iterator it = m_extra_stress_for_each_element.begin();
+       it != m_extra_stress_for_each_element.end(); ++it)
+  {
+    ASSERT_(it->first < nE);
+    ElementStress& es = out_stress.element_stress[it->first];
+
+    const ElementStress& es2add = it->second;
+    ASSERT_(es.size() == es2add.size());
+
+    for (size_t i = 0; i < es.size(); ++i) es[i] += es2add[i];
+  }
+
+  timelog.leave("postProcCalcStress");
 }

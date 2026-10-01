@@ -26,14 +26,11 @@
 using namespace std;
 using namespace openbeam;
 
-CElementTorsionSpring::CElementTorsionSpring()
-    : CElement(2), K(UNINITIALIZED_VALUE)
-{
-}
+CElementTorsionSpring::CElementTorsionSpring() : CElement(2), K(UNINITIALIZED_VALUE) {}
 
 CElementTorsionSpring::CElementTorsionSpring(
-    const size_t from_node_id, const size_t to_node_id, const num_t K)
-    : CElement(2, from_node_id, to_node_id), K(K)
+    const size_t from_node_id, const size_t to_node_id, const num_t K) :
+    CElement(2, from_node_id, to_node_id), K(K)
 {
 }
 
@@ -43,42 +40,42 @@ CElementTorsionSpring::CElementTorsionSpring(
 void CElementTorsionSpring::getLocalStiffnessMatrices(
     std::vector<TStiffnessSubmatrix>& outSubMats) const
 {
-    outSubMats.resize(3);
-    TStiffnessSubmatrix& K11 = outSubMats[0];
-    TStiffnessSubmatrix& K22 = outSubMats[1];
-    TStiffnessSubmatrix& K12 = outSubMats[2];
+  outSubMats.resize(3);
+  TStiffnessSubmatrix& K11 = outSubMats[0];
+  TStiffnessSubmatrix& K22 = outSubMats[1];
+  TStiffnessSubmatrix& K12 = outSubMats[2];
 
-    if (K == UNINITIALIZED_VALUE)
-        throw std::runtime_error(format(
-            "CElementTorsionSpring: Uninitialized parameter K (Element in "
-            "%u->%u)",
-            static_cast<unsigned int>(this->conected_nodes_ids[0]),
-            static_cast<unsigned int>(this->conected_nodes_ids[1])));
+  if (K == UNINITIALIZED_VALUE)
+    throw std::runtime_error(format(
+        "CElementTorsionSpring: Uninitialized parameter K (Element in "
+        "%u->%u)",
+        static_cast<unsigned int>(this->conected_nodes_ids[0]),
+        static_cast<unsigned int>(this->conected_nodes_ids[1])));
 
-    // k11 --------------
-    K11.edge_in      = 0;
-    K11.edge_out     = 0;
-    K11.matrix       = Matrix66::Zero();
-    K11.matrix(5, 5) = K;
+  // k11 --------------
+  K11.edge_in = 0;
+  K11.edge_out = 0;
+  K11.matrix = Matrix66::Zero();
+  K11.matrix(5, 5) = K;
 
-    // k22 --------------
-    K22.edge_in  = 1;
-    K22.edge_out = 1;
-    K22.matrix   = K11.matrix;
+  // k22 --------------
+  K22.edge_in = 1;
+  K22.edge_out = 1;
+  K22.matrix = K11.matrix;
 
-    // k12 --------------
-    K12.edge_in      = 0;
-    K12.edge_out     = 1;
-    K12.matrix       = Matrix66::Zero();
-    K12.matrix(5, 5) = -K;
+  // k12 --------------
+  K12.edge_in = 0;
+  K12.edge_out = 1;
+  K12.matrix = Matrix66::Zero();
+  K12.matrix(5, 5) = -K;
 }
 
 void CElementTorsionSpring::getLocalDoFs(std::vector<used_DoFs_t>& dofs) const
 {
-    dofs.resize(getNumberEdges());
+  dofs.resize(getNumberEdges());
 
-    static const used_DoFs_t sDofs = {false, false, false, false, false, true};
-    dofs[0] = dofs[1] = sDofs;
+  static const used_DoFs_t sDofs = {false, false, false, false, false, true};
+  dofs[0] = dofs[1] = sDofs;
 }
 
 /** Parse a set of parameters by (casi insensitive) name and set the element
@@ -86,48 +83,50 @@ void CElementTorsionSpring::getLocalDoFs(std::vector<used_DoFs_t>& dofs) const
 void CElementTorsionSpring::loadParamsFromSet(
     const mrpt::containers::yaml& p, const EvaluationContext& ctx)
 {
-    if (p.has("K")) this->K = ctx.evaluate(p["K"]);
+  if (p.has("K")) this->K = ctx.evaluate(p["K"]);
 }
 
 /** Draws the element to a SVG Cairo context (a pointer to a
  * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
  * options */
 void CElementTorsionSpring::drawSVG(
-    void* _cairo_context, const DrawStructureOptions& options,
-    const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
+    void* _cairo_context,
+    const DrawStructureOptions& options,
+    const RenderInitData& ri,
+    const DrawElementExtraParams& draw_el_params,
     const MeshOutputInfo* meshing_info) const
 {
 #if OPENBEAM_HAS_CAIRO
-    OB_TODO("Implement SVG")
+  OB_TODO("Implement SVG")
 #endif
 }
 
 /** Mesh this element into a set of (possibly) smaller ones */
 void CElementTorsionSpring::do_mesh(
-    const size_t my_idx, CStructureProblem& out_fem, MeshOutputInfo& out_info,
+    const size_t my_idx,
+    CStructureProblem& out_fem,
+    MeshOutputInfo& out_info,
     const MeshParams& params)
 {
-    ASSERT_(conected_nodes_ids.size() == 2);
-    ASSERT_(m_parent != nullptr);
+  ASSERT_(conected_nodes_ids.size() == 2);
+  ASSERT_(m_parent != nullptr);
 
-    if (out_info.element2nodes.size() <= my_idx)
-        out_info.element2nodes.resize(my_idx + 1);
+  if (out_info.element2nodes.size() <= my_idx) out_info.element2nodes.resize(my_idx + 1);
 
-    std::vector<size_t>& my_nodes = out_info.element2nodes.at(my_idx);
-    ASSERT_(my_nodes.empty());
+  std::vector<size_t>& my_nodes = out_info.element2nodes.at(my_idx);
+  ASSERT_(my_nodes.empty());
 
-    my_nodes.push_back(conected_nodes_ids[0]);
-    my_nodes.push_back(conected_nodes_ids[1]);
+  my_nodes.push_back(conected_nodes_ids[0]);
+  my_nodes.push_back(conected_nodes_ids[1]);
 
-    if (out_info.element2elements.size() <= my_idx)
-        out_info.element2elements.resize(my_idx + 1);
+  if (out_info.element2elements.size() <= my_idx) out_info.element2elements.resize(my_idx + 1);
 
-    std::vector<size_t>& my_elements = out_info.element2elements[my_idx];
-    ASSERT_(my_elements.empty());
+  std::vector<size_t>& my_elements = out_info.element2elements[my_idx];
+  ASSERT_(my_elements.empty());
 
-    // Mesh to myself:
-    auto new_el = shared_from_this();
+  // Mesh to myself:
+  auto new_el = shared_from_this();
 
-    size_t new_el_idx = out_fem.insertElement(new_el);
-    my_elements.push_back(new_el_idx);
+  size_t new_el_idx = out_fem.insertElement(new_el);
+  my_elements.push_back(new_el_idx);
 }

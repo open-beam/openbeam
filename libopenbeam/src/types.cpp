@@ -40,10 +40,7 @@ int VERB_LEVEL = 1;
 /** Changes the overall library verbosity level: 0=quiet, 1=info
  * 2=verbose. \sa getVerbosityLevel
  */
-void openbeam::setVerbosityLevel(int verbose_level)
-{
-    VERB_LEVEL = verbose_level;
-}
+void openbeam::setVerbosityLevel(int verbose_level) { VERB_LEVEL = verbose_level; }
 
 /** Get the current verbosity level of the library.
  * \sa setVerbosityLevel
@@ -55,12 +52,12 @@ bool openbeam::strCmpI(const std::string& s1, const std::string& s2)
 {
 #ifdef _WIN32
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
-    return !::_strcmpi(s1.c_str(), s2.c_str());
+  return !::_strcmpi(s1.c_str(), s2.c_str());
 #else
-    return !::strcmpi(s1.c_str(), s2.c_str());
+  return !::strcmpi(s1.c_str(), s2.c_str());
 #endif
 #else
-    return !::strcasecmp(s1.c_str(), s2.c_str());
+  return !::strcasecmp(s1.c_str(), s2.c_str());
 #endif
 }
 
@@ -68,10 +65,9 @@ bool openbeam::strCmpI(const std::string& s1, const std::string& s2)
  * it's not a valid number */
 num_t openbeam::str2num(const std::string& s)
 {
-    std::stringstream ss(s);
-    num_t             val;
-    if ((ss >> val).fail())
-        throw std::runtime_error(
-            std::string("'") + s + std::string("' is not a valid number."));
-    return val;
+  std::stringstream ss(s);
+  num_t val;
+  if ((ss >> val).fail())
+    throw std::runtime_error(std::string("'") + s + std::string("' is not a valid number."));
+  return val;
 }

@@ -37,74 +37,76 @@ using namespace openbeam::localization;
  * case. */
 class TLangSystem
 {
-   public:
-    TLanguage selectedLang;
+ public:
+  TLanguage selectedLang;
 
-    inline static TLangSystem& getInstance()
-    {
-        static TLangSystem inst;
-        return inst;
-    }
+  inline static TLangSystem& getInstance()
+  {
+    static TLangSystem inst;
+    return inst;
+  }
 
-   private:
-    TLangSystem() : selectedLang(LANG_EN)
-    {
-        // In Windows, make sure the console uses UTF-8:
-        //  http://stackoverflow.com/questions/1660492/utf-8-output-on-windows-xp-console
-        // (But still it doesn't work...)
+ private:
+  TLangSystem() : selectedLang(LANG_EN)
+  {
+    // In Windows, make sure the console uses UTF-8:
+    //  http://stackoverflow.com/questions/1660492/utf-8-output-on-windows-xp-console
+    // (But still it doesn't work...)
 #ifdef _WIN32
-        SetConsoleOutputCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
 #endif
-    }
+  }
 };
 
 struct TLangData
 {
-    TLanguage    id;  //!< Enum value
-    const char*  lang_name;  //!< ISO name of language
-    const char** string_table;  //!< Strings tranlation tables
+  TLanguage id;               //!< Enum value
+  const char* lang_name;      //!< ISO name of language
+  const char** string_table;  //!< Strings tranlation tables
 };
 
 // This MUST BE in the same language order as declared in languages.h
 const TLangData lang_data[NUMBER_OF_LANGUAGES] = {
-    {LANG_EN, "en", strs_en}, {LANG_ES, "es", strs_es}};
+    {LANG_EN, "en", strs_en},
+    {LANG_ES, "es", strs_es}
+};
 
 /** Selects the language from its 2 letter ISO 639-1 code
  *  ("en","es",...). \return false on unsupported language. */
 bool openbeam::localization::selectLanguage(const TLanguage langID)
 {
-    if (langID >= 0 && langID < NUMBER_OF_LANGUAGES)
-    {
-        TLangSystem::getInstance().selectedLang = langID;
-        return true;
-    }
-    else
-        return false;
+  if (langID >= 0 && langID < NUMBER_OF_LANGUAGES)
+  {
+    TLangSystem::getInstance().selectedLang = langID;
+    return true;
+  }
+  else
+    return false;
 }
 
 bool openbeam::localization::selectLanguage(const std::string& langID)
 {
-    // std::cout << "[openbeam::localization] Selecting language: " << langID <<
-    // std::endl;
-    for (int i = 0; i < sizeof(lang_data) / sizeof(lang_data[0]); i++)
+  // std::cout << "[openbeam::localization] Selecting language: " << langID <<
+  // std::endl;
+  for (int i = 0; i < sizeof(lang_data) / sizeof(lang_data[0]); i++)
+  {
+    if (std::string(lang_data[i].lang_name) == langID)
     {
-        if (std::string(lang_data[i].lang_name) == langID)
-        {
-            TLangSystem::getInstance().selectedLang = lang_data[i].id;
-            return true;
-        }
+      TLangSystem::getInstance().selectedLang = lang_data[i].id;
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
 /** The main translation function, takes a string code and return its
  * translation for the currently selected language */
 const char* openbeam::localization::_t(const TStringID strID)
 {
-    TLangSystem& ls = TLangSystem::getInstance();
+  TLangSystem& ls = TLangSystem::getInstance();
 
-    if (ls.selectedLang < NUMBER_OF_LANGUAGES && strID < STR_NUMBER_OF_IDS)
-        return lang_data[ls.selectedLang].string_table[strID];
-    else
-        return "<text not found>";
+  if (ls.selectedLang < NUMBER_OF_LANGUAGES && strID < STR_NUMBER_OF_IDS)
+    return lang_data[ls.selectedLang].string_table[strID];
+  else
+    return "<text not found>";
 }

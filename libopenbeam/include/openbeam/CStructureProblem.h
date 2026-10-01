@@ -34,60 +34,54 @@ namespace openbeam
  */
 class CStructureProblem : public CFiniteElementProblem
 {
-   public:
-    CStructureProblem();
-    virtual ~CStructureProblem();
+ public:
+  CStructureProblem();
+  virtual ~CStructureProblem();
 
-    /// Delete all elements, nodes and constraints in this structure, completely
-    /// emptying it.
-    void clear() override;
+  /// Delete all elements, nodes and constraints in this structure, completely
+  /// emptying it.
+  void clear() override;
 
-    /** Adds a new load to an element. The object must be created with "new",
-     * and not deleted by the user (it'll be done automatically by this class).
-     * \sa CFiniteElementProblem, CFiniteElementProblem::addLoadAtDOF
-     */
-    void addLoadAtBeam(const size_t element_index, CLoadOnBeam::Ptr load);
+  /** Adds a new load to an element. The object must be created with "new",
+   * and not deleted by the user (it'll be done automatically by this class).
+   * \sa CFiniteElementProblem, CFiniteElementProblem::addLoadAtDOF
+   */
+  void addLoadAtBeam(const size_t element_index, CLoadOnBeam::Ptr load);
 
-    /** Insert a new element in the problem
-     *  \return The element index */
-    template <typename LoadClass, typename... _Args>
-    void createLoadAtBeam(const size_t element_index, _Args&&... __args)
-    {
-        addLoadAtBeam(
-            element_index,
-            std::make_shared<LoadClass>(std::forward<_Args>(__args)...));
-    }
+  /** Insert a new element in the problem
+   *  \return The element index */
+  template <typename LoadClass, typename... _Args>
+  void createLoadAtBeam(const size_t element_index, _Args&&... __args)
+  {
+    addLoadAtBeam(element_index, std::make_shared<LoadClass>(std::forward<_Args>(__args)...));
+  }
 
-    // ----------------------------------------------------------------------------
-    /** @name Structure solving
-        @{ */
+  // ----------------------------------------------------------------------------
+  /** @name Structure solving
+      @{ */
 
-    /// Update all internal lists after changing the structure.
-    void updateAll() override;
+  /// Update all internal lists after changing the structure.
+  void updateAll() override;
 
-    /** Mesh the structure into a set of small elements.
-     */
-    void mesh(CStructureProblem& out_fem, MeshOutputInfo& mo,
-        const MeshParams& params);
+  /** Mesh the structure into a set of small elements.
+   */
+  void mesh(CStructureProblem& out_fem, MeshOutputInfo& mo, const MeshParams& params);
 
-    /** @} */
-    // ----------------------------------------------------------------------------
+  /** @} */
+  // ----------------------------------------------------------------------------
 
-    const std::multimap<size_t, CLoadOnBeam::Ptr>& loadsOnBeams() const
-    {
-        return m_loads_on_beams;
-    }
+  const std::multimap<size_t, CLoadOnBeam::Ptr>& loadsOnBeams() const { return m_loads_on_beams; }
 
-   private:
-    /** @name Structure data
-        @{ */
-    std::multimap<size_t, CLoadOnBeam::Ptr> m_loads_on_beams;
+ private:
+  /** @name Structure data
+      @{ */
+  std::multimap<size_t, CLoadOnBeam::Ptr> m_loads_on_beams;
 
-    /** @} */
+  /** @} */
 
-    /** In base classes, process loads on elements and populate the \a
-     * m_loads_at_each_dof_equivs and \a m_extra_stress_for_each_element
-     */
-    void internalComputeStressAndEquivalentLoads() override;
+  /** In base classes, process loads on elements and populate the \a
+   * m_loads_at_each_dof_equivs and \a m_extra_stress_for_each_element
+   */
+  void internalComputeStressAndEquivalentLoads() override;
 };
 }  // namespace openbeam

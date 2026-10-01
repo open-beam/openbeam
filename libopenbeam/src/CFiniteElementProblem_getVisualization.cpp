@@ -35,751 +35,717 @@ using namespace openbeam;
 using namespace Eigen;
 
 mrpt::viz::CSetOfObjects::Ptr CFiniteElementProblem::getVisualization(
-    const DrawStructureOptions& o, const StaticSolveProblemInfo& solverInfo,
-    const MeshOutputInfo* meshingInfo, const StressInfo* stressInfo) const
+    const DrawStructureOptions& o,
+    const StaticSolveProblemInfo& solverInfo,
+    const MeshOutputInfo* meshingInfo,
+    const StressInfo* stressInfo) const
 {
-    auto gl = mrpt::viz::CSetOfObjects::Create();
+  auto gl = mrpt::viz::CSetOfObjects::Create();
 
-    const size_t nNodes = getNumberOfNodes();
-    const size_t nEle   = getNumberOfElements();
+  const size_t nNodes = getNumberOfNodes();
+  const size_t nEle = getNumberOfElements();
 
-    const size_t nNodesToDraw =
-        meshingInfo ? meshingInfo->num_original_nodes : nNodes;
+  const size_t nNodesToDraw = meshingInfo ? meshingInfo->num_original_nodes : nNodes;
 
-    num_t min_x, max_x, min_y, max_y;
-    getBoundingBox(min_x, max_x, min_y, max_y);
+  num_t min_x, max_x, min_y, max_y;
+  getBoundingBox(min_x, max_x, min_y, max_y);
 
-    // "Screen constant sized" objects -------------
-    // const double NODE_LABEL_SIZE = o.labels_size;
-    // --------------
+  // "Screen constant sized" objects -------------
+  // const double NODE_LABEL_SIZE = o.labels_size;
+  // --------------
 
-    // Edges original:  ==============================================
-    if (o.show_elements_original)
+  // Edges original:  ==============================================
+  if (o.show_elements_original)
+  {
+    DrawStructureOptions opts2 = o;
+    opts2.show_element_labels = false;
+    opts2.show_node_labels = false;
+    for (size_t i = 0; i < nEle; i++)
     {
-        DrawStructureOptions opts2 = o;
-        opts2.show_element_labels  = false;
-        opts2.show_node_labels     = false;
-        for (size_t i = 0; i < nEle; i++)
-        {
-            const auto el = this->getElement(i);
-            ASSERT_(el != nullptr);
+      const auto el = this->getElement(i);
+      ASSERT_(el != nullptr);
 
-            DrawElementExtraParams el_params;
-            el_params.element_index          = i;
-            el_params.color_alpha            = o.elements_original_alpha;
-            el_params.draw_original_position = true;
+      DrawElementExtraParams el_params;
+      el_params.element_index = i;
+      el_params.color_alpha = o.elements_original_alpha;
+      el_params.draw_original_position = true;
 
-            gl->insert(el->getVisualization(opts2, el_params, meshingInfo));
-        }
+      gl->insert(el->getVisualization(opts2, el_params, meshingInfo));
     }
+  }
 
-    // Nodes original:  ==============================================
-    if (o.show_nodes_original)
+  // Nodes original:  ==============================================
+  if (o.show_nodes_original)
+  {
+    for (size_t i = 0; i < nNodesToDraw; i++)
     {
-        for (size_t i = 0; i < nNodesToDraw; i++)
-        {
-            const TRotationTrans3D& p = this->getNodePose(i);
+      const TRotationTrans3D& p = this->getNodePose(i);
 
-            {
-                auto glNode = mrpt::viz::CSphere::Create();
-                glNode->setRadius(o.NODE_RADIUS);
-                glNode->setColor(0, 0, 0, o.nodes_original_alpha);
-                glNode->setNumberDivs(o.NODE_SPHERE_DIVS);
-                glNode->setLocation(p.t);
-                gl->insert(glNode);
-            }
+      {
+        auto glNode = mrpt::viz::CSphere::Create();
+        glNode->setRadius(o.NODE_RADIUS);
+        glNode->setColor(0, 0, 0, o.nodes_original_alpha);
+        glNode->setNumberDivs(o.NODE_SPHERE_DIVS);
+        glNode->setLocation(p.t);
+        gl->insert(glNode);
+      }
 
-            if (o.show_node_labels && !o.show_nodes_deformed)
-            {
-                auto glLb = mrpt::viz::CText::Create();
-                glLb->setColor_u8(0x00, 0x00, 0xd0);
-                glLb->setLocation(p.t + TPoint3D(1.3, 0.8, 0) * o.NODE_RADIUS);
-                glLb->setString(getNodeLabel(i));
-                gl->insert(glLb);
-            }
-        }
+      if (o.show_node_labels && !o.show_nodes_deformed)
+      {
+        auto glLb = mrpt::viz::CText::Create();
+        glLb->setColor_u8(0x00, 0x00, 0xd0);
+        glLb->setLocation(p.t + TPoint3D(1.3, 0.8, 0) * o.NODE_RADIUS);
+        glLb->setString(getNodeLabel(i));
+        gl->insert(glLb);
+      }
     }
+  }
 
-    // If there is anything to draw in "deformed", determine the scale:
-    // =======================================================================
-    num_t DEFORMED_SCALE_FACTOR = o.deformed_scale_factor;
-    if (DEFORMED_SCALE_FACTOR == 0 &&
-        (o.show_nodes_deformed || o.show_elements_deformed))
-    {  // Autoscale of deformations:
-        const num_t max_desired_deformation =
-            o.deformed_scale_auto_max_image_ratio *
-            std::max(max_x - min_x, max_y - min_y);
-        const num_t max_real_deformation =
-            this->getMaximumDeformedDisplacement(solverInfo);
-        DEFORMED_SCALE_FACTOR =
-            max_real_deformation == 0
-                ? 1
-                : max_desired_deformation / max_real_deformation;
-    }
+  // If there is anything to draw in "deformed", determine the scale:
+  // =======================================================================
+  num_t DEFORMED_SCALE_FACTOR = o.deformed_scale_factor;
+  if (DEFORMED_SCALE_FACTOR == 0 && (o.show_nodes_deformed || o.show_elements_deformed))
+  {  // Autoscale of deformations:
+    const num_t max_desired_deformation =
+        o.deformed_scale_auto_max_image_ratio * std::max(max_x - min_x, max_y - min_y);
+    const num_t max_real_deformation = this->getMaximumDeformedDisplacement(solverInfo);
+    DEFORMED_SCALE_FACTOR =
+        max_real_deformation == 0 ? 1 : max_desired_deformation / max_real_deformation;
+  }
 
-    // Edges deformed:  ==============================================
-    if (o.show_elements_deformed)
+  // Edges deformed:  ==============================================
+  if (o.show_elements_deformed)
+  {
+    for (size_t i = 0; i < nEle; i++)
     {
-        for (size_t i = 0; i < nEle; i++)
-        {
-            const auto el = this->getElement(i);
-            ASSERT_(el != nullptr);
+      const auto el = this->getElement(i);
+      ASSERT_(el != nullptr);
 
-            DrawElementExtraParams el_params;
-            el_params.element_index          = i;
-            el_params.color_alpha            = o.elements_deformed_alpha;
-            el_params.draw_original_position = false;  // Draw deformed
-            el_params.solver_info            = &solverInfo;
-            el_params.deformed_scale_factor  = DEFORMED_SCALE_FACTOR;
+      DrawElementExtraParams el_params;
+      el_params.element_index = i;
+      el_params.color_alpha = o.elements_deformed_alpha;
+      el_params.draw_original_position = false;  // Draw deformed
+      el_params.solver_info = &solverInfo;
+      el_params.deformed_scale_factor = DEFORMED_SCALE_FACTOR;
 
-            gl->insert(el->getVisualization(o, el_params, meshingInfo));
-        }
+      gl->insert(el->getVisualization(o, el_params, meshingInfo));
     }
+  }
 
-    // Nodes deformed:  ==============================================
-    if (o.show_nodes_deformed)
+  // Nodes deformed:  ==============================================
+  if (o.show_nodes_deformed)
+  {
+    for (size_t i = 0; i < nNodesToDraw; i++)
     {
-        for (size_t i = 0; i < nNodesToDraw; i++)
-        {
-            Vector3 pt;
-            this->getNodeDeformedPosition(
-                i, pt, solverInfo, DEFORMED_SCALE_FACTOR);
+      Vector3 pt;
+      this->getNodeDeformedPosition(i, pt, solverInfo, DEFORMED_SCALE_FACTOR);
 
-            {
-                auto glNode = mrpt::viz::CSphere::Create();
-                glNode->setRadius(o.NODE_RADIUS);
-                glNode->setColor(0, 0, 0, o.nodes_deformed_alpha);
-                glNode->setNumberDivs(o.NODE_SPHERE_DIVS);
-                glNode->setLocation(pt.x(), pt.y(), pt.z());
-                gl->insert(glNode);
-            }
+      {
+        auto glNode = mrpt::viz::CSphere::Create();
+        glNode->setRadius(o.NODE_RADIUS);
+        glNode->setColor(0, 0, 0, o.nodes_deformed_alpha);
+        glNode->setNumberDivs(o.NODE_SPHERE_DIVS);
+        glNode->setLocation(pt.x(), pt.y(), pt.z());
+        gl->insert(glNode);
+      }
 
-            if (o.show_node_labels)
-            {
-                auto glLb = mrpt::viz::CText::Create();
-                glLb->setColor_u8(0x00, 0x00, 0xd0);
-                glLb->setLocation(
-                    TPoint3D(pt.x(), pt.y(), pt.z()) +
-                    TPoint3D(1.3, 0.8, 0) * o.NODE_RADIUS);
-                glLb->setString(getNodeLabel(i));
-                gl->insert(glLb);
-            }
-        }
+      if (o.show_node_labels)
+      {
+        auto glLb = mrpt::viz::CText::Create();
+        glLb->setColor_u8(0x00, 0x00, 0xd0);
+        glLb->setLocation(TPoint3D(pt.x(), pt.y(), pt.z()) + TPoint3D(1.3, 0.8, 0) * o.NODE_RADIUS);
+        glLb->setString(getNodeLabel(i));
+        gl->insert(glLb);
+      }
     }
+  }
 
-    // Bounding conditions: ==============================================
-    if (o.show_constraints)
-    {
-        internal_getVisualization_constraints(
-            *gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR);
-    }
+  // Bounding conditions: ==============================================
+  if (o.show_constraints)
+  {
+    internal_getVisualization_constraints(*gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR);
+  }
 
-    // Draw concentrated loads =========================================
-    if (o.show_loads)
-    {
-        internal_getVisualization_nodeLoads(
-            *gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR);
-    }
+  // Draw concentrated loads =========================================
+  if (o.show_loads)
+  {
+    internal_getVisualization_nodeLoads(*gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR);
+  }
 
-    // Draw distributed loads on elements ==============================
-    auto str = dynamic_cast<const CStructureProblem*>(this);
-    if (str && o.show_loads)
-    {
-        internal_getVisualization_distributedLoads(
-            *str, *gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR);
-    }
+  // Draw distributed loads on elements ==============================
+  auto str = dynamic_cast<const CStructureProblem*>(this);
+  if (str && o.show_loads)
+  {
+    internal_getVisualization_distributedLoads(
+        *str, *gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR);
+  }
 
-    // Draw stress diagrams on elements ==============================
-    if (stressInfo && o.show_any_stress())
-    {
-        internal_getVisualization_stressDiagrams(
-            *gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR,
-            *stressInfo);
-    }
+  // Draw stress diagrams on elements ==============================
+  if (stressInfo && o.show_any_stress())
+  {
+    internal_getVisualization_stressDiagrams(
+        *gl, o, solverInfo, meshingInfo, DEFORMED_SCALE_FACTOR, *stressInfo);
+  }
 
-    return gl;
+  return gl;
 }
 
 void CFiniteElementProblem::internal_getVisualization_nodeLoads(
-    mrpt::viz::CSetOfObjects& gl, const DrawStructureOptions& o,
+    mrpt::viz::CSetOfObjects& gl,
+    const DrawStructureOptions& o,
     const StaticSolveProblemInfo& solver_info,
-    const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const
+    const MeshOutputInfo* meshing_info,
+    num_t DEFORMED_SCALE_FACTOR) const
 {
-    num_t min_x, max_x, min_y, max_y;
-    getBoundingBox(min_x, max_x, min_y, max_y);
+  num_t min_x, max_x, min_y, max_y;
+  getBoundingBox(min_x, max_x, min_y, max_y);
 
-    // Dimensions of constraint plots:
-    const double R = o.NODE_RADIUS;
+  // Dimensions of constraint plots:
+  const double R = o.NODE_RADIUS;
 
-    // 0) Establish scale:
-    num_t max_load_force = 0, max_load_torque = 0;
-    for (const auto& load : m_loads_at_each_dof)
+  // 0) Establish scale:
+  num_t max_load_force = 0, max_load_torque = 0;
+  for (const auto& load : m_loads_at_each_dof)
+  {
+    const NodeDoF& dof_info = m_problem_DoFs[load.first];
+    const num_t force_val = std::abs(load.second);
+
+    if (dof_info.dofAsInt() < 3)
+      max_load_force = std::max(max_load_force, force_val);
+    else
+      max_load_torque = std::max(max_load_torque, force_val);
+  }
+  const double max_desired_abs_force_len =
+      std::max(max_x - min_x, max_y - min_y) * o.node_loads_max_relative_size;
+  const double FORCE_SCALE_FACTOR =
+      max_load_force == 0 ? 1 : max_desired_abs_force_len / max_load_force;
+  const double TORQUE_SCALE_FACTOR =
+      max_load_torque == 0 ? 1 : max_desired_abs_force_len / max_load_torque;
+
+  // 1) Forces on nodes
+  // -----------------------------------
+  for (const auto& load : m_loads_at_each_dof)
+  {
+    const size_t dof_idx = load.first;
+    const num_t force_val = load.second;
+    if (force_val == 0) continue;  // May happen sometimes.
+
+    const NodeDoF& dof_info = m_problem_DoFs[dof_idx];
+
+    // Scaled force dimension:
+    const double LEN =
+        std::abs(force_val) * (dof_info.dofAsInt() < 3 ? FORCE_SCALE_FACTOR : TORQUE_SCALE_FACTOR);
+
+    // Draw external force on "dof_info.dof" [0,5]:
+
+    // 1st: generate shape of the force in "local coords:"
+    //  Assume possitive sign (will be scaled below)
+    std::vector<TPoint3D> seq_points_local;
+    switch (dof_info.dof)
     {
-        const NodeDoF& dof_info  = m_problem_DoFs[load.first];
-        const num_t    force_val = std::abs(load.second);
-
-        if (dof_info.dofAsInt() < 3)
-            max_load_force = std::max(max_load_force, force_val);
-        else
-            max_load_torque = std::max(max_load_torque, force_val);
+      case DoF_index::DX:
+        seq_points_local.push_back(TPoint3D(-R - LEN, 0, 0));
+        seq_points_local.push_back(TPoint3D(-R, 0, 0));
+        break;
+      case DoF_index::DY:
+        seq_points_local.push_back(TPoint3D(0, -R - LEN, 0));
+        seq_points_local.push_back(TPoint3D(0, -R, 0));
+        break;
+      case DoF_index::DZ:
+        seq_points_local.push_back(TPoint3D(0, 0, -R - LEN));
+        seq_points_local.push_back(TPoint3D(0, 0, -R));
+        break;
+      case DoF_index::RX:
+        OB_TODO("Implement M torques")
+        break;
+      case DoF_index::RY:
+        break;
+      case DoF_index::RZ:
+        break;
     }
-    const double max_desired_abs_force_len =
-        std::max(max_x - min_x, max_y - min_y) * o.node_loads_max_relative_size;
-    const double FORCE_SCALE_FACTOR =
-        max_load_force == 0 ? 1 : max_desired_abs_force_len / max_load_force;
-    const double TORQUE_SCALE_FACTOR =
-        max_load_torque == 0 ? 1 : max_desired_abs_force_len / max_load_torque;
 
-    // 1) Forces on nodes
-    // -----------------------------------
-    for (const auto& load : m_loads_at_each_dof)
+    // Set correct sign:
+    const size_t nPts = seq_points_local.size();
+    if (force_val < 0)
+      for (size_t k = 0; k < nPts; k++) seq_points_local[k] = -seq_points_local[k];
+
+    TRotationTrans3D node_pose;
+
+    if (!o.show_nodes_deformed)
+    {  // original:
+      node_pose = this->getNodePose(dof_info.nodeId);
+    }
+    else
+    {  // deformed:
+      node_pose = this->getNodePose(dof_info.nodeId);
+      Vector3 pt;
+      this->getNodeDeformedPosition(dof_info.nodeId, pt, solver_info, DEFORMED_SCALE_FACTOR);
+      for (int k = 0; k < 3; k++) node_pose.t[k] = pt[k];
+    }
+
+    const Matrix33& node_rot = node_pose.r.getRot();
+
+    // then rotate to the nodal coordinates (typ. coincides with global
+    // coords)
+    std::vector<TPoint3D> seq_points_global;
+    if (node_pose.r.isIdentity())
     {
-        const size_t dof_idx   = load.first;
-        const num_t  force_val = load.second;
-        if (force_val == 0) continue;  // May happen sometimes.
-
-        const NodeDoF& dof_info = m_problem_DoFs[dof_idx];
-
-        // Scaled force dimension:
-        const double LEN = std::abs(force_val) * (dof_info.dofAsInt() < 3
-                                                      ? FORCE_SCALE_FACTOR
-                                                      : TORQUE_SCALE_FACTOR);
-
-        // Draw external force on "dof_info.dof" [0,5]:
-
-        // 1st: generate shape of the force in "local coords:"
-        //  Assume possitive sign (will be scaled below)
-        std::vector<TPoint3D> seq_points_local;
-        switch (dof_info.dof)
-        {
-            case DoF_index::DX:
-                seq_points_local.push_back(TPoint3D(-R - LEN, 0, 0));
-                seq_points_local.push_back(TPoint3D(-R, 0, 0));
-                break;
-            case DoF_index::DY:
-                seq_points_local.push_back(TPoint3D(0, -R - LEN, 0));
-                seq_points_local.push_back(TPoint3D(0, -R, 0));
-                break;
-            case DoF_index::DZ:
-                seq_points_local.push_back(TPoint3D(0, 0, -R - LEN));
-                seq_points_local.push_back(TPoint3D(0, 0, -R));
-                break;
-            case DoF_index::RX:
-                OB_TODO("Implement M torques")
-                break;
-            case DoF_index::RY:
-                break;
-            case DoF_index::RZ:
-                break;
-        }
-
-        // Set correct sign:
-        const size_t nPts = seq_points_local.size();
-        if (force_val < 0)
-            for (size_t k = 0; k < nPts; k++)
-                seq_points_local[k] = -seq_points_local[k];
-
-        TRotationTrans3D node_pose;
-
-        if (!o.show_nodes_deformed)
-        {  // original:
-            node_pose = this->getNodePose(dof_info.nodeId);
-        }
-        else
-        {  // deformed:
-            node_pose = this->getNodePose(dof_info.nodeId);
-            Vector3 pt;
-            this->getNodeDeformedPosition(
-                dof_info.nodeId, pt, solver_info, DEFORMED_SCALE_FACTOR);
-            for (int k = 0; k < 3; k++) node_pose.t[k] = pt[k];
-        }
-
-        const Matrix33& node_rot = node_pose.r.getRot();
-
-        // then rotate to the nodal coordinates (typ. coincides with global
-        // coords)
-        std::vector<TPoint3D> seq_points_global;
-        if (node_pose.r.isIdentity())
-        {
-            seq_points_global = seq_points_local;
-            for (size_t k = 0; k < nPts; k++)
-                // POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL
-                seq_points_global[k] += node_pose.t;
-        }
-        else
-        {
-            seq_points_global.resize(nPts);
-            for (size_t k = 0; k < nPts; k++)
-            {
-                // POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL
-                for (int l = 0; l < 3; l++)
-                    seq_points_global[k][l] =
-                        node_pose.t[l] +
-                        node_rot.coeff(l, 0) * seq_points_local[k][0] +
-                        node_rot.coeff(l, 1) * seq_points_local[k][1] +
-                        node_rot.coeff(l, 2) * seq_points_local[k][2];
-            }
-        }
-
-        auto glNodeLoad = mrpt::viz::CArrow::Create();
-        glNodeLoad->setColor(
-            0, 0, 1,
-            o.show_nodes_deformed ? o.loads_deformed_alpha
-                                  : o.loads_original_alpha);
-        glNodeLoad->setHeadRatio(0.2f);
-        glNodeLoad->setSmallRadius(1.1 * o.BEAM_PINNED_RADIUS);
-        glNodeLoad->setLargeRadius(2.0 * o.BEAM_PINNED_RADIUS);
-        glNodeLoad->setArrowEnds(
-            seq_points_global.at(0), seq_points_global.at(1));
-        gl.insert(glNodeLoad);
+      seq_points_global = seq_points_local;
+      for (size_t k = 0; k < nPts; k++)
+        // POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL
+        seq_points_global[k] += node_pose.t;
     }
+    else
+    {
+      seq_points_global.resize(nPts);
+      for (size_t k = 0; k < nPts; k++)
+      {
+        // POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL
+        for (int l = 0; l < 3; l++)
+          seq_points_global[k][l] = node_pose.t[l] + node_rot.coeff(l, 0) * seq_points_local[k][0] +
+                                    node_rot.coeff(l, 1) * seq_points_local[k][1] +
+                                    node_rot.coeff(l, 2) * seq_points_local[k][2];
+      }
+    }
+
+    auto glNodeLoad = mrpt::viz::CArrow::Create();
+    glNodeLoad->setColor(
+        0, 0, 1, o.show_nodes_deformed ? o.loads_deformed_alpha : o.loads_original_alpha);
+    glNodeLoad->setHeadRatio(0.2f);
+    glNodeLoad->setSmallRadius(1.1 * o.BEAM_PINNED_RADIUS);
+    glNodeLoad->setLargeRadius(2.0 * o.BEAM_PINNED_RADIUS);
+    glNodeLoad->setArrowEnds(seq_points_global.at(0), seq_points_global.at(1));
+    gl.insert(glNodeLoad);
+  }
 }
 
 void CFiniteElementProblem::internal_getVisualization_constraints(
-    mrpt::viz::CSetOfObjects& gl, const DrawStructureOptions& o,
+    mrpt::viz::CSetOfObjects& gl,
+    const DrawStructureOptions& o,
     const StaticSolveProblemInfo& solver_info,
-    const MeshOutputInfo* meshing_info, num_t DEFORMED_SCALE_FACTOR) const
+    const MeshOutputInfo* meshing_info,
+    num_t DEFORMED_SCALE_FACTOR) const
 {
-    using PT3 = mrpt::math::TPoint3D;
-    using namespace mrpt;
+  using PT3 = mrpt::math::TPoint3D;
+  using namespace mrpt;
 
-    // Dimensions of constraint plots:
-    const double R     = o.BEAM_PINNED_RADIUS;
-    const double SCALE = R * 3.0;
-    const double W     = SCALE * 1.2;
-    const double H     = SCALE * 1.8;
-    const double wR    = W / 3;  // Wheels radius
+  // Dimensions of constraint plots:
+  const double R = o.BEAM_PINNED_RADIUS;
+  const double SCALE = R * 3.0;
+  const double W = SCALE * 1.2;
+  const double H = SCALE * 1.8;
+  const double wR = W / 3;  // Wheels radius
 
-    // Run the whole thing twice:
-    // 1) Draw original constraints.
-    // 2) Draw deformed constraints (only if "show_nodes_deformed")
-    const int num_layers = o.show_nodes_deformed ? 2 : 1;
+  // Run the whole thing twice:
+  // 1) Draw original constraints.
+  // 2) Draw deformed constraints (only if "show_nodes_deformed")
+  const int num_layers = o.show_nodes_deformed ? 2 : 1;
 
-    using node_idx_t = std::size_t;
+  using node_idx_t = std::size_t;
 
-    std::map<node_idx_t, std::set<uint8_t>> nodeConstrained;
+  std::map<node_idx_t, std::set<uint8_t>> nodeConstrained;
 
-    for (const auto& kv : m_DoF_constraints)
+  for (const auto& kv : m_DoF_constraints)
+  {
+    // Retrieve the 3D orientation of the node:
+    const size_t dof_idx = kv.first;
+
+    OB_TODO("Draw constrained values != 0");
+    // const num_t  const_value = kv.second;
+
+    const NodeDoF& dofInfo = m_problem_DoFs[dof_idx];
+
+    nodeConstrained[dofInfo.nodeId].insert(dofInfo.dofAsInt());
+  }
+
+  OB_TODO("Rotation according to element orientation");
+
+  for (const auto& kv : nodeConstrained)
+  {
+    const auto nodeId = kv.first;
+    const auto constrDoFs = kv.second;
+
+    // Build set into a bit field for convenience:
+    uint8_t constrBits = 0;
+    for (const auto bit : constrDoFs) constrBits = constrBits | (1 << bit);
+
+    // Build list of lines to draw depending on constraint, in local coords:
+    std::vector<mrpt::math::TSegment3D> sgms;
+
+    auto lambdaRotateAllSegms = [&sgms](double ang)
     {
-        // Retrieve the 3D orientation of the node:
-        const size_t dof_idx = kv.first;
+      const auto r = mrpt::poses::CPose3D::FromYawPitchRoll(ang, 0, 0);
+      for (auto& sg : sgms)
+      {
+        sg.point1 = r.rotateVector(sg.point1);
+        sg.point2 = r.rotateVector(sg.point2);
+      }
+    };
 
-        OB_TODO("Draw constrained values != 0");
-        // const num_t  const_value = kv.second;
-
-        const NodeDoF& dofInfo = m_problem_DoFs[dof_idx];
-
-        nodeConstrained[dofInfo.nodeId].insert(dofInfo.dofAsInt());
-    }
-
-    OB_TODO("Rotation according to element orientation");
-
-    for (const auto& kv : nodeConstrained)
+    // Add a "wheel" at the given top point (x,y):
+    auto lambdaAddWheel = [&sgms](double x, double y, double R)
     {
-        const auto nodeId     = kv.first;
-        const auto constrDoFs = kv.second;
+      const size_t nPts = 10;
+      std::vector<mrpt::math::TPoint3D> pts;
+      for (size_t i = 0; i < nPts; i++)
+      {
+        double ang = M_PI * 0.5 + 2 * M_PI * i / static_cast<double>(nPts);
+        pts.emplace_back(x + cos(ang) * R, y - R + sin(ang) * R, 0);
+      }
 
-        // Build set into a bit field for convenience:
-        uint8_t constrBits = 0;
-        for (const auto bit : constrDoFs) constrBits = constrBits | (1 << bit);
+      for (size_t i = 0; i < nPts; i++) sgms.emplace_back(pts.at(i), pts.at((i + 1) % nPts));
+    };
 
-        // Build list of lines to draw depending on constraint, in local coords:
-        std::vector<mrpt::math::TSegment3D> sgms;
+    // Add a "ground line" at the given top point (x,y):
+    auto lambdaAddGroundSymbol = [&sgms](double x, double y, double L, double rotation = 0)
+    {
+      const size_t nLines = 6;
+      const double dx = 1.0 * L / static_cast<double>(nLines - 1);
 
-        auto lambdaRotateAllSegms = [&sgms](double ang) {
-            const auto r = mrpt::poses::CPose3D::FromYawPitchRoll(ang, 0, 0);
-            for (auto& sg : sgms)
-            {
-                sg.point1 = r.rotateVector(sg.point1);
-                sg.point2 = r.rotateVector(sg.point2);
-            }
-        };
+      const auto rot = mrpt::poses::CPose3D::FromYawPitchRoll(rotation, 0, 0);
 
-        // Add a "wheel" at the given top point (x,y):
-        auto lambdaAddWheel = [&sgms](double x, double y, double R) {
-            const size_t                      nPts = 10;
-            std::vector<mrpt::math::TPoint3D> pts;
-            for (size_t i = 0; i < nPts; i++)
-            {
-                double ang =
-                    M_PI * 0.5 + 2 * M_PI * i / static_cast<double>(nPts);
-                pts.emplace_back(x + cos(ang) * R, y - R + sin(ang) * R, 0);
-            }
+      sgms.emplace_back(
+          PT3(x, y, 0) + rot.rotateVector({0, -L * 0.5, 0}),
+          PT3(x, y, 0) + rot.rotateVector({0, +L * 0.5, 0}));
 
-            for (size_t i = 0; i < nPts; i++)
-                sgms.emplace_back(pts.at(i), pts.at((i + 1) % nPts));
-        };
+      for (size_t i = 0; i < nLines; i++)
+      {
+        double y0 = -L * 0.5 + L * i / static_cast<double>(nLines - 1);
 
-        // Add a "ground line" at the given top point (x,y):
-        auto lambdaAddGroundSymbol =
-            [&sgms](double x, double y, double L, double rotation = 0) {
-                const size_t nLines = 6;
-                const double dx     = 1.0 * L / static_cast<double>(nLines - 1);
+        sgms.emplace_back(
+            PT3(x, y, 0) + rot.rotateVector({0, y0, 0}),
+            PT3(x, y, 0) + rot.rotateVector({-dx, y0 + dx, 0}));
+      }
+    };
 
-                const auto rot =
-                    mrpt::poses::CPose3D::FromYawPitchRoll(rotation, 0, 0);
+    // DOFs:
+    //      RR RDDD
+    //      ZY XZYX
+    //  0b0000 0011  = 0x03 // DX DY
+    //  0b0000 0001  = 0x01 // DX
+    //  0b0000 0010  = 0x02 // DY
+    //  0b0010 0011  = 0x23 // DX DY ROTZ
+    //  0b0010 0010  = 0x22 // DY ROTZ
+    //
 
-                sgms.emplace_back(
-                    PT3(x, y, 0) + rot.rotateVector({0, -L * 0.5, 0}),
-                    PT3(x, y, 0) + rot.rotateVector({0, +L * 0.5, 0}));
+    switch (constrBits)
+    {
+      case 0x03:
+        // xy only:
+        sgms.emplace_back(PT3(0, -R, 0), PT3(W, -R - H, 0));
+        sgms.emplace_back(PT3(W, -R - H, 0), PT3(-W, -R - H, 0));
+        sgms.emplace_back(PT3(-W, -R - H, 0), PT3(0, -R, 0));
 
-                for (size_t i = 0; i < nLines; i++)
-                {
-                    double y0 =
-                        -L * 0.5 + L * i / static_cast<double>(nLines - 1);
+        lambdaAddGroundSymbol(0, -R - H, 2 * W, 90.0_deg);
+        break;
 
-                    sgms.emplace_back(
-                        PT3(x, y, 0) + rot.rotateVector({0, y0, 0}),
-                        PT3(x, y, 0) + rot.rotateVector({-dx, y0 + dx, 0}));
-                }
-            };
+      case 0x01:
+      {
+        // x only:
+        sgms.emplace_back(PT3(-R, 0, 0), PT3(-R - H, W, 0));
+        sgms.emplace_back(PT3(-R - H, W, 0), PT3(-R - H, -W, 0));
+        sgms.emplace_back(PT3(-R - H, -W, 0), PT3(-R, 0, 0));
+        sgms.emplace_back(PT3(-R, 0, 0), PT3(-R - H, W, 0));
 
-        // DOFs:
-        //      RR RDDD
-        //      ZY XZYX
-        //  0b0000 0011  = 0x03 // DX DY
-        //  0b0000 0001  = 0x01 // DX
-        //  0b0000 0010  = 0x02 // DY
-        //  0b0010 0011  = 0x23 // DX DY ROTZ
-        //  0b0010 0010  = 0x22 // DY ROTZ
-        //
+        lambdaAddWheel(-R - H - wR, W * 0.8 + wR, wR);
+        lambdaAddWheel(-R - H - wR, 0 + wR, wR);
+        lambdaAddWheel(-R - H - wR, -W * 0.8 + wR, wR);
 
-        switch (constrBits)
-        {
-            case 0x03:
-                // xy only:
-                sgms.emplace_back(PT3(0, -R, 0), PT3(W, -R - H, 0));
-                sgms.emplace_back(PT3(W, -R - H, 0), PT3(-W, -R - H, 0));
-                sgms.emplace_back(PT3(-W, -R - H, 0), PT3(0, -R, 0));
+        lambdaAddGroundSymbol(-R - H - 2 * W / 3, 0, 2 * W, 0.0_deg);
 
-                lambdaAddGroundSymbol(0, -R - H, 2 * W, 90.0_deg);
-                break;
+        double angX = 0, angY = 0, angZ = 0;
+        TRotation3D::matrix2angles(m_nodeMainDirection.at(nodeId).getRot(), angX, angY, angZ);
 
-            case 0x01:
-            {
-                // x only:
-                sgms.emplace_back(PT3(-R, 0, 0), PT3(-R - H, W, 0));
-                sgms.emplace_back(PT3(-R - H, W, 0), PT3(-R - H, -W, 0));
-                sgms.emplace_back(PT3(-R - H, -W, 0), PT3(-R, 0, 0));
-                sgms.emplace_back(PT3(-R, 0, 0), PT3(-R - H, W, 0));
+        // flip horizontally?
+        if (cos(angZ) < 0) lambdaRotateAllSegms(180.0_deg);
+      }
+      break;
 
-                lambdaAddWheel(-R - H - wR, W * 0.8 + wR, wR);
-                lambdaAddWheel(-R - H - wR, 0 + wR, wR);
-                lambdaAddWheel(-R - H - wR, -W * 0.8 + wR, wR);
+      case 0x02:
+      {
+        // y only:
+        sgms.emplace_back(PT3(0, -R, 0), PT3(W, -R - H, 0));
+        sgms.emplace_back(PT3(W, -R - H, 0), PT3(-W, -R - H, 0));
+        sgms.emplace_back(PT3(-W, -R - H, 0), PT3(0, -R, 0));
+        sgms.emplace_back(PT3(0, -R, 0), PT3(W, -R - H, 0));
 
-                lambdaAddGroundSymbol(-R - H - 2 * W / 3, 0, 2 * W, 0.0_deg);
+        lambdaAddWheel(W * 0.8, -R - H, wR);
+        lambdaAddWheel(0, -R - H, wR);
+        lambdaAddWheel(-W * 0.8, -R - H, wR);
 
-                double angX = 0, angY = 0, angZ = 0;
-                TRotation3D::matrix2angles(
-                    m_nodeMainDirection.at(nodeId).getRot(), angX, angY, angZ);
+        lambdaAddGroundSymbol(0, -R - H - 2 * W / 3, 2 * W, 90.0_deg);
 
-                // flip horizontally?
-                if (cos(angZ) < 0) lambdaRotateAllSegms(180.0_deg);
-            }
-            break;
+        double angX = 0, angY = 0, angZ = 0;
+        TRotation3D::matrix2angles(m_nodeMainDirection.at(nodeId).getRot(), angX, angY, angZ);
 
-            case 0x02:
-            {
-                // y only:
-                sgms.emplace_back(PT3(0, -R, 0), PT3(W, -R - H, 0));
-                sgms.emplace_back(PT3(W, -R - H, 0), PT3(-W, -R - H, 0));
-                sgms.emplace_back(PT3(-W, -R - H, 0), PT3(0, -R, 0));
-                sgms.emplace_back(PT3(0, -R, 0), PT3(W, -R - H, 0));
+        // flip vertically?
+        if (sin(angZ) < 0) lambdaRotateAllSegms(180.0_deg);
+      }
+      break;
 
-                lambdaAddWheel(W * 0.8, -R - H, wR);
-                lambdaAddWheel(0, -R - H, wR);
-                lambdaAddWheel(-W * 0.8, -R - H, wR);
+      case 0x23:
+      {
+        // 2D fix:
+        sgms.emplace_back(PT3(-R, H, 0), PT3(-R, -H, 0));
 
-                lambdaAddGroundSymbol(0, -R - H - 2 * W / 3, 2 * W, 90.0_deg);
+        double angX = 0, angY = 0, angZ = 0;
+        TRotation3D::matrix2angles(m_nodeMainDirection.at(nodeId).getRot(), angX, angY, angZ);
 
-                double angX = 0, angY = 0, angZ = 0;
-                TRotation3D::matrix2angles(
-                    m_nodeMainDirection.at(nodeId).getRot(), angX, angY, angZ);
+        lambdaAddGroundSymbol(-R, 0, 2 * W);
 
-                // flip vertically?
-                if (sin(angZ) < 0) lambdaRotateAllSegms(180.0_deg);
-            }
-            break;
+        lambdaRotateAllSegms(angZ);
+      }
+      break;
 
-            case 0x23:
-            {
-                // 2D fix:
-                sgms.emplace_back(PT3(-R, H, 0), PT3(-R, -H, 0));
+      case 0x22:
+      {
+        // Y and ROTZ:
+        sgms.emplace_back(PT3(-H, -R, 0), PT3(-H, -2 * R, 0));
+        sgms.emplace_back(PT3(-H, -2 * R, 0), PT3(H, -2 * R, 0));
+        sgms.emplace_back(PT3(H, -2 * R, 0), PT3(H, -R, 0));
+        sgms.emplace_back(PT3(H, -R, 0), PT3(-H, -R, 0));
 
-                double angX = 0, angY = 0, angZ = 0;
-                TRotation3D::matrix2angles(
-                    m_nodeMainDirection.at(nodeId).getRot(), angX, angY, angZ);
+        lambdaAddWheel(W * 0.8, -2 * R, wR);
+        lambdaAddWheel(0, -2 * R, wR);
+        lambdaAddWheel(-W * 0.8, -2 * R, wR);
 
-                lambdaAddGroundSymbol(-R, 0, 2 * W);
+        lambdaAddGroundSymbol(0, -2 * R - 2 * wR, 2 * H, 90.0_deg);
+      }
+      break;
 
-                lambdaRotateAllSegms(angZ);
-            }
-            break;
+      default:
+        throw std::runtime_error(
+            mrpt::format("Not implemented constrained bit field: 0x%02X", constrBits));
+    };
 
-            case 0x22:
-            {
-                // Y and ROTZ:
-                sgms.emplace_back(PT3(-H, -R, 0), PT3(-H, -2 * R, 0));
-                sgms.emplace_back(PT3(-H, -2 * R, 0), PT3(H, -2 * R, 0));
-                sgms.emplace_back(PT3(H, -2 * R, 0), PT3(H, -R, 0));
-                sgms.emplace_back(PT3(H, -R, 0), PT3(-H, -R, 0));
+    // Draw:
+    for (int pass = 0; pass < num_layers; pass++)
+    {
+      TRotationTrans3D node_pose;
 
-                lambdaAddWheel(W * 0.8, -2 * R, wR);
-                lambdaAddWheel(0, -2 * R, wR);
-                lambdaAddWheel(-W * 0.8, -2 * R, wR);
+      auto glConstr = mrpt::viz::CSetOfLines::Create();
 
-                lambdaAddGroundSymbol(0, -2 * R - 2 * wR, 2 * H, 90.0_deg);
-            }
-            break;
+      if (pass == 0)
+      {  // original:
 
-            default:
-                throw std::runtime_error(mrpt::format(
-                    "Not implemented constrained bit field: 0x%02X",
-                    constrBits));
-        };
+        glConstr->setColor(.0f, .0f, .0f, o.constraints_original_alpha);
 
-        // Draw:
-        for (int pass = 0; pass < num_layers; pass++)
-        {
-            TRotationTrans3D node_pose;
+        node_pose = this->getNodePose(nodeId);
+      }
+      else if (pass == 1)
+      {  // deformed:
+        glConstr->setColor(.0f, .0f, .0f, o.constraints_deformed_alpha);
 
-            auto glConstr = mrpt::viz::CSetOfLines::Create();
+        node_pose = this->getNodePose(nodeId);
 
-            if (pass == 0)
-            {  // original:
+        Vector3 pt;
+        this->getNodeDeformedPosition(nodeId, pt, solver_info, DEFORMED_SCALE_FACTOR);
 
-                glConstr->setColor(.0f, .0f, .0f, o.constraints_original_alpha);
+        for (int k = 0; k < 3; k++) node_pose.t[k] = pt[k];
+      }
 
-                node_pose = this->getNodePose(nodeId);
-            }
-            else if (pass == 1)
-            {  // deformed:
-                glConstr->setColor(.0f, .0f, .0f, o.constraints_deformed_alpha);
+      // Draw:
 
-                node_pose = this->getNodePose(nodeId);
+      ASSERT_(sgms.size() >= 2);
+      glConstr->appendLines(sgms);
 
-                Vector3 pt;
-                this->getNodeDeformedPosition(
-                    nodeId, pt, solver_info, DEFORMED_SCALE_FACTOR);
+      OB_TODO("Check nodal coordinates orientation?");
+      glConstr->setPose(
+          mrpt::poses::CPose3D::FromRotationAndTranslation(node_pose.r.getRot(), node_pose.t));
 
-                for (int k = 0; k < 3; k++) node_pose.t[k] = pt[k];
-            }
-
-            // Draw:
-
-            ASSERT_(sgms.size() >= 2);
-            glConstr->appendLines(sgms);
-
-            OB_TODO("Check nodal coordinates orientation?");
-            glConstr->setPose(mrpt::poses::CPose3D::FromRotationAndTranslation(
-                node_pose.r.getRot(), node_pose.t));
-
-            gl.insert(glConstr);
-        }  // end for "pass" (original/deformed)
-    }
+      gl.insert(glConstr);
+    }  // end for "pass" (original/deformed)
+  }
 }
 
 void CFiniteElementProblem::internal_getVisualization_distributedLoads(
-    const CStructureProblem& str, mrpt::viz::CSetOfObjects& gl,
-    const DrawStructureOptions& o, const StaticSolveProblemInfo& solver_info,
-    const MeshOutputInfo* meshing, num_t DEFORMED_SCALE_FACTOR) const
+    const CStructureProblem& str,
+    mrpt::viz::CSetOfObjects& gl,
+    const DrawStructureOptions& o,
+    const StaticSolveProblemInfo& solver_info,
+    const MeshOutputInfo* meshing,
+    num_t DEFORMED_SCALE_FACTOR) const
 {
-    DrawElementExtraParams elParams;
-    elParams.color_alpha =
-        o.show_nodes_deformed ? o.loads_deformed_alpha : o.loads_original_alpha;
-    elParams.draw_original_position = !o.show_nodes_deformed;
-    elParams.solver_info            = &solver_info;
-    elParams.deformed_scale_factor  = DEFORMED_SCALE_FACTOR;
+  DrawElementExtraParams elParams;
+  elParams.color_alpha = o.show_nodes_deformed ? o.loads_deformed_alpha : o.loads_original_alpha;
+  elParams.draw_original_position = !o.show_nodes_deformed;
+  elParams.solver_info = &solver_info;
+  elParams.deformed_scale_factor = DEFORMED_SCALE_FACTOR;
 
-    for (int stage = 0; stage < 3; stage++)
+  for (int stage = 0; stage < 3; stage++)
+  {
+    for (const auto& eLoadKV : str.loadsOnBeams())
     {
-        for (const auto& eLoadKV : str.loadsOnBeams())
-        {
-            const auto [beamId, eLoad] = eLoadKV;
-            if (!eLoad) continue;
-            elParams.element_index = beamId;
-            switch (stage)
-            {
-                case 0:
-                    eLoad->getVisualization_init(*this, o, elParams, meshing);
-                    break;
-                case 1:
-                    eLoad->getVisualization_pre(*this, o, elParams, meshing);
-                    break;
-                case 2:
-                    gl.insert(
-                        eLoad->getVisualization(*this, o, elParams, meshing));
-                    break;
-            }
-        }
+      const auto [beamId, eLoad] = eLoadKV;
+      if (!eLoad) continue;
+      elParams.element_index = beamId;
+      switch (stage)
+      {
+        case 0:
+          eLoad->getVisualization_init(*this, o, elParams, meshing);
+          break;
+        case 1:
+          eLoad->getVisualization_pre(*this, o, elParams, meshing);
+          break;
+        case 2:
+          gl.insert(eLoad->getVisualization(*this, o, elParams, meshing));
+          break;
+      }
     }
+  }
 }
 
 void CFiniteElementProblem::internal_getVisualization_stressDiagrams(
-    mrpt::viz::CSetOfObjects& gl, const DrawStructureOptions& options,
-    const StaticSolveProblemInfo& solverInfo, const MeshOutputInfo* meshingInfo,
-    num_t DEFORMED_SCALE_FACTOR, const StressInfo& stressInfo) const
+    mrpt::viz::CSetOfObjects& gl,
+    const DrawStructureOptions& options,
+    const StaticSolveProblemInfo& solverInfo,
+    const MeshOutputInfo* meshingInfo,
+    num_t DEFORMED_SCALE_FACTOR,
+    const StressInfo& stressInfo) const
 {
-    ASSERTMSG_(
-        meshingInfo,
-        "Doing meshing is required at present for drawing stress diagrams.");
+  ASSERTMSG_(meshingInfo, "Doing meshing is required at present for drawing stress diagrams.");
 
-    const double MAX_RELATIVE_DIAG_SIZE = 0.35;
+  const double MAX_RELATIVE_DIAG_SIZE = 0.35;
 
-    // The max. absolute value value for each stress:
-    FaceStress maxAbsStress;
+  // The max. absolute value value for each stress:
+  FaceStress maxAbsStress;
 
-    const auto numOrgElements = meshingInfo->element2elements.size();
-    std::vector<FaceStress> minDiagPerElement, maxDiagPerElement;
-    minDiagPerElement.resize(numOrgElements);
-    maxDiagPerElement.resize(numOrgElements);
+  const auto numOrgElements = meshingInfo->element2elements.size();
+  std::vector<FaceStress> minDiagPerElement, maxDiagPerElement;
+  minDiagPerElement.resize(numOrgElements);
+  maxDiagPerElement.resize(numOrgElements);
 
-    std::array<bool, 6> diagEnabled = {
-        options.show_force_axial,      options.show_force_shear_y,
-        options.show_bending_moment_z, options.show_force_shear_z,
-        options.show_bending_moment_y, options.show_torsion_moment};
+  std::array<bool, 6> diagEnabled = {options.show_force_axial,      options.show_force_shear_y,
+                                     options.show_bending_moment_z, options.show_force_shear_z,
+                                     options.show_bending_moment_y, options.show_torsion_moment};
 
-    for (int pass = 0; pass < 2; pass++)
+  for (int pass = 0; pass < 2; pass++)
+  {
+    // pass #0: find out absolute maximums
+    // pass #1: Draw them
+
+    for (element_index_t elIdx = 0; elIdx < numOrgElements; elIdx++)
     {
-        // pass #0: find out absolute maximums
-        // pass #1: Draw them
+      const auto& elEls = meshingInfo->element2elements[elIdx];
+      const auto& elNodes = meshingInfo->element2nodes[elIdx];
 
-        for (element_index_t elIdx = 0; elIdx < numOrgElements; elIdx++)
+      mrpt::viz::CSetOfLines::Ptr glDiag[6];
+      if (pass == 1)
+      {
+        for (int i = 0; i < 6; i++)
         {
-            const auto& elEls   = meshingInfo->element2elements[elIdx];
-            const auto& elNodes = meshingInfo->element2nodes[elIdx];
+          if (diagEnabled[i])
+          {
+            glDiag[i] = mrpt::viz::CSetOfLines::Create();
+            glDiag[i]->setColor_u8(mrpt::img::TColor::blue());
+          }
+        }
+      }
 
-            mrpt::viz::CSetOfLines::Ptr glDiag[6];
-            if (pass == 1)
+      bool minMaxSuppression[6] = {false, false, false, false, false, false};
+
+      // Note the "<=" below: we draw the last element twice, once to draw
+      // its first face, another for the second face:
+      for (size_t iSubEl = 0; iSubEl <= elEls.size(); iSubEl++)
+      {
+        const bool isLast = iSubEl == elEls.size();
+        const auto subElIdx = elEls.at(std::min(iSubEl, elEls.size() - 1));
+        const auto& stress = stressInfo.element_stress.at(subElIdx);
+
+        // We only have linear elements yet!
+        ASSERT_(stress.size() == 2);
+
+        // Draw the "left" (first) face for all
+        unsigned int face = isLast ? 1 : 0;
+
+        const FaceStress& es = stressInfo.element_stress[subElIdx][face];
+
+        switch (pass)
+        {
+          case 0:
+            for (int i = 0; i < 6; i++)
             {
-                for (int i = 0; i < 6; i++)
-                {
-                    if (diagEnabled[i])
-                    {
-                        glDiag[i] = mrpt::viz::CSetOfLines::Create();
-                        glDiag[i]->setColor_u8(mrpt::img::TColor::blue());
-                    }
-                }
+              mrpt::keep_max(maxAbsStress[i], std::abs(es[i]));
+
+              mrpt::keep_max(maxDiagPerElement[elIdx][i], es[i]);
+              mrpt::keep_min(minDiagPerElement[elIdx][i], es[i]);
             }
+            break;
 
-            bool minMaxSuppression[6] = {false, false, false,
-                                         false, false, false};
-
-            // Note the "<=" below: we draw the last element twice, once to draw
-            // its first face, another for the second face:
-            for (size_t iSubEl = 0; iSubEl <= elEls.size(); iSubEl++)
+          case 1:  // Draw them:
+          {
+            for (int i = 0; i < 6; i++)
             {
-                const bool isLast = iSubEl == elEls.size();
-                const auto subElIdx =
-                    elEls.at(std::min(iSubEl, elEls.size() - 1));
-                const auto& stress = stressInfo.element_stress.at(subElIdx);
+              auto glLine = glDiag[i];
+              if (!glLine) continue;
 
-                // We only have linear elements yet!
-                ASSERT_(stress.size() == 2);
+              // get coords of the two ends of the
+              // sub-element:
+              const auto n0 = getElement(subElIdx)->conected_nodes_ids.at(0);
+              const auto n1 = getElement(subElIdx)->conected_nodes_ids.at(1);
+              const auto p0 = getNodePose(n0);
+              const auto p1 = getNodePose(n1);
+              const auto u = (p1.t - p0.t).unitarize();
+              const TPoint3D uv = {u.y, -u.x, 0};
 
-                // Draw the "left" (first) face for all
-                unsigned int face = isLast ? 1 : 0;
+              const double s =
+                  MAX_RELATIVE_DIAG_SIZE * es[i] / (maxAbsStress[i] != 0 ? maxAbsStress[i] : 1.0);
 
-                const FaceStress& es =
-                    stressInfo.element_stress[subElIdx][face];
+              const auto pp0 = (isLast ? p1.t : p0.t) + uv * s;
+              if (glLine->empty())
+                glLine->appendLine(p0.t.x, p0.t.y, 0, pp0.x, pp0.y, 0);
+              else
+                glLine->appendLineStrip(pp0.x, pp0.y, 0);
 
-                switch (pass)
-                {
-                    case 0:
-                        for (int i = 0; i < 6; i++)
-                        {
-                            mrpt::keep_max(maxAbsStress[i], std::abs(es[i]));
+              if (isLast) glLine->appendLineStrip(p1.t);
 
-                            mrpt::keep_max(maxDiagPerElement[elIdx][i], es[i]);
-                            mrpt::keep_min(minDiagPerElement[elIdx][i], es[i]);
-                        }
-                        break;
+              // Draw a text label with the value?
+              bool isMaxMinPoint = false;
+              if (auto diagSpan = maxDiagPerElement[elIdx][i] - minDiagPerElement[elIdx][i];
+                  diagSpan > 0.01)
+              {
+                isMaxMinPoint = (std::abs(maxDiagPerElement[elIdx][i] - es[i]) < 1e-6 * diagSpan) ||
+                                (std::abs(minDiagPerElement[elIdx][i] - es[i]) < 1e-6 * diagSpan);
+              }
 
-                    case 1:  // Draw them:
-                    {
-                        for (int i = 0; i < 6; i++)
-                        {
-                            auto glLine = glDiag[i];
-                            if (!glLine) continue;
+              if (!(iSubEl == 0 || isLast || isMaxMinPoint))
+              {
+                minMaxSuppression[i] = false;
+                continue;
+              }
 
-                            // get coords of the two ends of the
-                            // sub-element:
-                            const auto n0 =
-                                getElement(subElIdx)->conected_nodes_ids.at(0);
-                            const auto n1 =
-                                getElement(subElIdx)->conected_nodes_ids.at(1);
-                            const auto p0 = getNodePose(n0);
-                            const auto p1 = getNodePose(n1);
-                            const auto u  = (p1.t - p0.t).unitarize();
-                            const TPoint3D uv = {u.y, -u.x, 0};
+              if (minMaxSuppression[i]) continue;
 
-                            const double s =
-                                MAX_RELATIVE_DIAG_SIZE * es[i] /
-                                (maxAbsStress[i] != 0 ? maxAbsStress[i] : 1.0);
-
-                            const auto pp0 = (isLast ? p1.t : p0.t) + uv * s;
-                            if (glLine->empty())
-                                glLine->appendLine(
-                                    p0.t.x, p0.t.y, 0, pp0.x, pp0.y, 0);
-                            else
-                                glLine->appendLineStrip(pp0.x, pp0.y, 0);
-
-                            if (isLast) glLine->appendLineStrip(p1.t);
-
-                            // Draw a text label with the value?
-                            bool isMaxMinPoint = false;
-                            if (auto diagSpan = maxDiagPerElement[elIdx][i] -
-                                                minDiagPerElement[elIdx][i];
-                                diagSpan > 0.01)
-                            {
-                                isMaxMinPoint =
-                                    (std::abs(
-                                         maxDiagPerElement[elIdx][i] - es[i]) <
-                                     1e-6 * diagSpan) ||
-                                    (std::abs(
-                                         minDiagPerElement[elIdx][i] - es[i]) <
-                                     1e-6 * diagSpan);
-                            }
-
-                            if (!(iSubEl == 0 || isLast || isMaxMinPoint))
-                            {
-                                minMaxSuppression[i] = false;
-                                continue;
-                            }
-
-                            if (minMaxSuppression[i]) continue;
-
-                            // Yes: draw it:
-                            auto glLb = mrpt::viz::CText::Create();
-                            glLb->setColor_u8(0x00, 0x00, 0xd0);
-                            glLb->setLocation(
-                                pp0 + 3 * uv * options.NODE_RADIUS +
-                                mrpt::math::TPoint3D(
-                                    0, 0, 4 * options.NODE_RADIUS));
-                            glLb->setString(mrpt::format("%.03g", es[i]));
-                            gl.insert(glLb);
-                            minMaxSuppression[i] = true;
-                        }
-                    }
-                    break;
-                };
-
-            }  // for each iSubEl
-
-            if (pass == 0)
-            {
-                for (int i = 0; i < 6; i++)
-                {
-                    // These are numerical noise, discard them:
-                    if (maxAbsStress[i] < 1e-5) maxAbsStress[i] = 1;
-                }
+              // Yes: draw it:
+              auto glLb = mrpt::viz::CText::Create();
+              glLb->setColor_u8(0x00, 0x00, 0xd0);
+              glLb->setLocation(
+                  pp0 + 3 * uv * options.NODE_RADIUS +
+                  mrpt::math::TPoint3D(0, 0, 4 * options.NODE_RADIUS));
+              glLb->setString(mrpt::format("%.03g", es[i]));
+              gl.insert(glLb);
+              minMaxSuppression[i] = true;
             }
-            if (pass == 1)
-            {
-                for (int i = 0; i < 6; i++)
-                    if (diagEnabled[i]) gl.insert(glDiag[i]);
-            }
+          }
+          break;
+        };
 
-        }  // for each elIdx
-    }  // for each pass
+      }  // for each iSubEl
+
+      if (pass == 0)
+      {
+        for (int i = 0; i < 6; i++)
+        {
+          // These are numerical noise, discard them:
+          if (maxAbsStress[i] < 1e-5) maxAbsStress[i] = 1;
+        }
+      }
+      if (pass == 1)
+      {
+        for (int i = 0; i < 6; i++)
+          if (diagEnabled[i]) gl.insert(glDiag[i]);
+      }
+
+    }  // for each elIdx
+  }    // for each pass
 }

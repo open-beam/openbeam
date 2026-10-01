@@ -31,50 +31,51 @@ namespace openbeam
 {
 /** A torsion spring element in the rotation Z axis between two given nodes.
  */
-class CElementTorsionSpring
-    : public CElement,
-      public std::enable_shared_from_this<CElementTorsionSpring>
+class CElementTorsionSpring :
+    public CElement,
+    public std::enable_shared_from_this<CElementTorsionSpring>
 {
-   public:
-    CElementTorsionSpring();
-    CElementTorsionSpring(
-        const size_t from_node_id, const size_t to_node_id, const num_t K);
+ public:
+  CElementTorsionSpring();
+  CElementTorsionSpring(const size_t from_node_id, const size_t to_node_id, const num_t K);
 
-    /** Return the stiffness submatrices between each pair of edges in this
-     * element, for the current element state.
-     */
-    void getLocalStiffnessMatrices(
-        std::vector<TStiffnessSubmatrix>& outSubMats) const override;
+  /** Return the stiffness submatrices between each pair of edges in this
+   * element, for the current element state.
+   */
+  void getLocalStiffnessMatrices(std::vector<TStiffnessSubmatrix>& outSubMats) const override;
 
-    void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const override;
+  void getLocalDoFs(std::vector<used_DoFs_t>& dofs) const override;
 
-    num_t K;  //!< Stiffness constant of the spring (Nm/m)
+  num_t K;  //!< Stiffness constant of the spring (Nm/m)
 
-    /** Parse a set of parameters by (casi insensitive) name and set the element
-     * values from them.
-     *  Each element must document the supported parameters and their meaning.
-     */
-    void loadParamsFromSet(
-        const mrpt::containers::yaml& p, const EvaluationContext& ctx) override;
+  /** Parse a set of parameters by (casi insensitive) name and set the element
+   * values from them.
+   *  Each element must document the supported parameters and their meaning.
+   */
+  void loadParamsFromSet(const mrpt::containers::yaml& p, const EvaluationContext& ctx) override;
 
-    /** Draws the element to a SVG Cairo context (a pointer to a
-     * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
-     * options */
-    void drawSVG(
-        void* _cairo_context, const DrawStructureOptions& options,
-        const RenderInitData& ri, const DrawElementExtraParams& draw_el_params,
-        const MeshOutputInfo* meshing_info) const override;
-    mrpt::viz::CSetOfObjects::Ptr getVisualization(
-        const DrawStructureOptions&   options,
-        const DrawElementExtraParams& draw_el_params,
-        const MeshOutputInfo*         meshing_info) const override
-    {
-        return {};
-    }
+  /** Draws the element to a SVG Cairo context (a pointer to a
+   * Cairo::RefPtr<Cairo::Context> casted to void*), according to the passed
+   * options */
+  void drawSVG(
+      void* _cairo_context,
+      const DrawStructureOptions& options,
+      const RenderInitData& ri,
+      const DrawElementExtraParams& draw_el_params,
+      const MeshOutputInfo* meshing_info) const override;
+  mrpt::viz::CSetOfObjects::Ptr getVisualization(
+      const DrawStructureOptions& options,
+      const DrawElementExtraParams& draw_el_params,
+      const MeshOutputInfo* meshing_info) const override
+  {
+    return {};
+  }
 
-    /** Mesh this element into a set of (possibly) smaller ones */
-    void do_mesh(
-        const size_t my_idx, CStructureProblem& out_fem,
-        MeshOutputInfo& out_info, const MeshParams& params) override;
+  /** Mesh this element into a set of (possibly) smaller ones */
+  void do_mesh(
+      const size_t my_idx,
+      CStructureProblem& out_fem,
+      MeshOutputInfo& out_info,
+      const MeshParams& params) override;
 };
 }  // namespace openbeam

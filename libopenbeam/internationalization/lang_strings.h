@@ -28,24 +28,24 @@ namespace localization
 {
 enum TStringID
 {
-    STR_Constraints = 0,
-    STR_constraint,
-    STR_Loads,
-    STR_load,
-    STR_Displacements,
-    STR_displacement,
-    STR_Reactions,
-    STR_reaction,
-    STR_dof,
-    STR_node,
-    STR_and,
-    STR_click_to_enlarge,
-    STR_GlobalStiffnessMatrix,
-    STR_AllElementsStiffnessMatrices,
-    STR_Bar,
+  STR_Constraints = 0,
+  STR_constraint,
+  STR_Loads,
+  STR_load,
+  STR_Displacements,
+  STR_displacement,
+  STR_Reactions,
+  STR_reaction,
+  STR_dof,
+  STR_node,
+  STR_and,
+  STR_click_to_enlarge,
+  STR_GlobalStiffnessMatrix,
+  STR_AllElementsStiffnessMatrices,
+  STR_Bar,
 
-    // Always leave this as an END flag:
-    STR_NUMBER_OF_IDS
+  // Always leave this as an END flag:
+  STR_NUMBER_OF_IDS
 };
 }
 }  // namespace openbeam
