@@ -157,7 +157,7 @@ int main_code(int argc, char** argv)
         cmd);
 
     TCLAP::ValueArg<std::string> argSolver(
-        "", "solver", "Static solver algorithm", false, "Dense_LLT",
+        "", "solver", "Static solver algorithm", false, "Sparse_LLT",
         "{Dense_LLT|Sparse_LLT}", cmd);
 
     TCLAP::ValueArg<std::string> arg_out_animation(

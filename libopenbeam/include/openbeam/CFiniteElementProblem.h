@@ -115,11 +115,24 @@ struct StaticSolveProblemInfo
     /// displacement of free DOFs, in the same order than \a free_dof_indices
     Eigen::Matrix<num_t, Eigen::Dynamic, 1> U_f;
 
-    /// The full F vector (bounded+free DOFs)
+    /// The full F vector, for all problem DoFs (in the order of
+    /// CFiniteElementProblem::getProblemDoFs()): reactions at constrained DoFs
+    /// and applied loads (including the equivalent loads of element loads) at
+    /// free DoFs.
     Eigen::Matrix<num_t, Eigen::Dynamic, 1> F;
 
-    /// The full U vector (bounded+free DOFs)
+    /// The full U vector, for all problem DoFs (in the order of
+    /// CFiniteElementProblem::getProblemDoFs()): computed displacements at free
+    /// DoFs and the prescribed ones at constrained DoFs. Nodal coordinates.
     Eigen::Matrix<num_t, Eigen::Dynamic, 1> U;
+
+    /// Estimate of the reciprocal condition number of the free-free stiffness
+    /// matrix (a true estimate for the dense solver, a cheaper heuristic for
+    /// the sparse one). Values near zero mean that results may be inaccurate.
+    num_t rcond = std::numeric_limits<num_t>::quiet_NaN();
+
+    /// Non-fatal issues found while solving (e.g. ill-conditioning)
+    std::vector<std::string> warnings;
 };
 
 /** Options and parameters for CStructureProblem::mesh()
@@ -166,7 +179,9 @@ struct StaticSolverOptions
 {
     StaticSolverOptions() = default;
 
-    StaticSolverAlgorithm algorithm          = StaticSolverAlgorithm::Dense_LLT;
+    /// Sparse Cholesky is the right choice except for tiny problems, where
+    /// both are equally fast.
+    StaticSolverAlgorithm algorithm          = StaticSolverAlgorithm::Sparse_LLT;
     bool                  nonLinearIterative = false;
 };
 
@@ -309,6 +324,21 @@ class CFiniteElementProblem
     const constraint_list_t& getAllConstraints() const
     {
         return m_DoF_constraints;
+    }
+
+    /** Constrains a DoF of a node (in nodal coordinates) to a given
+     * displacement. The request is remembered even if no element uses that
+     * DoF (which is then left out of the problem), so it is applied again if
+     * the problem DoFs change, e.g. when meshing.
+     * \return false if the DoF is not part of the problem right now.
+     */
+    bool addNodeConstraint(node_index_t node, DoF_index dof, num_t value = 0);
+
+    /// Constraints as requested with addNodeConstraint()
+    const std::map<std::pair<node_index_t, DoF_index>, num_t>&
+        getNodeConstraintRequests() const
+    {
+        return m_node_constraint_requests;
     }
 
     /** Sets the load (force or moment) applied to a given DOF  \sa addLoadAtDOF
@@ -481,6 +511,10 @@ class CFiniteElementProblem
      */
     constraint_list_t m_DoF_constraints;
 
+    /// See addNodeConstraint()
+    std::map<std::pair<node_index_t, DoF_index>, num_t>
+        m_node_constraint_requests;
+
     /**  The vector of overall external loads (F_L) - Map keys are indices of \a
      * m_problem_DoFs  */
     load_list_t m_loads_at_each_dof;
@@ -542,6 +576,11 @@ class CFiniteElementProblem
 
     /** Fills up m_nodeMainDirection */
     void updateNodesMainOrientation();
+
+    /** Explains why a free-free stiffness matrix could not be factorized:
+     * lists the DoFs that can move freely (a mechanism), if any. */
+    std::string describeSingularStiffness(
+        const DynMatrix& Kff, const std::vector<size_t>& free_dof_indices) const;
 
     /** Used in \a m_problem_DoFs_inverse_list  */
     struct TProblemDOFIndicesForNode

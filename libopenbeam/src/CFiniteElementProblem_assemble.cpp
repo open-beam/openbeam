@@ -225,78 +225,77 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
     tle3.stop();
 
     auto tle4 =
-        mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.3_full_K");
-
-    // Build sparse K from triplets:
-    SparseMatrix<num_t> K(
-        static_cast<index_t>(nDOFs), static_cast<index_t>(nDOFs));
-    K.setFromTriplets(K_tri.begin(), K_tri.end());
-
-    if (openbeam::getVerbosityLevel() >= 3)
-        OB_MESSAGE(3) << "Complete K:\n" << Eigen::MatrixXd(K) << std::endl;
-
-    tle4.stop();
-
-    // Split K into bounded(R) and free (L) dofs:
-    // ------------------------------------------------
-    // List of free indices : free_dof_indices
-    // Indices are wrt      : m_problem_DoFs
-
-    OB_TODO("More efficient submatrices?");
-    auto tle5 =
         mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.4_sub_Ks");
 
+    // Split K into its bounded (b) and free (f) blocks, straight from the
+    // triplets of its upper triangle:
+    //  - K_ff: lower triangle only, as read by the Cholesky solvers.
+    //  - K_bb: full symmetric matrix.
+    //  - K_bf: full (rectangular) matrix.
     const index_t nDOFs_f = static_cast<index_t>(free_dof_indices.size());
     const index_t nDOFs_b = static_cast<index_t>(bounded_dof_indices.size());
-    ASSERT_(nDOFs_f + nDOFs_b == nDOFs);
+    ASSERT_EQUAL_(static_cast<size_t>(nDOFs_f + nDOFs_b), nDOFs);
 
-    SparseMatrix<num_t> K_bb_aux(nDOFs_b, nDOFs_b);
-    SparseMatrix<num_t> K_ff_aux(nDOFs_f, nDOFs_f);
-    SparseMatrix<num_t> K_bf_aux(nDOFs_b, nDOFs_f);
+    std::vector<Eigen::Triplet<num_t>> tri_ff;
+    std::vector<Eigen::Triplet<num_t>> tri_bb;
+    std::vector<Eigen::Triplet<num_t>> tri_bf;
+    tri_ff.reserve(K_tri.size());
 
-    // Symmetric K_bb
-    for (index_t r = 0; r < nDOFs_b; r++)
-        for (index_t c = r; c < nDOFs_b; c++)
-            K_bb_aux.insert(r, c) = K.coeff(
-                static_cast<index_t>(bounded_dof_indices[r]),
-                static_cast<index_t>(bounded_dof_indices[c]));
-
-    // Symmetric K_ff: IMPORTANT: Note the (c,r) transpose order, since LLT
-    // Cholesky expects the data in that triangular half.
-    for (index_t r = 0; r < nDOFs_f; r++)
-        for (index_t c = r; c < nDOFs_f; c++)
-            K_ff_aux.insert(c, r) = K.coeff(
-                static_cast<index_t>(free_dof_indices[r]),
-                static_cast<index_t>(free_dof_indices[c]));
-
-    // Non-symmetric K_bf
-    for (index_t r = 0; r < nDOFs_b; r++)
+    for (const auto& t : K_tri)
     {
-        for (index_t c = 0; c < nDOFs_f; c++)
-        {
-            const index_t i_b = static_cast<index_t>(bounded_dof_indices[r]);
-            const index_t i_f = static_cast<index_t>(free_dof_indices[c]);
+        const auto& tr    = dof_types[static_cast<size_t>(t.row())];
+        const auto& tc    = dof_types[static_cast<size_t>(t.col())];
+        const bool  rFree = tr.free_index != string::npos;
+        const bool  cFree = tc.free_index != string::npos;
 
-            K_bf_aux.insert(r, c) =
-                (i_f >= i_b)
-                    ? K.coeff(i_b, i_f)
-                    : K.coeff(
-                          i_f, i_b);  // Only the UPPER part of K is populated.
+        if (rFree && cFree)
+        {
+            const auto i = static_cast<index_t>(tr.free_index);
+            const auto j = static_cast<index_t>(tc.free_index);
+            tri_ff.emplace_back(std::max(i, j), std::min(i, j), t.value());
+        }
+        else if (!rFree && !cFree)
+        {
+            const auto i = static_cast<index_t>(tr.bounded_index);
+            const auto j = static_cast<index_t>(tc.bounded_index);
+            tri_bb.emplace_back(i, j, t.value());
+            if (i != j)
+            {
+                tri_bb.emplace_back(j, i, t.value());
+            }
+        }
+        else if (rFree)
+        {
+            tri_bf.emplace_back(
+                static_cast<index_t>(tc.bounded_index),
+                static_cast<index_t>(tr.free_index), t.value());
+        }
+        else
+        {
+            tri_bf.emplace_back(
+                static_cast<index_t>(tr.bounded_index),
+                static_cast<index_t>(tc.free_index), t.value());
         }
     }
 
-    tle5.stop();
+    // (Duplicated entries are summed up)
+    K_ff.resize(nDOFs_f, nDOFs_f);
+    K_ff.setFromTriplets(tri_ff.begin(), tri_ff.end());
+    K_bb.resize(nDOFs_b, nDOFs_b);
+    K_bb.setFromTriplets(tri_bb.begin(), tri_bb.end());
+    K_bf.resize(nDOFs_b, nDOFs_f);
+    K_bf.setFromTriplets(tri_bf.begin(), tri_bf.end());
 
-    // Convert matrices to the sparse compressed form:
-    // -----------------------------------------------------
-    auto tle6 =
-        mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.5_compress");
+    if (openbeam::getVerbosityLevel() >= 3)
+    {
+        SparseMatrix<num_t> K(
+            static_cast<index_t>(nDOFs), static_cast<index_t>(nDOFs));
+        K.setFromTriplets(K_tri.begin(), K_tri.end());
+        OB_MESSAGE(3) << "Complete K (upper triangle):\n"
+                      << Eigen::MatrixXd(K) << std::endl;
+    }
 
-    K_bb = Eigen::SparseMatrix<num_t>(K_bb_aux);
-    K_ff = Eigen::SparseMatrix<num_t>(K_ff_aux);
-    K_bf = Eigen::SparseMatrix<num_t>(K_bf_aux);
-
-    tle6.stop();
+    tle4.stop();
 
     auto tle7 = mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.6_Ub");
 

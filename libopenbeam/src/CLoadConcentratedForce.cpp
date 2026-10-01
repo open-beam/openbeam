@@ -160,9 +160,7 @@ void CLoadConcentratedForce::loadParamsFromSet(
 {
     this->P    = ctx.evaluate(p["p"]);
     this->dist = ctx.evaluate(p["dist"]);
-    dir[0]     = ctx.evaluate(p["DX"]);
-    dir[1]     = ctx.evaluate(p["DY"]);
-    if (p.has("DZ")) dir[2] = ctx.evaluate(p["DZ"]);
+    readDirection(p, ctx, dir);
 }
 
 /** Decompose the distributed load as needed into the set of elements in which

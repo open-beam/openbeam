@@ -164,9 +164,7 @@ void CLoadDistributedUniform::loadParamsFromSet(
     const mrpt::containers::yaml& p, const EvaluationContext& ctx)
 {
     this->q = ctx.evaluate(p["q"]);
-    dir[0]  = ctx.evaluate(p["DX"]);
-    dir[1]  = ctx.evaluate(p["DY"]);
-    if (p.has("DZ")) dir[2] = ctx.evaluate(p["DZ"]);
+    readDirection(p, ctx, dir);
 }
 
 /** Decompose the distributed load as needed into the set of elements in which

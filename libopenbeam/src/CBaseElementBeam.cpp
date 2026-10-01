@@ -370,44 +370,47 @@ void CBaseElementBeam::do_mesh(
     ASSERT_(my_elements.empty());
     my_elements.reserve(nElements);
 
+    // End conditions of the original element are kept at its two ends; the
+    // new joints in between are rigid.
+    const bool origStartPinned =
+        dynamic_cast<CElementBeam_2D_AA*>(this) != nullptr ||
+        dynamic_cast<CElementBeam_2D_AR*>(this) != nullptr;
+    const bool origEndPinned =
+        dynamic_cast<CElementBeam_2D_AA*>(this) != nullptr ||
+        dynamic_cast<CElementBeam_2D_RA*>(this) != nullptr;
+    const bool origEndSlider =
+        dynamic_cast<CElementBeam_2D_RD*>(this) != nullptr;
+
     for (size_t idx_el = 0; idx_el < nElements; idx_el++)
     {
+        const size_t ni = my_nodes[idx_el];
+        const size_t nj = my_nodes[idx_el + 1];
+
+        const bool isFirst     = idx_el == 0;
+        const bool isLast      = idx_el == nElements - 1;
+        const bool startPinned = isFirst && origStartPinned;
+        const bool endPinned   = isLast && origEndPinned;
+        const bool endSlider   = isLast && origEndSlider;
+
         CBaseElementBeam::Ptr new_el;
-        const size_t          ni = my_nodes[idx_el];
-        const size_t          nj = my_nodes[idx_el + 1];
-        if (idx_el == 0)
+        if (startPinned && endPinned)
         {
-            OB_TODO(
-                "Make virtual method to allow each element to tell its special "
-                "first and ending element.");
-            // First element:
-            if (dynamic_cast<CElementBeam_2D_AR*>(this) != nullptr ||
-                dynamic_cast<CElementBeam_2D_AA*>(this) != nullptr)
-                new_el = std::make_shared<CElementBeam_2D_AR>(ni, nj);
-            //			else if
-            //(dynamic_cast<CElementBeam_2D_DR*>(this)!=nullptr)
-            // new_el = new CElementBeam_2D_DR(ni,nj);
-            else
-            {
-                new_el = std::make_shared<CElementBeam_2D_RR>(ni, nj);
-            }
+            new_el = std::make_shared<CElementBeam_2D_AA>(ni, nj);
         }
-        else if (idx_el == nElements - 1)
+        else if (startPinned)
         {
-            // Last element:
-            if (dynamic_cast<CElementBeam_2D_RA*>(this) != nullptr ||
-                dynamic_cast<CElementBeam_2D_AA*>(this) != nullptr)
-                new_el = std::make_shared<CElementBeam_2D_RA>(ni, nj);
-            else if (dynamic_cast<CElementBeam_2D_RD*>(this) != nullptr)
-                new_el = std::make_shared<CElementBeam_2D_RD>(ni, nj);
-            else
-            {
-                new_el = std::make_shared<CElementBeam_2D_RR>(ni, nj);
-            }
+            new_el = std::make_shared<CElementBeam_2D_AR>(ni, nj);
+        }
+        else if (endPinned)
+        {
+            new_el = std::make_shared<CElementBeam_2D_RA>(ni, nj);
+        }
+        else if (endSlider)
+        {
+            new_el = std::make_shared<CElementBeam_2D_RD>(ni, nj);
         }
         else
         {
-            // The rest of (intermediary) elements:
             new_el = std::make_shared<CElementBeam_2D_RR>(ni, nj);
         }
         // Copy params:

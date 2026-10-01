@@ -84,6 +84,14 @@ struct CLoadOnBeam
         const MeshOutputInfo*         meshing_info) const
     {
     }
+
+   protected:
+    /** Reads a load direction from the parameters "DX", "DY" and the optional
+     * "DZ" (default: 0) into `dir`, normalized to unit length. Throws if the
+     * vector is null. */
+    static void readDirection(
+        const mrpt::containers::yaml& p, const EvaluationContext& ctx,
+        num_t dir[3]);
 };
 
 /** A "load" for a constant increase of temperature in the whole element.
@@ -123,7 +131,7 @@ struct CLoadConstTemperature : public CLoadOnBeam
 /** Distributed, uniform load over the entire length of a beam with a \a q(N/m)
  * and a director vector. Accepted parameters loadable from problem files:
  *   - "Q": Load density (N/m)
- *   - "DX", "DY" & "DZ": Director vector (must not be unitary)
+ *   - "DX", "DY" & "DZ": Direction vector (normalized; "DZ" defaults to 0)
  */
 struct CLoadDistributedUniform : public CLoadOnBeam
 {
@@ -178,7 +186,7 @@ struct CLoadDistributedUniform : public CLoadOnBeam
  * parameters loadable from problem files:
  *   - "q_ini": Load density at the start point (N/m)
  *   - "q_end": Load density at the end point (N/m)
- *   - "DX", "DY" & "DZ": Director vector (must not be unitary)
+ *   - "DX", "DY" & "DZ": Direction vector (normalized; "DZ" defaults to 0)
  */
 struct CLoadDistributedTriangular : public CLoadOnBeam
 {
@@ -225,9 +233,9 @@ struct CLoadDistributedTriangular : public CLoadOnBeam
 /** Concentrated force applied at any point along the beam, in an arbitrary
  * direction given by a director vector. Accepted parameters loadable from
  * problem files:
- *   - "P": Load value (N)
- *   - "D": Distance from the first node to the application point (m)
- *   - "DX", "DY" & "DZ": Director vector (must not be unitary)
+ *   - "p": Load value (N)
+ *   - "dist": Distance from the first node to the application point (m)
+ *   - "DX", "DY" & "DZ": Direction vector (normalized; "DZ" defaults to 0)
  */
 struct CLoadConcentratedForce : public CLoadOnBeam
 {

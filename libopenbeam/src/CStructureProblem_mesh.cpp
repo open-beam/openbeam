@@ -62,34 +62,14 @@ void CStructureProblem::mesh(
     out_fem.updateAll();
 
     // ------------------------------
-    // (4) Constraints:
-    // Copy from the original fem, since they can only appear in the original
-    // nodes:
+    // (4) Constraints: re-applied from the original requests, since the meshed
+    // problem may use DoFs that the original one did not (e.g. bending DoFs
+    // of a meshed truss bar).
     // ------------------------------
-    // Map key are indices in \a m_problem_DoFs.
-    //	  *  Map values are displacement in that DoF wrt the current node pose.
-    // Units are SI (meters or radians). 	TListOfConstraints
-    // m_DoF_constraints;
     this->updateListDoFs();
-    for (constraint_list_t::const_iterator itC =
-             this->m_DoF_constraints.begin();
-         itC != this->m_DoF_constraints.end(); ++itC)
+    for (const auto& [nodeDof, value] : m_node_constraint_requests)
     {
-        // Get the existing constraint:
-        const size_t dof_idx          = itC->first;
-        const num_t  constraint_value = itC->second;
-
-        ASSERT_(dof_idx < m_problem_DoFs.size());
-
-        const NodeDoF& dof              = m_problem_DoFs[dof_idx];
-        const size_t   original_node_id = dof.nodeId;
-
-        // Insert into the new (meshed) FEM problem:
-        const size_t globalIdxDOF = out_fem.getDOFIndex(
-            original_node_id, DoF_index(dof.dof) /* 0:dx,1:dy,... */);
-        ASSERT_(globalIdxDOF != string::npos);
-
-        out_fem.insertConstraint(globalIdxDOF, constraint_value);
+        out_fem.addNodeConstraint(nodeDof.first, nodeDof.second, value);
     }
 
     // ------------------------------

@@ -34,11 +34,30 @@ CFiniteElementProblem::~CFiniteElementProblem() = default;
 void CFiniteElementProblem::clear()
 {
     m_node_poses.clear();
+    m_node_defined.clear();
+    m_node_labels.clear();
     m_DoF_constraints.clear();
+    m_node_constraint_requests.clear();
     m_loads_at_each_dof.clear();
     m_loads_at_each_dof_equivs.clear();
     m_extra_stress_for_each_element.clear();
     m_elements.clear();
+}
+
+bool CFiniteElementProblem::addNodeConstraint(
+    node_index_t node, DoF_index dof, num_t value)
+{
+    ASSERT_LT_(node, getNumberOfNodes());
+    m_node_constraint_requests[{node, dof}] = value;
+
+    updateListDoFs();
+    const size_t idx = getDOFIndex(node, dof);
+    if (idx == std::string::npos)
+    {
+        return false;
+    }
+    insertConstraint(idx, value);
+    return true;
 }
 
 size_t CFiniteElementProblem::insertElement(CElement::Ptr el)

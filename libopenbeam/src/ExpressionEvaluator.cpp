@@ -39,7 +39,21 @@ double openbeam::evaluate(
     }
     catch (const std::exception& e)
     {
-        throw std::runtime_error(
-            mrpt::format("[Line: %i] %s", lineNumber + 1, e.what()));
+        // Keep only the parser diagnostic, e.g. "Undefined symbol: 'Z'", out
+        // of the full exception text (which includes a backtrace):
+        std::string       msg = e.what();
+        const std::string tag = "Error: `";
+        if (const auto p = msg.find(tag); p != std::string::npos)
+        {
+            msg = msg.substr(p + tag.size());
+            msg = msg.substr(0, msg.find('`'));
+            if (const auto dash = msg.find(" - "); dash != std::string::npos)
+            {
+                msg = msg.substr(dash + 3);  // drop the "ERR123" code
+            }
+        }
+        throw std::runtime_error(mrpt::format(
+            "Line %i: %s in expression '%s'", lineNumber + 1, msg.c_str(),
+            expr.c_str()));
     }
 }

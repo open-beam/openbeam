@@ -176,9 +176,7 @@ void CLoadDistributedTriangular::loadParamsFromSet(
     q_ini = ctx.evaluate(p["q_ini"]);
     q_end = ctx.evaluate(p["q_end"]);
 
-    dir[0] = ctx.evaluate(p["DX"]);
-    dir[1] = ctx.evaluate(p["DY"]);
-    if (p.has("DZ")) dir[2] = ctx.evaluate(p["DZ"]);
+    readDirection(p, ctx, dir);
 }
 
 /** Decompose the distributed load as needed into the set of elements in which

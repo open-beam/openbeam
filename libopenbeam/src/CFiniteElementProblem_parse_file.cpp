@@ -26,6 +26,7 @@
 #include <openbeam/CStructureProblem.h>
 
 #include <array>
+#include <charconv>
 #include <optional>
 
 #include "ExpressionEvaluator.h"
@@ -286,7 +287,15 @@ num_t EvaluationContext::evaluate(const std::string& sVarVal) const
     OB_MESSAGE(5) << "[evaluate] Line: " << lin_num
                   << " Expression: " << sVarVal << "..." << std::endl;
 
-    const num_t val = openbeam::evaluate(sVarVal, parameters, lin_num);
+    // Fast path for plain numbers, by far the most common case:
+    num_t       val     = 0;
+    const char* first   = sVarVal.data();
+    const char* last    = first + sVarVal.size();
+    const auto [ptr, ec] = std::from_chars(first, last, val);
+    if (ec != std::errc() || ptr != last)
+    {
+        val = openbeam::evaluate(sVarVal, parameters, lin_num);
+    }
 
     OB_MESSAGE(5) << " ==> " << val << std::endl;
     return val;
@@ -620,11 +629,10 @@ void CFiniteElementProblem::internal_parser5_constraints(
                 {
                     continue;
                 }
-                const size_t globalIdxDOF = this->getDOFIndex(
-                    static_cast<size_t>(mrpt::round(nodeId)), DoF_index(k));
-                if (globalIdxDOF != std::string::npos)
+                if (addNodeConstraint(
+                        static_cast<size_t>(mrpt::round(nodeId)),
+                        DoF_index(k), constrVal))
                 {
-                    this->insertConstraint(globalIdxDOF, constrVal);
                     OB_MESSAGE(4) << "Adding constraint in DoF=" << sDof
                                   << " of node " << nodeId
                                   << " value=" << constrVal << "\n";
