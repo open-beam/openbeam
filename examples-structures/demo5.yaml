@@ -1,0 +1,33 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#  By Jose Luis Blanco Claraco (2017)
+#
+# Execute with:
+#
+# ~/code/openbeam/build/bin/ob-solve -i demo5.yaml --svg --html -o index.html --stress-plots --stress  --out-animation-num-frames 20 --out-images-width 600 --anim-show-node-labels --svg-prefix demo5 --svg-deformed-factor 100 --anim-keep-files --show-U --out-dir demo5 -l es --plots-continuous-beam 0,1,2,3 --mesh --mesh-resolution 0.10 --draw-margin-left 0.5  --draw-margin-right 0.5  --draw-margin-bottom 0.2 --draw-margin-top 0.25 --show-FR
+#
+# -------------------------------------------------------
+
+
+beam_sections:
+- {name: IPE200, E: 2.1e11, A: 28.5e-4, Iz: 1940e-8}
+
+nodes:
+- {id: 0, coords: [0, 0     // A], label: A}
+- {id: 1, coords: [2, 0     // B], label: B}
+- {id: 2, coords: [2, 1   // C], label: C}
+- {id: 3, coords: [2, 2   // D], label: D}
+- {id: 4, coords: [3, 3   // E], label: D}
+
+elements:
+- {type: BEAM2D_RR, nodes: [0, 1], section: IPE200}
+- {type: BEAM2D_RD, nodes: [1, 2], section: IPE200}
+- {type: BEAM2D_RA, nodes: [2, 3], section: IPE200}
+- {type: BEAM2D_AR, nodes: [3, 4], section: IPE200}
+
+constraints:
+- {node: 0, dof: DXDY}
+- {node: 4, dof: DXDYRZ}
+
+element_loads:
+- {element: 3, type: DISTRIB_UNIFORM, q: 5000, DX: 0.7071, DY: -0.7071, DZ: 0}

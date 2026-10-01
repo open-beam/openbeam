@@ -89,7 +89,7 @@ int main_code(int argc, char** argv)
     TCLAP::CmdLine cmd("ob-solve", ' ', "" /* version */);
 
     TCLAP::ValueArg<std::string> arg_problemFile(
-        "i", "input", "Problem file to load", true, "", "problem.txt", cmd);
+        "i", "input", "Problem file to load", true, "", "problem.yaml", cmd);
     TCLAP::ValueArg<int> arg_verbose_level(
         "v", "verbose", "Verbosity level (0-3)", false, 1, "0-3", cmd);
     TCLAP::ValueArg<std::string> arg_language(

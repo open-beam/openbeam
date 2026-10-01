@@ -1,0 +1,34 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#  By Jose Luis Blanco Claraco (2017)
+#
+# Execute with: 
+#
+# ob-solve -i demo4.yaml --html -o p4.html --show-U --show-FR --stress
+#
+# -------------------------------------------------------
+
+
+parameters:
+  G: 9.81
+  D: 2  # Dimensions of the problem
+  M: G * 100  # Load
+
+beam_sections:
+- {name: IPE200, E: 2.1e11, A: 28.5e-4, Iz: 1940e-8}
+
+nodes:
+- {id: 0, coords: [0, 0]}
+- {id: 1, coords: [D, 0]}
+- {id: 2, coords: [0, D]}
+
+elements:
+- {type: BEAM2D_RR, nodes: [0, 1], section: IPE200}
+- {type: BEAM2D_RR, nodes: [0, 2], section: IPE200}
+
+constraints:
+- {node: 2, dof: DXDY}
+- {node: 1, dof: DXRZ}
+
+node_loads:
+- {node: 0, dof: RZ, value: M}

@@ -1,0 +1,36 @@
+# -------------------------------------------------------
+# Example of a FE problem for the OpenBeam library
+#  By Jose Luis Blanco Claraco (2017)
+#
+# Execute with: 
+#
+# ~/code/openbeam/build/bin/ob-solve -i pr1_05.yaml --svg --html -o index.html --stress-plots --stress  --out-animation-num-frames 20 --out-images-width 600 --anim-show-node-labels --svg-prefix pr1_05 --svg-deformed-factor 100 --anim-keep-files --show-U --out-dir pr1_05 -l es --mesh --mesh-resolution 0.10 --draw-margin-left 0.5  --draw-margin-right 0.5  --draw-margin-bottom 0.2 --draw-margin-top 0.25 --show-FR
+#
+# -------------------------------------------------------
+
+
+parameters:
+  P: 1000  // Newtons
+  L: 1     // m
+
+beam_sections:
+- {name: IPE200, E: 2.1e11, A: 28.5e-4, Iz: 1940e-8}
+
+nodes:
+- {id: 0, coords: [0, 0     // A], label: A}
+- {id: 1, coords: [0.5*L, 0.5*L*0.57735     // B], label: B}
+- {id: 2, coords: [L*0.5, L*0.5*1.73205   // C], label: C}
+- {id: 3, coords: [L, 0   // D], label: D}
+
+elements:
+- {type: BEAM2D_RD, nodes: [0, 1], section: IPE200}
+- {type: BEAM2D_RR, nodes: [2, 1], section: IPE200}
+- {type: BEAM2D_RR, nodes: [3, 1], section: IPE200}
+
+constraints:
+- {node: 0, dof: DXDYRZ}
+- {node: 3, dof: DY}
+
+node_loads:
+- {node: 2, dof: DX, value: +P*0.5}
+- {node: 2, dof: DY, value: -P*0.866}

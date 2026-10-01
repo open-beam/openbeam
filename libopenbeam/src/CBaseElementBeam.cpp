@@ -334,9 +334,12 @@ void CBaseElementBeam::do_mesh(
     ASSERT_(L > 0);
     ASSERT_(params.max_element_length > 0);
 
-    // Compute # of elements:
+    // Number of elements. Truss bars (pinned at both ends) are not split: they
+    // only carry a constant axial force, and their pieces would have no
+    // bending stiffness to keep the new intermediate nodes in place.
+    const bool   isTrussBar = dynamic_cast<CElementBeam_2D_AA*>(this) != nullptr;
     const size_t nElements =
-        static_cast<size_t>(ceil(L / params.max_element_length));
+        isTrussBar ? 1 : static_cast<size_t>(ceil(L / params.max_element_length));
 
     // 1/2: Create new intermediary nodes:
     // -----------------------------------------------

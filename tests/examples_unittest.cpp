@@ -170,7 +170,8 @@ TEST_P(Examples, MeshingKeepsNodalDisplacements)
     StaticSolveProblemInfo meshedInfo;
     s.problem->mesh(meshed, mi, mp);
     meshed.solveStatic(meshedInfo);
-    EXPECT_GT(meshed.getNumberOfElements(), s.problem->getNumberOfElements());
+    // (Truss bars are not split, so pure trusses keep all their elements)
+    EXPECT_GE(meshed.getNumberOfElements(), s.problem->getNumberOfElements());
 
     const double scale = std::max(s.info.U_f.cwiseAbs().maxCoeff(), 1e-12);
     for (size_t node = 0; node < s.problem->getNumberOfNodes(); node++)
