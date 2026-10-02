@@ -1,0 +1,50 @@
+name: CI Linux
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.compiler }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    env:
+      CC: ${{ matrix.compiler == 'clang' && 'clang' || 'gcc' }}
+      CXX: ${{ matrix.compiler == 'clang' && 'clang++' || 'g++' }}
+    steps:
+      - name: Checkout OpenBeam
+        uses: actions/checkout@v4
+        with:
+          path: src/openbeam
+
+      - name: Checkout MRPT 3 (develop)
+        uses: actions/checkout@v4
+        with:
+          repository: MRPT/mrpt
+          ref: develop
+          path: src/mrpt
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get -y update
+          sudo apt-get install -y cmake build-essential clang libeigen3-dev libgtest-dev \
+            libglfw3-dev libglu1-mesa-dev freeglut3-dev libassimp-dev libtinyxml2-dev \
+            libzstd-dev python3-pip
+          pip3 install --break-system-packages colcon-common-extensions
+
+      - name: Build
+        run: |
+          colcon build --event-handlers console_direct+ \
+            --packages-up-to openbeam \
+            --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+
+      - name: Test
+        run: |
+          colcon test --packages-select openbeam --event-handlers console_direct+ \
+            --return-code-on-test-failure

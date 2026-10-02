@@ -1,9 +1,9 @@
 *~
-build*
-install*
+/build*/
+/install*/
+/log/
 *.layout
 CMakeFiles/
 CMakeLists.txt.user
-
 *.user
 .vscode
