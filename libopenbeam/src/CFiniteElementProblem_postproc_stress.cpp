@@ -76,6 +76,16 @@ void CFiniteElementProblem::postProcCalcStress(
     const NodeDoF& D = m_problem_DoFs[dof_idx];
     U[D.nodeId][D.dofAsInt()] = solver_info.U_f[i];
   }
+  // From nodal to global coordinates:
+  for (size_t n = 0; n < nNodes; n++)
+  {
+    const TRotation3D& rot = m_node_poses[n].r;
+    if (!rot.isIdentity())
+    {
+      U[n].head<3>() = rot.getRot() * U[n].head<3>();
+      U[n].tail<3>() = rot.getRot() * U[n].tail<3>();
+    }
+  }
 
   // For each element, ask for its stiffness sub-matrices, gather the
   //  global displacements of each edge and build a complete

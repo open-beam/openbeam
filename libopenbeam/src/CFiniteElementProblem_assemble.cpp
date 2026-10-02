@@ -295,113 +295,50 @@ void CFiniteElementProblem::assembleProblem(BuildProblemInfo& out_info)
   // of processing special loads:
   this->internalComputeStressAndEquivalentLoads();
 
-  // Build F_f vector:
-  // -------------------------
+  // Applied loads, direct and equivalent ones from element loads, are given in
+  // global coordinates. Convert them to nodal coordinates and split them into
+  // free DoFs (F_f) and constrained ones (F_b_applied, taken by the supports):
+  out_info.F_f.setZero(nDOFs_f);
+  out_info.F_b_applied.setZero(nDOFs_b);
   {
-    out_info.F_f.resize(nDOFs_f);
-    out_info.F_f.setZero();
-
-    for (size_t i = 0; i < nDOFs_f; i++)
+    std::vector<Vector6> nodeLoads(nNodes, Vector6::Zero());
+    for (const auto* loads : {&m_loads_at_each_dof, &m_loads_at_each_dof_equivs})
     {
-      const size_t dofIdx = out_info.free_dof_indices[i];
+      for (const auto& [dofIdx, value] : *loads)
+      {
+        const NodeDoF& d = m_problem_DoFs.at(dofIdx);
+        nodeLoads[d.nodeId][d.dofAsInt()] += value;
+      }
+    }
 
-      if (auto it = m_loads_at_each_dof.find(dofIdx); it != m_loads_at_each_dof.end())
-        out_info.F_f[i] = it->second;
-
-      if (auto it = m_loads_at_each_dof_equivs.find(dofIdx); it != m_loads_at_each_dof_equivs.end())
-        out_info.F_f[i] += it->second;
+    for (size_t i = 0; i < nNodes; i++)
+    {
+      Vector6 f = nodeLoads[i];
+      const TRotation3D& rot = this->getNodePose(i).r;
+      if (!rot.isIdentity())
+      {
+        f.head<3>() = rot.getRot().transpose() * f.head<3>();
+        f.tail<3>() = rot.getRot().transpose() * f.tail<3>();
+      }
+      for (int k = 0; k < 6; k++)
+      {
+        const int dofIdx = m_problem_DoFs_inverse_list[i].dof_index[k];
+        if (f[k] == 0 || dofIdx < 0)
+        {
+          continue;
+        }
+        const auto& t = dof_types[static_cast<size_t>(dofIdx)];
+        if (t.free_index != string::npos)
+        {
+          out_info.F_f[t.free_index] += f[k];
+        }
+        else
+        {
+          out_info.F_b_applied[t.bounded_index] += f[k];
+        }
+      }
     }
   }
 
   tle8.stop();
-
-  auto tle9 = mrpt::system::CTimeLoggerEntry(timelog, "assembleProblem.9_nodalCoords");
-
-  // Process nodal coordinates:
-  for (size_t i = 0; i < nNodes; i++)
-  {
-    const TRotationTrans3D& rt_i = this->getNodePose(i);
-    if (rt_i.r.isIdentity()) continue;  // Nothing to do here.
-
-    // Loads (Forces and moments) at "i".
-    num_t* Fs[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
-    Eigen::Matrix<num_t, 3, 1> Fi, Mi;
-    Fi.setZero();
-    Mi.setZero();
-
-    // Bounded (translations and rotations) at "i".
-    num_t* Us[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
-    Eigen::Matrix<num_t, 3, 1> Ui, URi;
-    Ui.setZero();
-    URi.setZero();
-
-    // make list of pointers once:
-    const TProblemDOFIndicesForNode& dof_i = m_problem_DoFs_inverse_list[i];
-    for (int k = 0; k < 6; k++)
-    {
-      if (dof_i.dof_index[k] != -1)
-      {
-        // This DOF is studied in the problem:
-        if (auto it = problem_dof2free_dof_indices.find(dof_i.dof_index[k]);
-            it != problem_dof2free_dof_indices.end())
-        {
-          // it is a free DOF:
-          Fs[k] = &out_info.F_f[it->second];
-        }
-        else
-        {
-          // It must be bounded:
-          auto it2 = problem_dof2bounded_dof_indices.find(dof_i.dof_index[k]);
-          ASSERT_(it2 != problem_dof2bounded_dof_indices.end());
-          Us[k] = &out_info.U_b[it2->second];
-        }
-      }
-    }
-
-    // load current values (in global coords) into the temp. vectors:
-    for (int k = 0; k < 6; k++)
-    {
-      if (Fs[k])
-      {
-        if (k < 3)
-          Fi(k, 0) = *Fs[k];
-        else
-          Mi(k - 3, 0) = *Fs[k];
-      }
-      if (Us[k])
-      {
-        if (k < 3)
-          Ui(k, 0) = *Us[k];
-        else
-          URi(k - 3, 0) = *Us[k];
-      }
-    }
-
-    // Convert from "global" to "nodal" coordinates:
-    Fi = rt_i.r.getRot().transpose() * Fi;
-    Mi = rt_i.r.getRot().transpose() * Mi;
-
-    Ui = rt_i.r.getRot().transpose() * Ui;
-    URi = rt_i.r.getRot().transpose() * URi;
-
-    // and save back to the pointers:
-    for (int k = 0; k < 6; k++)
-    {
-      if (Fs[k])
-      {
-        if (k < 3)
-          *Fs[k] = Fi(k, 0);
-        else
-          *Fs[k] = Mi(k - 3, 0);
-      }
-      if (Us[k])
-      {
-        if (k < 3)
-          *Us[k] = Ui(k, 0);
-        else
-          *Us[k] = URi(k - 3, 0);
-      }
-    }
-  }  // end for each node: process nodal coordinates:
-  tle9.stop();
 }

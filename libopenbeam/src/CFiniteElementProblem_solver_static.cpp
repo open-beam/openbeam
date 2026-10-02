@@ -332,17 +332,8 @@ void CFiniteElementProblem::solveStatic(
     out_info.F_b = bi.K_bf * out_info.U_f;
   }
 
-  // Add the contributions of distributed loads to the reactions.
-  // m_loads_at_each_dof_equivs: equivalent loads (F_L') on each DoF due to
-  // element loads. Map keys are indices of m_problem_DoFs.
-  for (const auto& [idx_dof, F_value] : m_loads_at_each_dof_equivs)
-  {
-    const size_t idx_restricted = bi.dof_types[idx_dof].bounded_index;
-    if (idx_restricted != std::string::npos)
-    {
-      out_info.F_b[idx_restricted] -= F_value;
-    }
-  }
+  // Loads applied on constrained DoFs are taken by the supports:
+  out_info.F_b -= bi.F_b_applied;
 
   // Full U and F vectors, for all DoFs:
   const size_t nDOFs = bi.dof_types.size();

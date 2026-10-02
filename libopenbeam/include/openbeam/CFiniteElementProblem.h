@@ -96,6 +96,10 @@ struct BuildProblemInfo
   /// A vector of length = "free_dof_indices.size()" with the overall load at
   /// each free DOF, in the order as they appear in \a free_dof_indices
   Eigen::Matrix<num_t, Eigen::Dynamic, 1> F_f;
+
+  /// Loads applied directly on constrained DoFs, in the order of
+  /// \a bounded_dof_indices. They go straight into the supports.
+  Eigen::Matrix<num_t, Eigen::Dynamic, 1> F_b_applied;
 };
 
 /** Output information from \a solveStatic() */
