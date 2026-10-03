@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['updateall_247',['updateAll',['../classopenbeam_1_1CFiniteElementProblem.html#a1c8ac146e827a709347fba16db8e99e2',1,'openbeam::CFiniteElementProblem::updateAll()'],['../classopenbeam_1_1CStructureProblem.html#a962459a56d370a660391ed99d9a90365',1,'openbeam::CStructureProblem::updateAll()']]],
-  ['updateelementsorientation_248',['updateElementsOrientation',['../classopenbeam_1_1CFiniteElementProblem.html#a913a2665c18fbf02143b09ea2ec6fc2a',1,'openbeam::CFiniteElementProblem']]],
-  ['updatelistdofs_249',['updateListDoFs',['../classopenbeam_1_1CFiniteElementProblem.html#a4498e7c5b8e04262b9a8394aee5628c4',1,'openbeam::CFiniteElementProblem']]],
-  ['updatenodeconnections_250',['updateNodeConnections',['../classopenbeam_1_1CFiniteElementProblem.html#ac404277f56c516ee28ae8634695b36db',1,'openbeam::CFiniteElementProblem']]],
-  ['updatenodesmainorientation_251',['updateNodesMainOrientation',['../classopenbeam_1_1CFiniteElementProblem.html#ac4992da99b8984c550fd3bc7a1519921',1,'openbeam::CFiniteElementProblem']]],
-  ['updateorientationfromnodepositions_252',['updateOrientationFromNodePositions',['../classopenbeam_1_1CElement.html#a739a2ce750297460db7442199c4e8c37',1,'openbeam::CElement']]]
+  ['saveasimagesvg_254',['saveAsImageSVG',['../classopenbeam_1_1CFiniteElementProblem.html#a5981dabd8445ee1c68c4a80181a98182',1,'openbeam::CFiniteElementProblem']]],
+  ['setdesignrotationaroundlinearaxis_255',['setDesignRotationAroundLinearAxis',['../classopenbeam_1_1CElement.html#aab8dfcedfbd8ce19bafe0e626357e4b2',1,'openbeam::CElement']]],
+  ['setloadatdof_256',['setLoadAtDOF',['../classopenbeam_1_1CFiniteElementProblem.html#af1f5649a98d1ec92f057cbbb1f2712a6',1,'openbeam::CFiniteElementProblem']]],
+  ['setnodepose_257',['setNodePose',['../classopenbeam_1_1CFiniteElementProblem.html#ae9b5097abe615c7642ad377a81e7e819',1,'openbeam::CFiniteElementProblem::setNodePose(size_t idx, const TRotationTrans3D &amp;p)'],['../classopenbeam_1_1CFiniteElementProblem.html#aaeb78cc2da49087620953085ac1b9c96',1,'openbeam::CFiniteElementProblem::setNodePose(size_t idx, const num_t x, const num_t y, const num_t z)']]],
+  ['setnumberofnodes_258',['setNumberOfNodes',['../classopenbeam_1_1CFiniteElementProblem.html#ab5589ef287d690918af97255bcf2ca1e',1,'openbeam::CFiniteElementProblem']]],
+  ['solvestatic_259',['solveStatic',['../classopenbeam_1_1CFiniteElementProblem.html#a4413a861acaa9dbbd473f6655093ae3a',1,'openbeam::CFiniteElementProblem']]]
 ];

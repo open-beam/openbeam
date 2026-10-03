@@ -7,10 +7,14 @@
   <title>Installing &mdash; OpenBeam  documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
       <link rel="stylesheet" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+      <link rel="stylesheet" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
       <link rel="stylesheet" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
 
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
@@ -89,15 +93,15 @@
 <li><p>MRPT (&gt;=2.4.0)</p></li>
 </ul>
 <p>In Ubuntu, this will install all requirements:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install <span class="se">\</span>
-  build-essential cmake g++ <span class="se">\</span>
-  libmrpt-opengl-dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>build-essential<span class="w"> </span>cmake<span class="w"> </span>g++<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libmrpt-opengl-dev
 </pre></div>
 </div>
 <p>Compile as usual:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir build
-<span class="nb">cd</span> build
-cmake ..
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>build
+<span class="nb">cd</span><span class="w"> </span>build
+cmake<span class="w"> </span>..
 make
 <span class="c1">#make test</span>
 </pre></div>

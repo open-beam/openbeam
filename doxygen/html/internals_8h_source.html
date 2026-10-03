@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>OpenBeam: /home/jlblanco/code/openbeam/libopenbeam/src/internals.h Source File</title>
+<title>OpenBeam: /home/jlblanco/code/openbeam-public/libopenbeam/src/internals.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -115,60 +115,59 @@ $(function() {
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;{</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> CAIROCR&gt;</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keywordtype">void</span> drawLocalScaledSegments(</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    CAIROCR&amp; cr, <span class="keyword">const</span> TRotationTrans3D&amp; node_pose, <span class="keyword">const</span> <span class="keywordtype">double</span> scale,</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keyword">const</span> std::vector&lt;TPoint3D&gt;&amp; seq_points_local)</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;{</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keyword">const</span> Matrix33&amp; node_rot = node_pose.r.getRot();</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="comment">// then rotate to the nodal coordinates (typ. coincides with global coords)</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span>          nPts = seq_points_local.size();</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    std::vector&lt;TPoint3D&gt; seq_points_global;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <span class="keywordflow">if</span> (node_pose.r.isIdentity())</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    {</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        seq_points_global = seq_points_local;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; nPts; k++)</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;            <span class="comment">// POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;            <span class="keywordflow">if</span> (scale == 1)</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;                seq_points_global[k] += node_pose.t;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;            <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;                seq_points_global[k] =</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                    node_pose.t + scale * seq_points_global[k];</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    }</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    {</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        seq_points_global.resize(nPts);</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; nPts; k++)</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        {</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;            <span class="comment">// POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> l = 0; l &lt; 3; l++)</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                seq_points_global[k][l] =</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                    node_pose.t[l] +</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;                    scale * (node_rot.coeff(l, 0) * seq_points_local[k].x +</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;                             node_rot.coeff(l, 1) * seq_points_local[k].y +</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                             node_rot.coeff(l, 2) * seq_points_local[k].z);</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        }</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    }</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    CAIROCR&amp; cr,</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keyword">const</span> TRotationTrans3D&amp; node_pose,</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> scale,</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keyword">const</span> std::vector&lt;TPoint3D&gt;&amp; seq_points_local)</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;{</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  <span class="keyword">const</span> Matrix33&amp; node_rot = node_pose.r.getRot();</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="comment">// then rotate to the nodal coordinates (typ. coincides with global coords)</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> nPts = seq_points_local.size();</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  std::vector&lt;TPoint3D&gt; seq_points_global;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  <span class="keywordflow">if</span> (node_pose.r.isIdentity())</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  {</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    seq_points_global = seq_points_local;</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; nPts; k++)</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;      <span class="comment">// POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      <span class="keywordflow">if</span> (scale == 1)</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        seq_points_global[k] += node_pose.t;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;      <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        seq_points_global[k] = node_pose.t + scale * seq_points_global[k];</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  }</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  {</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    seq_points_global.resize(nPts);</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; nPts; k++)</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    {</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;      <span class="comment">// POINT_GLOBAL = NODE_GLOBAL + MATRIX33 * POINT_LOCAL</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> l = 0; l &lt; 3; l++)</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        seq_points_global[k][l] =</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;            node_pose.t[l] + scale * (node_rot.coeff(l, 0) * seq_points_local[k].x +</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;                                      node_rot.coeff(l, 1) * seq_points_local[k].y +</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                                      node_rot.coeff(l, 2) * seq_points_local[k].z);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    }</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  }</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="comment">// Draw the lines:</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; nPts; k++)</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    {</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">double</span> xx = seq_points_global[k].x;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">double</span> yy = seq_points_global[k].y;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        <span class="keywordflow">if</span> (k == 0)</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;            cr-&gt;move_to(xx, yy);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;            cr-&gt;line_to(xx, yy);</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    }</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    cr-&gt;stroke();</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <span class="comment">// Draw the lines:</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; nPts; k++)</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  {</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> xx = seq_points_global[k].x;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> yy = seq_points_global[k].y;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keywordflow">if</span> (k == 0)</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;      cr-&gt;move_to(xx, yy);</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;      cr-&gt;line_to(xx, yy);</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  }</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  cr-&gt;stroke();</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;}  <span class="comment">// end of drawLocalScaledSegments</span></div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="keywordtype">void</span> computeOrientationFromTwoPoints(</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keyword">const</span> TPoint3D&amp; t1, <span class="keyword">const</span> TPoint3D&amp; t2, <span class="keyword">const</span> num_t rotation_around_x,</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    TRotation3D&amp; R);</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160; </div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;}  <span class="comment">// namespace internal</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;}  <span class="comment">// namespace openbeam</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keyword">const</span> TPoint3D&amp; t1, <span class="keyword">const</span> TPoint3D&amp; t2, <span class="keyword">const</span> num_t rotation_around_x, TRotation3D&amp; R);</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;}  <span class="comment">// namespace internal</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;}  <span class="comment">// namespace openbeam</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

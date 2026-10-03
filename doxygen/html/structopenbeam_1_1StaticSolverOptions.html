@@ -85,8 +85,7 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a9957a43c35d56b71b9f41d81165532a8"><td class="memItemLeft" align="right" valign="top"><a id="a9957a43c35d56b71b9f41d81165532a8"></a>
-StaticSolverAlgorithm&#160;</td><td class="memItemRight" valign="bottom"><b>algorithm</b> = StaticSolverAlgorithm::Dense_LLT</td></tr>
+<tr class="memitem:a9957a43c35d56b71b9f41d81165532a8"><td class="memItemLeft" align="right" valign="top">StaticSolverAlgorithm&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1StaticSolverOptions.html#a9957a43c35d56b71b9f41d81165532a8">algorithm</a> = StaticSolverAlgorithm::Sparse_LLT</td></tr>
 <tr class="separator:a9957a43c35d56b71b9f41d81165532a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac673bdbc5e61882b6956d7bb56ccb3b4"><td class="memItemLeft" align="right" valign="top"><a id="ac673bdbc5e61882b6956d7bb56ccb3b4"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>nonLinearIterative</b> = false</td></tr>
@@ -94,8 +93,24 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>nonLinearIterative</b
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The options of the static solver <em>solveStatic()</em> </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li>/home/jlblanco/code/openbeam/libopenbeam/include/openbeam/<a class="el" href="CFiniteElementProblem_8h_source.html">CFiniteElementProblem.h</a></li>
+</div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a9957a43c35d56b71b9f41d81165532a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9957a43c35d56b71b9f41d81165532a8">&#9670;&nbsp;</a></span>algorithm</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">StaticSolverAlgorithm openbeam::StaticSolverOptions::algorithm = StaticSolverAlgorithm::Sparse_LLT</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Sparse Cholesky is the right choice except for tiny problems, where both are equally fast. </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li>/home/jlblanco/code/openbeam-public/libopenbeam/include/openbeam/<a class="el" href="CFiniteElementProblem_8h_source.html">CFiniteElementProblem.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

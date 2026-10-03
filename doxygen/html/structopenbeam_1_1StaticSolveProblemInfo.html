@@ -87,8 +87,8 @@ Collaboration diagram for openbeam::StaticSolveProblemInfo:</div>
 <div class="dyncontent">
 <div class="center"><img src="structopenbeam_1_1StaticSolveProblemInfo__coll__graph.png" border="0" usemap="#aopenbeam_1_1StaticSolveProblemInfo_coll__map" alt="Collaboration graph"/></div>
 <map name="aopenbeam_1_1StaticSolveProblemInfo_coll__map" id="aopenbeam_1_1StaticSolveProblemInfo_coll__map">
-<area shape="rect" title=" " alt="" coords="5,95,256,121"/>
-<area shape="rect" href="structopenbeam_1_1BuildProblemInfo.html" title=" " alt="" coords="25,5,236,32"/>
+<area shape="rect" title=" " alt="" coords="5,95,232,121"/>
+<area shape="rect" href="structopenbeam_1_1BuildProblemInfo.html" title=" " alt="" coords="24,5,213,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -102,18 +102,35 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a0dffe397931219475fd1a5bdbf73b610"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a041389c93388497648777f76a9345168"><td class="memItemLeft" align="right" valign="top">Eigen::Matrix&lt; num_t, Eigen::Dynamic, 1 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html#a041389c93388497648777f76a9345168">U_f</a></td></tr>
 <tr class="separator:a041389c93388497648777f76a9345168"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c4a0d54ec8ea34c1ef128c10255e8f0"><td class="memItemLeft" align="right" valign="top"><a id="a6c4a0d54ec8ea34c1ef128c10255e8f0"></a>
-Eigen::Matrix&lt; num_t, Eigen::Dynamic, 1 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html#a6c4a0d54ec8ea34c1ef128c10255e8f0">F</a></td></tr>
-<tr class="memdesc:a6c4a0d54ec8ea34c1ef128c10255e8f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">The full F vector (bounded+free DOFs) <br /></td></tr>
+<tr class="memitem:a6c4a0d54ec8ea34c1ef128c10255e8f0"><td class="memItemLeft" align="right" valign="top">Eigen::Matrix&lt; num_t, Eigen::Dynamic, 1 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html#a6c4a0d54ec8ea34c1ef128c10255e8f0">F</a></td></tr>
 <tr class="separator:a6c4a0d54ec8ea34c1ef128c10255e8f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad5d2f5577b04973b26b886faa9b6f9fa"><td class="memItemLeft" align="right" valign="top"><a id="ad5d2f5577b04973b26b886faa9b6f9fa"></a>
-Eigen::Matrix&lt; num_t, Eigen::Dynamic, 1 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html#ad5d2f5577b04973b26b886faa9b6f9fa">U</a></td></tr>
-<tr class="memdesc:ad5d2f5577b04973b26b886faa9b6f9fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">The full U vector (bounded+free DOFs) <br /></td></tr>
+<tr class="memitem:ad5d2f5577b04973b26b886faa9b6f9fa"><td class="memItemLeft" align="right" valign="top">Eigen::Matrix&lt; num_t, Eigen::Dynamic, 1 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html#ad5d2f5577b04973b26b886faa9b6f9fa">U</a></td></tr>
 <tr class="separator:ad5d2f5577b04973b26b886faa9b6f9fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68b724e67fe0f1b0c552f98a2f88215c"><td class="memItemLeft" align="right" valign="top">num_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html#a68b724e67fe0f1b0c552f98a2f88215c">rcond</a> = std::numeric_limits&lt;num_t&gt;::quiet_NaN()</td></tr>
+<tr class="separator:a68b724e67fe0f1b0c552f98a2f88215c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78d9182d55de1dbd59bd1d23b12dd0b9"><td class="memItemLeft" align="right" valign="top"><a id="a78d9182d55de1dbd59bd1d23b12dd0b9"></a>
+std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html#a78d9182d55de1dbd59bd1d23b12dd0b9">warnings</a></td></tr>
+<tr class="memdesc:a78d9182d55de1dbd59bd1d23b12dd0b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Non-fatal issues found while solving (e.g. ill-conditioning) <br /></td></tr>
+<tr class="separator:a78d9182d55de1dbd59bd1d23b12dd0b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Output information from <em>solveStatic()</em> </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a6c4a0d54ec8ea34c1ef128c10255e8f0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c4a0d54ec8ea34c1ef128c10255e8f0">&#9670;&nbsp;</a></span>F</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Eigen::Matrix&lt;num_t, Eigen::Dynamic, 1&gt; openbeam::StaticSolveProblemInfo::F</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The full F vector, for all problem DoFs (in the order of <a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#a6a766e94fb13e53e9db33ab07c812255">CFiniteElementProblem::getProblemDoFs()</a>): reactions at constrained DoFs and applied loads (including the equivalent loads of element loads) at free DoFs. </p>
+
+</div>
+</div>
 <a id="a0dffe397931219475fd1a5bdbf73b610"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0dffe397931219475fd1a5bdbf73b610">&#9670;&nbsp;</a></span>F_b</h2>
 
@@ -126,6 +143,36 @@ Eigen::Matrix&lt; num_t, Eigen::Dynamic, 1 &gt;&#160;</td><td class="memItemRigh
       </table>
 </div><div class="memdoc">
 <p>A vector of length = "build_info.bounded_dof_indices.size()" with all the reaction forces, DOFs in the same order than <em>bounded_dof_indices</em> </p>
+
+</div>
+</div>
+<a id="a68b724e67fe0f1b0c552f98a2f88215c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a68b724e67fe0f1b0c552f98a2f88215c">&#9670;&nbsp;</a></span>rcond</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">num_t openbeam::StaticSolveProblemInfo::rcond = std::numeric_limits&lt;num_t&gt;::quiet_NaN()</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Estimate of the reciprocal condition number of the free-free stiffness matrix (a true estimate for the dense solver, a cheaper heuristic for the sparse one). Values near zero mean that results may be inaccurate. </p>
+
+</div>
+</div>
+<a id="ad5d2f5577b04973b26b886faa9b6f9fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad5d2f5577b04973b26b886faa9b6f9fa">&#9670;&nbsp;</a></span>U</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Eigen::Matrix&lt;num_t, Eigen::Dynamic, 1&gt; openbeam::StaticSolveProblemInfo::U</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The full U vector, for all problem DoFs (in the order of <a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#a6a766e94fb13e53e9db33ab07c812255">CFiniteElementProblem::getProblemDoFs()</a>): computed displacements at free DoFs and the prescribed ones at constrained DoFs. Nodal coordinates. </p>
 
 </div>
 </div>
@@ -145,7 +192,7 @@ Eigen::Matrix&lt; num_t, Eigen::Dynamic, 1 &gt;&#160;</td><td class="memItemRigh
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>/home/jlblanco/code/openbeam/libopenbeam/include/openbeam/<a class="el" href="CFiniteElementProblem_8h_source.html">CFiniteElementProblem.h</a></li>
+<li>/home/jlblanco/code/openbeam-public/libopenbeam/include/openbeam/<a class="el" href="CFiniteElementProblem_8h_source.html">CFiniteElementProblem.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

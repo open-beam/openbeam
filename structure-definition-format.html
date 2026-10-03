@@ -7,10 +7,14 @@
   <title>Problem definition file format &mdash; OpenBeam  documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
       <link rel="stylesheet" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" type="text/css" />
+      <link rel="stylesheet" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" type="text/css" />
       <link rel="stylesheet" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" type="text/css" />
+      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
 
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
@@ -47,13 +51,16 @@
 <li class="toctree-l1"><a class="reference external" href="ob-solver-simple/#http://">Online solver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compile.html">Installing</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Problem definition file format</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#values-expressions-and-parameters">Values, expressions and parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#parameters">1. Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#beam-sections">2. Beam sections</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#geometry-nodes">3. Geometry: nodes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#geometry-elements">4. Geometry: elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#geometry-constraints">5. Geometry: constraints</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#loads-on-nodes">6. Loads on nodes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#distributed-loads-on-the-elements">7. Distributed loads on the elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loads-on-the-elements">7. Loads on the elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#complete-example">8. Complete example</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="finite_elements.html">Implemented finite elements</a></li>
@@ -86,11 +93,81 @@
              
   <section id="problem-definition-file-format">
 <span id="yaml-definition"></span><h1>Problem definition file format<a class="headerlink" href="#problem-definition-file-format" title="Permalink to this headline"></a></h1>
-<p>OpenBeam reads problem definitions from a YAML file, with the format explained in this page.
-You can also directly jump to see the <a class="reference external" href="https://github.com/open-beam/openbeam/tree/master/examples-structures">YAML example files</a>
-or test and edit them in the <a class="reference external" href="ob-solver-simple/">online app</a>.</p>
-<p>Then, come back to this page when in doubt about how to define a particular
-element, load, or parameter.</p>
+<p>OpenBeam reads a structure (geometry, materials, supports and loads) from a YAML file,
+with the format explained in this page.
+You can also directly jump to see the <a class="reference external" href="https://github.com/open-beam/openbeam/tree/develop/examples-structures">YAML example files</a>
+or test and edit them in the <a class="reference external" href="ob-solver-simple/">online app</a>.
+A <a class="reference internal" href="#yaml-complete-example"><span class="std std-ref">complete example</span></a> is given at the end of this page.</p>
+<div class="contents local topic" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#overview" id="id1">Overview</a></p></li>
+<li><p><a class="reference internal" href="#values-expressions-and-parameters" id="id2">Values, expressions and parameters</a></p></li>
+<li><p><a class="reference internal" href="#parameters" id="id3">1. Parameters</a></p></li>
+<li><p><a class="reference internal" href="#beam-sections" id="id4">2. Beam sections</a></p></li>
+<li><p><a class="reference internal" href="#geometry-nodes" id="id5">3. Geometry: nodes</a></p></li>
+<li><p><a class="reference internal" href="#geometry-elements" id="id6">4. Geometry: elements</a></p></li>
+<li><p><a class="reference internal" href="#geometry-constraints" id="id7">5. Geometry: constraints</a></p></li>
+<li><p><a class="reference internal" href="#loads-on-nodes" id="id8">6. Loads on nodes</a></p></li>
+<li><p><a class="reference internal" href="#loads-on-the-elements" id="id9">7. Loads on the elements</a></p></li>
+<li><p><a class="reference internal" href="#complete-example" id="id10">8. Complete example</a></p></li>
+</ul>
+</div>
+<section id="overview">
+<h2><a class="toc-backref" href="#id1">Overview</a><a class="headerlink" href="#overview" title="Permalink to this headline"></a></h2>
+<p>A problem file is a YAML map with these top-level sections, which are read in this order:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 12%" />
+<col style="width: 68%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Section</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Contents</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">parameters</span></code></p></td>
+<td><p>no</p></td>
+<td><p>Named values to use in any other field (lengths, loads…).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">beam_sections</span></code></p></td>
+<td><p>yes (may be an empty list <code class="docutils literal notranslate"><span class="pre">[]</span></code>)</p></td>
+<td><p>Named sets of material and section properties shared by several elements.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nodes</span></code></p></td>
+<td><p>yes</p></td>
+<td><p>Node IDs, coordinates and labels.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">elements</span></code></p></td>
+<td><p>yes</p></td>
+<td><p>Finite elements (beams, bars, springs) and the nodes they join.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">constraints</span></code></p></td>
+<td><p>yes</p></td>
+<td><p>Supports: constrained degrees of freedom (DoF) and prescribed displacements.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">node_loads</span></code></p></td>
+<td><p>no</p></td>
+<td><p>Forces and moments applied at nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">element_loads</span></code></p></td>
+<td><p>no</p></td>
+<td><p>Distributed, concentrated and thermal loads on elements.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Other top-level keys are ignored.
+Names of element types, load types and DoFs are case insensitive (<code class="docutils literal notranslate"><span class="pre">BEAM2D_RR</span></code> and
+<code class="docutils literal notranslate"><span class="pre">beam2d_rr</span></code> are equivalent).</p>
+<p><strong>Units.</strong> OpenBeam does not assume any unit system: use any consistent one, and results come
+out in the same units. The SI is recommended (m, N, Pa, m², m⁴), as in all examples.
+Two exceptions: node rotations (<code class="docutils literal notranslate"><span class="pre">rot_x</span></code>, <code class="docutils literal notranslate"><span class="pre">rot_y</span></code>, <code class="docutils literal notranslate"><span class="pre">rot_z</span></code>) are given in <strong>degrees</strong>, and
+the thermal expansion coefficient of the <code class="docutils literal notranslate"><span class="pre">TEMPERATURE</span></code> load is fixed (see below).</p>
+<p><strong>Errors.</strong> If the file cannot be parsed, the error messages give the section and the line
+number of the offending entry.</p>
 <details class="sphinx-bs dropdown card mb-3" open="open">
 <summary class="summary-title card-header">
 YAML format summary<div class="summary-down docutils">
@@ -103,119 +180,262 @@ or directly in its <a class="reference external" href="https://yaml.org/">offici
 <p class="card-text"><strong>Comments</strong>: A <code class="docutils literal notranslate"><span class="pre">#</span></code> means that the rest of the line is a comment, so it is ignored by the YAML parser.</p>
 <p class="card-text"><strong>Maps</strong> or <strong>Dictionaries</strong>: It is the main data structure used in the OpenBeam problem definition files.
 It defines a map between <code class="docutils literal notranslate"><span class="pre">keys</span> <span class="pre">=&gt;</span> <span class="pre">values</span></code> with this format:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dictionary_name</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">key1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100e34</span><span class="w"></span>
-<span class="w">  </span><span class="nt">key2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span><span class="w"></span>
-<span class="w">  </span><span class="nt">key3</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;a</span><span class="nv"> </span><span class="s">text</span><span class="nv"> </span><span class="s">can</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">defined</span><span class="nv"> </span><span class="s">like</span><span class="nv"> </span><span class="s">this&#39;</span><span class="w"></span>
-<span class="w">  </span><span class="nt">key4</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;or</span><span class="nv"> </span><span class="s">like</span><span class="nv"> </span><span class="s">this</span><span class="nv"> </span><span class="s">too&quot;</span><span class="w"></span>
-<span class="w">  </span><span class="nt">key5</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">also_a_text_string</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dictionary_name</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">key1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100e34</span>
+<span class="w">  </span><span class="nt">key2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
+<span class="w">  </span><span class="nt">key3</span><span class="p">:</span><span class="w"> </span><span class="s">'a</span><span class="nv"> </span><span class="s">text</span><span class="nv"> </span><span class="s">can</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">defined</span><span class="nv"> </span><span class="s">like</span><span class="nv"> </span><span class="s">this'</span>
+<span class="w">  </span><span class="nt">key4</span><span class="p">:</span><span class="w"> </span><span class="s">"or</span><span class="nv"> </span><span class="s">like</span><span class="nv"> </span><span class="s">this</span><span class="nv"> </span><span class="s">too"</span>
+<span class="w">  </span><span class="nt">key5</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">also_a_text_string</span>
 </pre></div>
 </div>
-<p class="card-text">The short JSON-like version works too:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dictionary_name</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key1</span><span class="p">:</span><span class="w"> </span><span class="nv">100e34</span><span class="p p-Indicator">,</span><span class="nt"> key2</span><span class="p">:</span><span class="w"> </span><span class="nv">foo</span><span class="p p-Indicator">}</span><span class="w"></span>
+<p class="card-text">The short JSON-like version works too, and it is the usual one for nodes, elements and loads:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dictionary_name</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key1</span><span class="p">:</span><span class="w"> </span><span class="nv">100e34</span><span class="p p-Indicator">,</span><span class="nt"> key2</span><span class="p">:</span><span class="w"> </span><span class="nv">foo</span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+<p class="card-text"><strong>Lists</strong> (sequences): one entry per line starting with <code class="docutils literal notranslate"><span class="pre">-</span></code>, or in the short form <code class="docutils literal notranslate"><span class="pre">[a,</span> <span class="pre">b,</span> <span class="pre">c]</span></code>.
+Most sections of a problem file are lists of maps:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nodes</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">]}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">4</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">]}</span>
 </pre></div>
 </div>
 <p class="card-text"><strong>IMPORTANT</strong>: The space after the colon <code class="docutils literal notranslate"><span class="pre">:</span></code> is mandatory.</p>
 </div>
-</details><section id="parameters">
-<h2>1. Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline"></a></h2>
-<p>This <strong>optional</strong> section allows you to define variables or
-parameters, to easily parameterize a structure dimensions,
-loads, etc.
-Its format is just a YAML map, which each key being converted
-into a parameter.</p>
+</details></section>
+<section id="values-expressions-and-parameters">
+<h2><a class="toc-backref" href="#id2">Values, expressions and parameters</a><a class="headerlink" href="#values-expressions-and-parameters" title="Permalink to this headline"></a></h2>
+<p>Every numeric field may be a number or a <strong>mathematical expression</strong>, which may use the
+parameters defined in the <code class="docutils literal notranslate"><span class="pre">parameters</span></code> section, e.g. <code class="docutils literal notranslate"><span class="pre">L/2</span></code>, <code class="docutils literal notranslate"><span class="pre">2*sqrt(2)*P</span></code> or <code class="docutils literal notranslate"><span class="pre">-q*cos(30*pi/180)</span></code>.
+Expressions are evaluated with <a class="reference external" href="https://docs.mrpt.org/reference/latest/class_mrpt_expr_CRuntimeCompiledExpression.html">mrpt::expr::CRuntimeCompiledExpression</a>,
+which uses the <a class="reference external" href="https://github.com/ArashPartow/exprtk#readme">exprtk language</a>: the usual
+operators (<code class="docutils literal notranslate"><span class="pre">+</span> <span class="pre">-</span> <span class="pre">*</span> <span class="pre">/</span> <span class="pre">^</span></code>), parentheses, functions such as <code class="docutils literal notranslate"><span class="pre">sqrt</span></code>, <code class="docutils literal notranslate"><span class="pre">sin</span></code>, <code class="docutils literal notranslate"><span class="pre">cos</span></code>, <code class="docutils literal notranslate"><span class="pre">tan</span></code>,
+<code class="docutils literal notranslate"><span class="pre">abs</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, and the constant <code class="docutils literal notranslate"><span class="pre">pi</span></code>. Trigonometric functions use radians.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Mathematical expressions and formulas can be used in all entries,
-including the parameters that have been defined
-formerly. This is an extension of YAML implemented in OpenBeam,
-making use of <a class="reference external" href="https://docs.mrpt.org/reference/latest/class_mrpt_expr_CRuntimeCompiledExpression.html">mrpt::expr::CRuntimeCompiledExpression</a>
-which in turn uses the <a class="reference external" href="https://github.com/ArashPartow/exprtk#readme">exprtk language</a>.</p>
+<p>Most expressions can be written as plain YAML values. Those that start with a character
+with a special meaning in YAML (<code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">!</span></code>, <code class="docutils literal notranslate"><span class="pre">[</span></code>, <code class="docutils literal notranslate"><span class="pre">{</span></code>, <code class="docutils literal notranslate"><span class="pre">%</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>), or that
+contain a colon or a <code class="docutils literal notranslate"><span class="pre">#</span></code> preceded by a space, must be quoted, e.g. <code class="docutils literal notranslate"><span class="pre">label:</span> <span class="pre">&quot;A:</span> <span class="pre">left&quot;</span></code>.</p>
 </div>
+</section>
+<section id="parameters">
+<h2><a class="toc-backref" href="#id3">1. Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this headline"></a></h2>
+<p>This <strong>optional</strong> section defines named values, to easily parameterize the dimensions,
+loads, etc. of a structure. It is a YAML map: each key becomes a parameter.
+Parameters are evaluated in order, so each one may use the ones defined before it.
+Defining the same name twice is an error.</p>
 <p>Example:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># -------------------------------------------------</span><span class="w"></span>
-<span class="c1">#  Parameters</span><span class="w"></span>
-<span class="c1"># -------------------------------------------------</span><span class="w"></span>
-<span class="nt">parameters</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">G</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9.81</span><span class="w"></span>
-<span class="w">  </span><span class="nt">L</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">         </span><span class="c1"># Dimensions of the problem</span><span class="w"></span>
-<span class="w">  </span><span class="nt">P</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">G * 1000</span><span class="w">  </span><span class="c1"># External load value</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">G</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9.81</span>
+<span class="w">  </span><span class="nt">L</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">         </span><span class="c1"># Dimensions of the problem</span>
+<span class="w">  </span><span class="nt">P</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">G * 1000</span><span class="w">  </span><span class="c1"># External load value</span>
 </pre></div>
 </div>
 <p>The YAML short format is also supported:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> G</span><span class="p">:</span><span class="w"> </span><span class="nv">9.81</span><span class="p p-Indicator">,</span><span class="nt"> L</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> P</span><span class="p">:</span><span class="w"> </span><span class="nv">G * 1000</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> G</span><span class="p">:</span><span class="w"> </span><span class="nv">9.81</span><span class="p p-Indicator">,</span><span class="nt"> L</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> P</span><span class="p">:</span><span class="w"> </span><span class="nv">G * 1000</span><span class="w"> </span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 </section>
 <section id="beam-sections">
-<h2>2. Beam sections<a class="headerlink" href="#beam-sections" title="Permalink to this headline"></a></h2>
-<p>This <strong>optional</strong> section allows you to define short names for beam
-sections that will be used in more than one element.
-A mandatory <code class="docutils literal notranslate"><span class="pre">name</span></code> key must be defined, along with the material and
-beam section geometry parameters that will be needed by the particular
-finite element.</p>
+<h2><a class="toc-backref" href="#id4">2. Beam sections</a><a class="headerlink" href="#beam-sections" title="Permalink to this headline"></a></h2>
+<p>This section gives names to sets of element properties (material and cross section), to be
+used by several elements. Each entry needs a unique <code class="docutils literal notranslate"><span class="pre">name</span></code>; the other keys are the
+properties needed by the finite elements that will use it:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 85%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">E</span></code></p></td>
+<td><p>Young’s modulus (e.g. Pa).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">A</span></code></p></td>
+<td><p>Cross-section area (e.g. m²).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Iz</span></code></p></td>
+<td><p>Second moment of area about the local <cite>z</cite> axis, for bending in the XY plane (e.g. m⁴).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">G</span></code>, <code class="docutils literal notranslate"><span class="pre">J</span></code></p></td>
+<td><p>Shear modulus and torsion constant (not used by the planar elements).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">K</span></code>, <code class="docutils literal notranslate"><span class="pre">Kx</span></code>, <code class="docutils literal notranslate"><span class="pre">Ky</span></code>, <code class="docutils literal notranslate"><span class="pre">KRz</span></code></p></td>
+<td><p>Stiffness constants of the spring elements.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Extra keys are not an error: they are ignored by the elements that do not need them.
+See <a class="reference internal" href="finite_elements.html#finite-elements"><span class="std std-ref">Implemented finite elements</span></a> for the properties required by each element type.</p>
 <p>Example:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># -------------------------------------------------</span><span class="w"></span>
-<span class="c1"># beam sections</span><span class="w"></span>
-<span class="c1"># -------------------------------------------------</span><span class="w"></span>
-<span class="nt">beam_sections</span><span class="p">:</span><span class="w"></span>
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IPE200</span><span class="w"></span>
-<span class="w">  </span><span class="nt">E</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.1e11</span><span class="w">     </span><span class="c1"># Young module</span><span class="w"></span>
-<span class="w">  </span><span class="nt">A</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">28.5e-4</span><span class="w">    </span><span class="c1"># Area</span><span class="w"></span>
-<span class="w">  </span><span class="nt">Iz</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1940e-8</span><span class="w">   </span><span class="c1"># Second moment of area in z</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">beam_sections</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IPE200</span>
+<span class="w">  </span><span class="nt">E</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.1e11</span><span class="w">     </span><span class="c1"># Young's modulus</span>
+<span class="w">  </span><span class="nt">A</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">28.5e-4</span><span class="w">    </span><span class="c1"># Area</span>
+<span class="w">  </span><span class="nt">Iz</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1940e-8</span><span class="w">   </span><span class="c1"># Second moment of area in z</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">TIE</span><span class="p p-Indicator">,</span><span class="nt"> E</span><span class="p">:</span><span class="w"> </span><span class="nv">2.1e11</span><span class="p p-Indicator">,</span><span class="nt"> A</span><span class="p">:</span><span class="w"> </span><span class="nv">5e-4</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
+<p>A structure without named sections still needs the (empty) section: <code class="docutils literal notranslate"><span class="pre">beam_sections:</span> <span class="pre">[]</span></code>.</p>
 </section>
 <section id="geometry-nodes">
-<h2>3. Geometry: nodes<a class="headerlink" href="#geometry-nodes" title="Permalink to this headline"></a></h2>
-<p>Each node must be assigned a unique <code class="docutils literal notranslate"><span class="pre">id</span></code> number, coordinates (in 2D or 3D),
-and an <strong>optinal label</strong>, for easy identification of node names in diagrams
-and animations.
-In case of tilted planes using nodal coordinates, additional entries <code class="docutils literal notranslate"><span class="pre">rot_x</span></code>,
-<code class="docutils literal notranslate"><span class="pre">rot_y</span></code> and <code class="docutils literal notranslate"><span class="pre">rot_z</span></code> may be added to especify the roll, pitch, and yaw
-rotation angles <strong>in degrees</strong>, respectively. Planar structures only need to
-specify <code class="docutils literal notranslate"><span class="pre">rot_z</span></code>.</p>
+<h2><a class="toc-backref" href="#id5">3. Geometry: nodes</a><a class="headerlink" href="#geometry-nodes" title="Permalink to this headline"></a></h2>
+<p>Each node has:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">id</span></code>: unique integer, starting at 0. IDs must be consecutive (no gaps), but nodes may be
+listed in any order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coords</span></code>: <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y]</span></code> for planar structures, or <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y,</span> <span class="pre">z]</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label</span></code> (optional): a name shown in drawings, diagrams and animations, e.g. <code class="docutils literal notranslate"><span class="pre">A</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rot_x</span></code>, <code class="docutils literal notranslate"><span class="pre">rot_y</span></code>, <code class="docutils literal notranslate"><span class="pre">rot_z</span></code> (optional): rotation of the <strong>nodal axes</strong>, in degrees
+(roll, pitch and yaw). Planar structures only need <code class="docutils literal notranslate"><span class="pre">rot_z</span></code>. Constraints and reactions of a
+node refer to its nodal axes, which is the way to model <strong>inclined supports</strong>: a roller on a
+plane tilted 30 degrees is a node with <code class="docutils literal notranslate"><span class="pre">rot_z:</span> <span class="pre">30</span></code> and a <code class="docutils literal notranslate"><span class="pre">DY</span></code> constraint.</p></li>
+</ul>
 <p>Example:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nodes</span><span class="p">:</span><span class="w"></span>
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="w">   </span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">A</span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2*L</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">B</span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">3*L</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">C</span><span class="p p-Indicator">,</span><span class="nt"> rot_z</span><span class="p">:</span><span class="w"> </span><span class="nv">45</span><span class="p p-Indicator">}</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nodes</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="w">   </span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">A</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2*L</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">B</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">3*L</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">C</span><span class="p p-Indicator">,</span><span class="nt"> rot_z</span><span class="p">:</span><span class="w"> </span><span class="nv">45</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 </section>
 <section id="geometry-elements">
-<h2>4. Geometry: elements<a class="headerlink" href="#geometry-elements" title="Permalink to this headline"></a></h2>
-<p>This section defines how many finite elements exist,
-to which nodes they are attached, and their type.</p>
-<p>For the full list of finite elements implemented in
-this library, along with their <code class="docutils literal notranslate"><span class="pre">type</span></code> names and
-mathematical definitions, see <a class="reference internal" href="finite_elements.html#finite-elements"><span class="std std-ref">Implemented finite elements</span></a>.</p>
+<h2><a class="toc-backref" href="#id6">4. Geometry: elements</a><a class="headerlink" href="#geometry-elements" title="Permalink to this headline"></a></h2>
+<p>This section lists the finite elements, their type and the nodes they join.
+Each entry has:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code>: the element type (see the table below).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nodes</span></code>: list of the IDs of the connected nodes, <code class="docutils literal notranslate"><span class="pre">[first,</span> <span class="pre">second]</span></code>. The local <cite>x</cite> axis of
+a bar goes from its first node to its second node.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">section</span></code>: the name of a beam section, <strong>or</strong> the properties given inline
+(<code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">Iz</span></code>, <code class="docutils literal notranslate"><span class="pre">K</span></code>…). If <code class="docutils literal notranslate"><span class="pre">section</span></code> is present, inline properties are ignored.</p></li>
+</ul>
+<p>Elements have no ID: they are numbered in the order they appear, starting at 0, and
+<code class="docutils literal notranslate"><span class="pre">element_loads</span></code> refer to them by that index.</p>
+<p>Planar element types:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 50%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Properties</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BEAM2D_RR</span></code></p></td>
+<td><p>Beam, rigidly connected at both ends.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">Iz</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BEAM2D_AR</span></code></p></td>
+<td><p>Beam with a hinge (no bending moment) at its first node.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">Iz</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BEAM2D_RA</span></code></p></td>
+<td><p>Beam with a hinge at its second node.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">Iz</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BEAM2D_AA</span></code></p></td>
+<td><p>Bar hinged at both ends: axial force only (truss bar).</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BEAM2D_RD</span></code></p></td>
+<td><p>Beam whose second node slides along the local <cite>y</cite> axis.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">Iz</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SPRING_1D</span></code></p></td>
+<td><p>Linear spring along the line joining both nodes.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">K</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SPRING_XY</span></code></p></td>
+<td><p>Two linear springs, along the local <cite>x</cite> and <cite>y</cite> axes.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Kx</span></code>, <code class="docutils literal notranslate"><span class="pre">Ky</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SPRING_TORSION</span></code></p></td>
+<td><p>Rotational spring about <cite>z</cite>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">K</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SPRING_DXDYRZ</span></code></p></td>
+<td><p>Two linear springs and a rotational one.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Kx</span></code>, <code class="docutils literal notranslate"><span class="pre">Ky</span></code>, <code class="docutils literal notranslate"><span class="pre">KRz</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>See <a class="reference internal" href="finite_elements.html#finite-elements"><span class="std std-ref">Implemented finite elements</span></a> for the details and stiffness matrices of each type.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Hinges belong to element ends: a hinged joint between two beams is modeled by making the
+end of (at least) one of them a hinge, e.g. <code class="docutils literal notranslate"><span class="pre">BEAM2D_RA</span></code> followed by <code class="docutils literal notranslate"><span class="pre">BEAM2D_RR</span></code>.
+If all the elements meeting at a node are hinged there, the rotation of that node is
+unused and simply discarded.</p>
+</div>
 <p>Example:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nodes</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">BEAM2D_RA</span><span class="p p-Indicator">,</span><span class="nt"> nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">],</span><span class="nt"> section</span><span class="p">:</span><span class="w"> </span><span class="nv">IPE200</span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">BEAM2D_AR</span><span class="p p-Indicator">,</span><span class="nt"> nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">],</span><span class="nt"> section</span><span class="p">:</span><span class="w"> </span><span class="nv">IPE200</span><span class="p p-Indicator">}</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">elements</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">BEAM2D_RA</span><span class="p p-Indicator">,</span><span class="nt"> nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">],</span><span class="nt"> section</span><span class="p">:</span><span class="w"> </span><span class="nv">IPE200</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">BEAM2D_AR</span><span class="p p-Indicator">,</span><span class="nt"> nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">],</span><span class="nt"> section</span><span class="p">:</span><span class="w"> </span><span class="nv">IPE200</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">BEAM2D_AA</span><span class="p p-Indicator">,</span><span class="nt"> nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">],</span><span class="nt"> E</span><span class="p">:</span><span class="w"> </span><span class="nv">2.1e11</span><span class="p p-Indicator">,</span><span class="nt"> A</span><span class="p">:</span><span class="w"> </span><span class="nv">5e-4</span><span class="p p-Indicator">}</span><span class="w">   </span><span class="c1"># inline properties</span>
 </pre></div>
 </div>
 </section>
 <section id="geometry-constraints">
-<h2>5. Geometry: constraints<a class="headerlink" href="#geometry-constraints" title="Permalink to this headline"></a></h2>
-<p>This sections lists all the degrees-of-freedom that are
-constrained such that their displacement is zero (or any other fixed value).</p>
-<p>Each YAML map entry must define the node <code class="docutils literal notranslate"><span class="pre">id</span></code> number
-(as defined in the <a class="reference external" href="#geometry-nodes">node section above</a>)
-and <strong>which DoF are constrained</strong>, using these names:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> or <code class="docutils literal notranslate"><span class="pre">DZ</span></code>: Translation in one axis only (X,Y,Z).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">RX</span></code>, <code class="docutils literal notranslate"><span class="pre">RY</span></code> or <code class="docutils literal notranslate"><span class="pre">RZ</span></code>: Rotation along one axis only (X,Y,Z).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DXDYDZ</span></code>: All translations are constrained.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">RXRYRZ</span></code>: All rotations are constrained.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DXDY</span></code>, <code class="docutils literal notranslate"><span class="pre">DXDZ</span></code>, <code class="docutils literal notranslate"><span class="pre">DYDZ</span></code> : Translation in two axis is constrained.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DXDYRZ</span></code>: A very common case in 2D structures: translation in X and Y, and rotation in Z are constrained.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DXRZ</span></code>: Translation in X and rotation in Z are constrained.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DYRZ</span></code>: Translation in Y and rotation in Z are constrained.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DXDYRXRZ</span></code>: Translations in X,Y and rotations in X and Z are constrained (for beams with torsion loads).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ALL</span></code> or <code class="docutils literal notranslate"><span class="pre">DXDYDZRXRYRZ</span></code>: All 6 DoFs are constrained.</p></li>
+<h2><a class="toc-backref" href="#id7">5. Geometry: constraints</a><a class="headerlink" href="#geometry-constraints" title="Permalink to this headline"></a></h2>
+<p>This section lists the supports: the degrees of freedom whose displacement is zero, or a
+given value (prescribed displacement, e.g. a support settlement).
+Each entry has:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: the node ID.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dof</span></code>: which DoFs are constrained, by any of these names:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Constrained DoFs</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code>, <code class="docutils literal notranslate"><span class="pre">DZ</span></code></p></td>
+<td><p>Translation along one axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RX</span></code>, <code class="docutils literal notranslate"><span class="pre">RY</span></code>, <code class="docutils literal notranslate"><span class="pre">RZ</span></code></p></td>
+<td><p>Rotation about one axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DXDY</span></code>, <code class="docutils literal notranslate"><span class="pre">DXDZ</span></code>, <code class="docutils literal notranslate"><span class="pre">DYDZ</span></code></p></td>
+<td><p>Translation along two axes, e.g. <code class="docutils literal notranslate"><span class="pre">DXDY</span></code> is a pinned support in 2D.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DXDYRZ</span></code></p></td>
+<td><p>Both translations and the rotation: a fixed (clamped) support in 2D.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DXRZ</span></code>, <code class="docutils literal notranslate"><span class="pre">DYRZ</span></code></p></td>
+<td><p>One translation and the rotation: a sliding clamp in 2D.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DXDYDZ</span></code>, <code class="docutils literal notranslate"><span class="pre">RXRYRZ</span></code></p></td>
+<td><p>All translations, or all rotations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DXDYRXRZ</span></code></p></td>
+<td><p>Translations in X, Y and rotations about X and Z (beams with torsion).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ALL</span></code> or <code class="docutils literal notranslate"><span class="pre">DXDYDZRXRYRZ</span></code></p></td>
+<td><p>All 6 DoFs.</p></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code> (optional, default 0): prescribed displacement (length units) or rotation
+(radians). It applies to <strong>every</strong> DoF named in <code class="docutils literal notranslate"><span class="pre">dof</span></code>, so give each DoF with a nonzero
+value its own entry (see the example).</p></li>
 </ul>
+<p>For nodes with rotated axes (<code class="docutils literal notranslate"><span class="pre">rot_z</span></code>, etc.), constrained DoFs and their <code class="docutils literal notranslate"><span class="pre">value</span></code> refer to
+the rotated nodal axes, e.g. <code class="docutils literal notranslate"><span class="pre">DY</span></code> of a node with <code class="docutils literal notranslate"><span class="pre">rot_z:</span> <span class="pre">30</span></code> is normal to a plane tilted
+30 degrees.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You do not need to specify constraints in DoFs that are not used
@@ -226,73 +446,136 @@ Though, it is not an error to overspecify those constraints, only a
 warning will be generated.</p>
 </div>
 <p>Example:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Constraints</span><span class="w"></span>
-<span class="nt">constraints</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DXDYRZ</span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DXDYRZ</span><span class="p p-Indicator">}</span><span class="w"></span>
-<span class="w">  </span><span class="c1">#- {node: 2, dof: DY, value: 1e-3} # optional value different than zero.</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">constraints</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DXDYRZ</span><span class="p p-Indicator">}</span><span class="w">             </span><span class="c1"># fixed support</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DXDY</span><span class="p p-Indicator">}</span><span class="w">               </span><span class="c1"># pinned support</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">5</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DY</span><span class="p p-Indicator">}</span><span class="w">                 </span><span class="c1"># roller</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DXRZ</span><span class="p p-Indicator">}</span><span class="w">               </span><span class="c1"># fixed support...</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DY</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">-1e-3</span><span class="p p-Indicator">}</span><span class="w">   </span><span class="c1"># ...that settles 1 mm</span>
 </pre></div>
 </div>
 </section>
 <section id="loads-on-nodes">
-<h2>6. Loads on nodes<a class="headerlink" href="#loads-on-nodes" title="Permalink to this headline"></a></h2>
-<p>This sections allows the definition of concentrated forces or torques
-at particular DoFs of nodes.
-Each entry must define these keys:</p>
+<h2><a class="toc-backref" href="#id8">6. Loads on nodes</a><a class="headerlink" href="#loads-on-nodes" title="Permalink to this headline"></a></h2>
+<p>Concentrated forces and moments at nodes. Each entry has:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The node <code class="docutils literal notranslate"><span class="pre">id</span></code> as defined in the <a class="reference external" href="#geometry-nodes">node section above</a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dof</span></code>: The DoF on which the load is defined. Any of:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code>, <code class="docutils literal notranslate"><span class="pre">DZ</span></code>: for forces. Positive values are in the direction of the axes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">RX</span></code> (torsion), <code class="docutils literal notranslate"><span class="pre">RY</span></code> (bending), <code class="docutils literal notranslate"><span class="pre">RZ</span></code>  (bending): for torques.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: the node ID.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dof</span></code>: <code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code>, <code class="docutils literal notranslate"><span class="pre">DZ</span></code> for forces along the global axes; <code class="docutils literal notranslate"><span class="pre">RX</span></code>, <code class="docutils literal notranslate"><span class="pre">RY</span></code>, <code class="docutils literal notranslate"><span class="pre">RZ</span></code>
+for moments about them.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: magnitude of the force or moment. Positive values follow the axes: forces towards
++X, +Y, and moments counter-clockwise (right-hand rule about +Z, for planar structures).</p></li>
 </ul>
-</li>
-</ul>
+<p>Several entries on the same node and DoF add up. Loads are always given in <strong>global axes</strong>,
+even on nodes with rotated axes. A load on a constrained DoF is taken directly by the support
+(it shows up in the reaction).</p>
 <p>Example:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Loads:</span><span class="w"></span>
-<span class="nt">node_loads</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DX</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">-P</span><span class="p p-Indicator">}</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">node_loads</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DX</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">-P</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">RZ</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">5e3</span><span class="p p-Indicator">}</span><span class="w">   </span><span class="c1"># counter-clockwise moment</span>
 </pre></div>
 </div>
 </section>
-<section id="distributed-loads-on-the-elements">
-<h2>7. Distributed loads on the elements<a class="headerlink" href="#distributed-loads-on-the-elements" title="Permalink to this headline"></a></h2>
-<p>Loads which are distributed along the elements.</p>
-<p>The element <code class="docutils literal notranslate"><span class="pre">id</span></code> number is the 0-based index of the elements
-as defined in the <code class="docutils literal notranslate"><span class="pre">elements</span></code> section above.</p>
-<p>Implemented load <code class="docutils literal notranslate"><span class="pre">type</span></code> are:</p>
+<section id="loads-on-the-elements">
+<h2><a class="toc-backref" href="#id9">7. Loads on the elements</a><a class="headerlink" href="#loads-on-the-elements" title="Permalink to this headline"></a></h2>
+<p>Loads applied along the elements. Each entry has:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">TEMPERATURE</span></code>: Temperature increment load. Parameters:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">deltaT</span></code>: Temperature increment (in Celsius degrees).</p></li>
-<li><p>NOTE: Temperature coefficient is right now fixed to <code class="docutils literal notranslate"><span class="pre">12e-6</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">element</span></code>: the element index (0-based, in the order of the <code class="docutils literal notranslate"><span class="pre">elements</span></code> section).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code>: one of the types below, with its own parameters.</p></li>
 </ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DISTRIB_UNIFORM</span></code>: Uniformly distributed load. Parameters:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">q</span></code>: Load density value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> (and optionally, <code class="docutils literal notranslate"><span class="pre">DZ</span></code>): They must form a unit vector specifying the load direction.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TRIANGULAR</span></code>: Triangular or trapezoidal load.  Parameters:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">q_ini</span></code>, <code class="docutils literal notranslate"><span class="pre">q_end</span></code>: Load density values at the first and second element nodes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> (and optionally, <code class="docutils literal notranslate"><span class="pre">DZ</span></code>): They must form a unit vector specifying the load direction.</p></li>
-</ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CONCENTRATED</span></code>: Concentrated load at a particular point amid the element.  Parameters:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">p</span></code>: Concentrated load value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> (and optionally, <code class="docutils literal notranslate"><span class="pre">DZ</span></code>): They must form a unit vector specifying the load direction.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dist</span></code>: Distance from the first element node.</p></li>
-</ul>
-</li>
-</ul>
+<p>Forces need a direction, given by the components <code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> (and optionally <code class="docutils literal notranslate"><span class="pre">DZ</span></code>) of a
+vector in <strong>global axes</strong>. It is normalized, so any non-null vector works:
+<code class="docutils literal notranslate"><span class="pre">{DX:</span> <span class="pre">0,</span> <span class="pre">DY:</span> <span class="pre">-1}</span></code> is a downward load, <code class="docutils literal notranslate"><span class="pre">{DX:</span> <span class="pre">1,</span> <span class="pre">DY:</span> <span class="pre">1}</span></code> points at 45 degrees.
+Load densities are per unit length <strong>of the element</strong> (not of its projection), and
+negative values reverse the direction.</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 78%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Type</p></th>
+<th class="head"><p>Parameters</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DISTRIB_UNIFORM</span></code></p></td>
+<td><p>Uniformly distributed load over the whole element.
+<code class="docutils literal notranslate"><span class="pre">q</span></code>: load density (e.g. N/m). Direction: <code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> [, <code class="docutils literal notranslate"><span class="pre">DZ</span></code>].</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TRIANGULAR</span></code></p></td>
+<td><p>Linearly varying (triangular or trapezoidal) load over the whole element.
+<code class="docutils literal notranslate"><span class="pre">q_ini</span></code>, <code class="docutils literal notranslate"><span class="pre">q_end</span></code>: load densities at the first and second nodes.
+Direction: <code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> [, <code class="docutils literal notranslate"><span class="pre">DZ</span></code>].</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONCENTRATED</span></code></p></td>
+<td><p>Point force inside the element.
+<code class="docutils literal notranslate"><span class="pre">p</span></code>: force (e.g. N). <code class="docutils literal notranslate"><span class="pre">dist</span></code>: distance from the first node, between 0 and the
+element length. Direction: <code class="docutils literal notranslate"><span class="pre">DX</span></code>, <code class="docutils literal notranslate"><span class="pre">DY</span></code> [, <code class="docutils literal notranslate"><span class="pre">DZ</span></code>].</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TEMPERATURE</span></code></p></td>
+<td><p>Uniform temperature increment, which makes the element expand (or contract, if
+negative). <code class="docutils literal notranslate"><span class="pre">deltaT</span></code>: increment in Celsius degrees. The thermal expansion
+coefficient is fixed to <code class="docutils literal notranslate"><span class="pre">12e-6</span></code> (1/°C, structural steel).</p></td>
+</tr>
+</tbody>
+</table>
+<p>An element may have any number of loads.</p>
 <p>Example:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">element_loads</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">element</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">DISTRIB_UNIFORM</span><span class="p p-Indicator">,</span><span class="nt"> q</span><span class="p">:</span><span class="w"> </span><span class="nv">2000*G</span><span class="p p-Indicator">,</span><span class="nt"> DX</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> DY</span><span class="p">:</span><span class="w"> </span><span class="nv">-1</span><span class="p p-Indicator">,</span><span class="nt"> DZ</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">}</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">element_loads</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">element</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">DISTRIB_UNIFORM</span><span class="p p-Indicator">,</span><span class="nt"> q</span><span class="p">:</span><span class="w"> </span><span class="nv">2000*G</span><span class="p p-Indicator">,</span><span class="nt"> DX</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> DY</span><span class="p">:</span><span class="w"> </span><span class="nv">-1</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">element</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">TRIANGULAR</span><span class="p p-Indicator">,</span><span class="nt"> q_ini</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> q_end</span><span class="p">:</span><span class="w"> </span><span class="nv">4e3</span><span class="p p-Indicator">,</span><span class="nt"> DX</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> DY</span><span class="p">:</span><span class="w"> </span><span class="nv">-1</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">element</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">CONCENTRATED</span><span class="p p-Indicator">,</span><span class="nt"> p</span><span class="p">:</span><span class="w"> </span><span class="nv">10e3</span><span class="p p-Indicator">,</span><span class="nt"> dist</span><span class="p">:</span><span class="w"> </span><span class="nv">L/2</span><span class="p p-Indicator">,</span><span class="nt"> DX</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> DY</span><span class="p">:</span><span class="w"> </span><span class="nv">-1</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">element</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">TEMPERATURE</span><span class="p p-Indicator">,</span><span class="nt"> deltaT</span><span class="p">:</span><span class="w"> </span><span class="nv">25</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
+</section>
+<section id="complete-example">
+<span id="yaml-complete-example"></span><h2><a class="toc-backref" href="#id10">8. Complete example</a><a class="headerlink" href="#complete-example" title="Permalink to this headline"></a></h2>
+<p>A portal frame with a diagonal tie, a support settlement, an inclined roller and one load of
+each type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># SI units: m, N, Pa</span>
+<span class="nt">parameters</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">L</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span><span class="w">          </span><span class="c1"># span</span>
+<span class="w">  </span><span class="nt">H</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span><span class="w">          </span><span class="c1"># height</span>
+<span class="w">  </span><span class="nt">q</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10e3</span><span class="w">       </span><span class="c1"># load on the beam, N/m</span>
+<span class="w">  </span><span class="nt">P</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20e3</span><span class="w">       </span><span class="c1"># lateral force, N</span>
+
+<span class="nt">beam_sections</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">IPE300</span><span class="p p-Indicator">,</span><span class="nt"> E</span><span class="p">:</span><span class="w"> </span><span class="nv">210e9</span><span class="p p-Indicator">,</span><span class="nt"> A</span><span class="p">:</span><span class="w"> </span><span class="nv">53.8e-4</span><span class="p p-Indicator">,</span><span class="nt"> Iz</span><span class="p">:</span><span class="w"> </span><span class="nv">8356e-8</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">HEB200</span><span class="p p-Indicator">,</span><span class="nt"> E</span><span class="p">:</span><span class="w"> </span><span class="nv">210e9</span><span class="p p-Indicator">,</span><span class="nt"> A</span><span class="p">:</span><span class="w"> </span><span class="nv">78.1e-4</span><span class="p p-Indicator">,</span><span class="nt"> Iz</span><span class="p">:</span><span class="w"> </span><span class="nv">5696e-8</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="nv">TIE</span><span class="p p-Indicator">,</span><span class="nt"> E</span><span class="p">:</span><span class="w"> </span><span class="nv">210e9</span><span class="p p-Indicator">,</span><span class="nt"> A</span><span class="p">:</span><span class="w"> </span><span class="nv">5.0e-4</span><span class="p p-Indicator">}</span>
+
+<span class="nt">nodes</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">A</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">H</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">B</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">L</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">H</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">C</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="nt"> coords</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">L</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">],</span><span class="nt"> label</span><span class="p">:</span><span class="w"> </span><span class="nv">D</span><span class="p p-Indicator">,</span><span class="nt"> rot_z</span><span class="p">:</span><span class="w"> </span><span class="nv">30</span><span class="p p-Indicator">}</span><span class="w">   </span><span class="c1"># nodal axes rotated 30 degrees</span>
+
+<span class="nt">elements</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">BEAM2D_RR</span><span class="p p-Indicator">,</span><span class="nt"> nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">],</span><span class="nt"> section</span><span class="p">:</span><span class="w"> </span><span class="nv">HEB200</span><span class="p p-Indicator">}</span><span class="w">   </span><span class="c1"># element 0: left column</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">BEAM2D_RR</span><span class="p p-Indicator">,</span><span class="nt"> nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">],</span><span class="nt"> section</span><span class="p">:</span><span class="w"> </span><span class="nv">IPE300</span><span class="p p-Indicator">}</span><span class="w">   </span><span class="c1"># element 1: beam</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">BEAM2D_RA</span><span class="p p-Indicator">,</span><span class="nt"> nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">],</span><span class="nt"> section</span><span class="p">:</span><span class="w"> </span><span class="nv">HEB200</span><span class="p p-Indicator">}</span><span class="w">   </span><span class="c1"># element 2: right column, hinged at D</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">BEAM2D_AA</span><span class="p p-Indicator">,</span><span class="nt"> nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">],</span><span class="nt"> section</span><span class="p">:</span><span class="w"> </span><span class="nv">TIE</span><span class="p p-Indicator">}</span><span class="w">      </span><span class="c1"># element 3: tie (axial force only)</span>
+
+<span class="nt">constraints</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DXRZ</span><span class="p p-Indicator">}</span><span class="w">                </span><span class="c1"># A: fixed support...</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DY</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">-0.01</span><span class="p p-Indicator">}</span><span class="w">    </span><span class="c1"># ...that settles 10 mm</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DY</span><span class="p p-Indicator">}</span><span class="w">                  </span><span class="c1"># D: roller on a plane tilted 30 degrees</span>
+
+<span class="nt">node_loads</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">DX</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">P</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> dof</span><span class="p">:</span><span class="w"> </span><span class="nv">RZ</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">-5e3</span><span class="p p-Indicator">}</span><span class="w">     </span><span class="c1"># clockwise moment, N·m</span>
+
+<span class="nt">element_loads</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">element</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">DISTRIB_UNIFORM</span><span class="p p-Indicator">,</span><span class="nt"> q</span><span class="p">:</span><span class="w"> </span><span class="nv">q</span><span class="p p-Indicator">,</span><span class="nt"> DX</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> DY</span><span class="p">:</span><span class="w"> </span><span class="nv">-1</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">element</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">CONCENTRATED</span><span class="p p-Indicator">,</span><span class="nt"> p</span><span class="p">:</span><span class="w"> </span><span class="nv">15e3</span><span class="p p-Indicator">,</span><span class="nt"> dist</span><span class="p">:</span><span class="w"> </span><span class="nv">L/3</span><span class="p p-Indicator">,</span><span class="nt"> DX</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> DY</span><span class="p">:</span><span class="w"> </span><span class="nv">-1</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">element</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">TRIANGULAR</span><span class="p p-Indicator">,</span><span class="nt"> q_ini</span><span class="p">:</span><span class="w"> </span><span class="nv">4e3</span><span class="p p-Indicator">,</span><span class="nt"> q_end</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="nt"> DX</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> DY</span><span class="p">:</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">}</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">element</span><span class="p">:</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">TEMPERATURE</span><span class="p p-Indicator">,</span><span class="nt"> deltaT</span><span class="p">:</span><span class="w"> </span><span class="nv">20</span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+<p>More examples, from simple beams to frames and trusses, are in the
+<a class="reference external" href="https://github.com/open-beam/openbeam/tree/develop/examples-structures">examples-structures</a>
+directory of the repository.</p>
 </section>
 </section>
 

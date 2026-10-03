@@ -113,10 +113,27 @@ std::vector&lt; <a class="el" href="structopenbeam_1_1BuildProblemInfo_1_1TDoFTy
 <tr class="separator:aa86482f89de659ca8b4d915797255c4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7d0a3eb08628ca1a4b9021a50df8c0b"><td class="memItemLeft" align="right" valign="top">Eigen::Matrix&lt; num_t, Eigen::Dynamic, 1 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1BuildProblemInfo.html#ab7d0a3eb08628ca1a4b9021a50df8c0b">F_f</a></td></tr>
 <tr class="separator:ab7d0a3eb08628ca1a4b9021a50df8c0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe65383f2f90af1f895ba5acc8185d61"><td class="memItemLeft" align="right" valign="top">Eigen::Matrix&lt; num_t, Eigen::Dynamic, 1 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1BuildProblemInfo.html#abe65383f2f90af1f895ba5acc8185d61">F_b_applied</a></td></tr>
+<tr class="separator:abe65383f2f90af1f895ba5acc8185d61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Extra output information from <em>assembleProblem()</em> </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="abe65383f2f90af1f895ba5acc8185d61"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abe65383f2f90af1f895ba5acc8185d61">&#9670;&nbsp;</a></span>F_b_applied</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Eigen::Matrix&lt;num_t, Eigen::Dynamic, 1&gt; openbeam::BuildProblemInfo::F_b_applied</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Loads applied directly on constrained DoFs, in the order of <em>bounded_dof_indices</em>. They go straight into the supports. </p>
+
+</div>
+</div>
 <a id="ab7d0a3eb08628ca1a4b9021a50df8c0b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab7d0a3eb08628ca1a4b9021a50df8c0b">&#9670;&nbsp;</a></span>F_f</h2>
 
@@ -148,7 +165,7 @@ std::vector&lt; <a class="el" href="structopenbeam_1_1BuildProblemInfo_1_1TDoFTy
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>/home/jlblanco/code/openbeam/libopenbeam/include/openbeam/<a class="el" href="CFiniteElementProblem_8h_source.html">CFiniteElementProblem.h</a></li>
+<li>/home/jlblanco/code/openbeam-public/libopenbeam/include/openbeam/<a class="el" href="CFiniteElementProblem_8h_source.html">CFiniteElementProblem.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

@@ -77,6 +77,7 @@ $(function() {
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pro-static-methods">Static Protected Member Functions</a> &#124;
 <a href="structopenbeam_1_1CLoadOnBeam-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">openbeam::CLoadOnBeam Struct Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
@@ -89,11 +90,11 @@ Inheritance diagram for openbeam::CLoadOnBeam:</div>
 <div class="dyncontent">
 <div class="center"><img src="structopenbeam_1_1CLoadOnBeam__inherit__graph.png" border="0" usemap="#aopenbeam_1_1CLoadOnBeam_inherit__map" alt="Inheritance graph"/></div>
 <map name="aopenbeam_1_1CLoadOnBeam_inherit__map" id="aopenbeam_1_1CLoadOnBeam_inherit__map">
-<area shape="rect" title=" " alt="" coords="5,101,200,127"/>
-<area shape="rect" href="structopenbeam_1_1CLoadConcentratedForce.html" title=" " alt="" coords="264,5,491,47"/>
-<area shape="rect" href="structopenbeam_1_1CLoadConstTemperature.html" title=" " alt="" coords="248,71,507,98"/>
-<area shape="rect" href="structopenbeam_1_1CLoadDistributedTriangular.html" title=" " alt="" coords="272,123,483,164"/>
-<area shape="rect" href="structopenbeam_1_1CLoadDistributedUniform.html" title=" " alt="" coords="272,188,483,229"/>
+<area shape="rect" title=" " alt="" coords="5,101,184,127"/>
+<area shape="rect" href="structopenbeam_1_1CLoadConcentratedForce.html" title=" " alt="" coords="246,5,453,47"/>
+<area shape="rect" href="structopenbeam_1_1CLoadConstTemperature.html" title=" " alt="" coords="232,71,467,98"/>
+<area shape="rect" href="structopenbeam_1_1CLoadDistributedTriangular.html" title=" " alt="" coords="254,123,445,164"/>
+<area shape="rect" href="structopenbeam_1_1CLoadDistributedUniform.html" title=" " alt="" coords="254,188,445,229"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -115,9 +116,9 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>computeStress
 <tr class="separator:a08a28175ef6ed21b6d74ea0d28ef5da2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a39eb73b73a2ae59ea2a9737a6833eb29"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1CLoadOnBeam.html#a39eb73b73a2ae59ea2a9737a6833eb29">meshLoad</a> (<a class="el" href="classopenbeam_1_1CStructureProblem.html">CStructureProblem</a> &amp;meshed_fem, const std::vector&lt; size_t &gt; &amp;meshed_element_idxs, const size_t original_bar_idx, const <a class="el" href="classopenbeam_1_1CStructureProblem.html">CStructureProblem</a> &amp;original_fem) const =0</td></tr>
 <tr class="separator:a39eb73b73a2ae59ea2a9737a6833eb29"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad46060c9623a692dd66dbb84de54b6d"><td class="memItemLeft" align="right" valign="top"><a id="aad46060c9623a692dd66dbb84de54b6d"></a>
-virtual mrpt::opengl::CSetOfObjects::Ptr&#160;</td><td class="memItemRight" valign="bottom"><b>getVisualization</b> (const <a class="el" href="classopenbeam_1_1CFiniteElementProblem.html">CFiniteElementProblem</a> &amp;fem, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1DrawElementExtraParams.html">DrawElementExtraParams</a> &amp;draw_el_params, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info) const =0</td></tr>
-<tr class="separator:aad46060c9623a692dd66dbb84de54b6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a060f72279dbac677401c625c06e1bcdb"><td class="memItemLeft" align="right" valign="top"><a id="a060f72279dbac677401c625c06e1bcdb"></a>
+virtual mrpt::viz::CSetOfObjects::Ptr&#160;</td><td class="memItemRight" valign="bottom"><b>getVisualization</b> (const <a class="el" href="classopenbeam_1_1CFiniteElementProblem.html">CFiniteElementProblem</a> &amp;fem, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1DrawElementExtraParams.html">DrawElementExtraParams</a> &amp;draw_el_params, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info) const =0</td></tr>
+<tr class="separator:a060f72279dbac677401c625c06e1bcdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e03b23850a187414bbdc5927ee5de3a"><td class="memItemLeft" align="right" valign="top"><a id="a2e03b23850a187414bbdc5927ee5de3a"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getVisualization_init</b> (const <a class="el" href="classopenbeam_1_1CFiniteElementProblem.html">CFiniteElementProblem</a> &amp;fem, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1DrawElementExtraParams.html">DrawElementExtraParams</a> &amp;draw_el_params, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info) const</td></tr>
 <tr class="separator:a2e03b23850a187414bbdc5927ee5de3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,6 +130,11 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getVisualizat
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a5a328a62398edc1d84480a854c2df574"><td class="memItemLeft" align="right" valign="top">static CLoadOnBeam::Ptr&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1CLoadOnBeam.html#a5a328a62398edc1d84480a854c2df574">createLoadByName</a> (const std::string &amp;sName)</td></tr>
 <tr class="separator:a5a328a62398edc1d84480a854c2df574"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-static-methods"></a>
+Static Protected Member Functions</h2></td></tr>
+<tr class="memitem:af7389819db861a96e06e0c0e4b76f95a"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopenbeam_1_1CLoadOnBeam.html#af7389819db861a96e06e0c0e4b76f95a">readDirection</a> (const mrpt::containers::yaml &amp;p, const <a class="el" href="structopenbeam_1_1EvaluationContext.html">EvaluationContext</a> &amp;ctx, num_t dir[3])</td></tr>
+<tr class="separator:af7389819db861a96e06e0c0e4b76f95a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Base for all loads that can be applied to beam, distributed or applied to a single point. </p>
@@ -255,8 +261,51 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="af7389819db861a96e06e0c0e4b76f95a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af7389819db861a96e06e0c0e4b76f95a">&#9670;&nbsp;</a></span>readDirection()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void openbeam::CLoadOnBeam::readDirection </td>
+          <td>(</td>
+          <td class="paramtype">const mrpt::containers::yaml &amp;&#160;</td>
+          <td class="paramname"><em>p</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structopenbeam_1_1EvaluationContext.html">EvaluationContext</a> &amp;&#160;</td>
+          <td class="paramname"><em>ctx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">num_t&#160;</td>
+          <td class="paramname"><em>dir</em>[3]&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Reads a load direction from the parameters "DX", "DY" and the optional "DZ" (default: 0) into <code>dir</code>, normalized to unit length. Throws if the vector is null. </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>/home/jlblanco/code/openbeam/libopenbeam/include/openbeam/<a class="el" href="loads_8h_source.html">loads.h</a></li>
+<li>/home/jlblanco/code/openbeam-public/libopenbeam/include/openbeam/<a class="el" href="loads_8h_source.html">loads.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

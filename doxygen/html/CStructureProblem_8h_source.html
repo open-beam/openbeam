@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>OpenBeam: /home/jlblanco/code/openbeam/libopenbeam/include/openbeam/CStructureProblem.h Source File</title>
+<title>OpenBeam: /home/jlblanco/code/openbeam-public/libopenbeam/include/openbeam/CStructureProblem.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -108,50 +108,44 @@ $(function() {
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;{</div>
 <div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="classopenbeam_1_1CStructureProblem.html">   35</a></span>&#160;<span class="keyword">class </span><a class="code" href="classopenbeam_1_1CStructureProblem.html">CStructureProblem</a> : <span class="keyword">public</span> <a class="code" href="classopenbeam_1_1CFiniteElementProblem.html">CFiniteElementProblem</a></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;{</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;   <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <a class="code" href="classopenbeam_1_1CStructureProblem.html">CStructureProblem</a>();</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keyword">virtual</span> ~<a class="code" href="classopenbeam_1_1CStructureProblem.html">CStructureProblem</a>();</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <a class="code" href="classopenbeam_1_1CStructureProblem.html">CStructureProblem</a>();</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <span class="keyword">virtual</span> ~<a class="code" href="classopenbeam_1_1CStructureProblem.html">CStructureProblem</a>();</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="classopenbeam_1_1CStructureProblem.html#a497b6bcf9ec87b47f9d531c90430ad68">   43</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classopenbeam_1_1CStructureProblem.html#a497b6bcf9ec87b47f9d531c90430ad68">clear</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="classopenbeam_1_1CStructureProblem.html#a497b6bcf9ec87b47f9d531c90430ad68">   43</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classopenbeam_1_1CStructureProblem.html#a497b6bcf9ec87b47f9d531c90430ad68">clear</a>() <span class="keyword">override</span>;</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
-<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="classopenbeam_1_1CStructureProblem.html#aa57e5507cbd2b251253302ca45c8a361">   49</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classopenbeam_1_1CStructureProblem.html#aa57e5507cbd2b251253302ca45c8a361">addLoadAtBeam</a>(<span class="keyword">const</span> <span class="keywordtype">size_t</span> element_index, CLoadOnBeam::Ptr load);</div>
+<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="classopenbeam_1_1CStructureProblem.html#aa57e5507cbd2b251253302ca45c8a361">   49</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classopenbeam_1_1CStructureProblem.html#aa57e5507cbd2b251253302ca45c8a361">addLoadAtBeam</a>(<span class="keyword">const</span> <span class="keywordtype">size_t</span> element_index, CLoadOnBeam::Ptr load);</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> LoadClass, <span class="keyword">typename</span>... _Args&gt;</div>
-<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="classopenbeam_1_1CStructureProblem.html#ae01a10a865996f89e250c2ade6fe387f">   54</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classopenbeam_1_1CStructureProblem.html#ae01a10a865996f89e250c2ade6fe387f">createLoadAtBeam</a>(<span class="keyword">const</span> <span class="keywordtype">size_t</span> element_index, _Args&amp;&amp;... __args)</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    {</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        <a class="code" href="classopenbeam_1_1CStructureProblem.html#aa57e5507cbd2b251253302ca45c8a361">addLoadAtBeam</a>(</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;            element_index,</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;            std::make_shared&lt;LoadClass&gt;(std::forward&lt;_Args&gt;(__args)...));</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    }</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160; </div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="comment">// ----------------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="comment"></span>    <span class="keywordtype">void</span> <a class="code" href="classopenbeam_1_1CStructureProblem.html#a962459a56d370a660391ed99d9a90365">updateAll</a>() <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
-<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="classopenbeam_1_1CStructureProblem.html#adfedbcbe29c0b32d934726d9eaddc4e8">   70</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classopenbeam_1_1CStructureProblem.html#adfedbcbe29c0b32d934726d9eaddc4e8">mesh</a>(<a class="code" href="classopenbeam_1_1CStructureProblem.html">CStructureProblem</a>&amp; out_fem, <a class="code" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a>&amp; mo,</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keyword">const</span> <a class="code" href="structopenbeam_1_1MeshParams.html">MeshParams</a>&amp; params);</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> LoadClass, <span class="keyword">typename</span>... _Args&gt;</div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="classopenbeam_1_1CStructureProblem.html#ae01a10a865996f89e250c2ade6fe387f">   54</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classopenbeam_1_1CStructureProblem.html#ae01a10a865996f89e250c2ade6fe387f">createLoadAtBeam</a>(<span class="keyword">const</span> <span class="keywordtype">size_t</span> element_index, _Args&amp;&amp;... __args)</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  {</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <a class="code" href="classopenbeam_1_1CStructureProblem.html#aa57e5507cbd2b251253302ca45c8a361">addLoadAtBeam</a>(element_index, std::make_shared&lt;LoadClass&gt;(std::forward&lt;_Args&gt;(__args)...));</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  }</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  <span class="comment">// ----------------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="comment"></span>  <span class="keywordtype">void</span> <a class="code" href="classopenbeam_1_1CStructureProblem.html#a962459a56d370a660391ed99d9a90365">updateAll</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
+<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="classopenbeam_1_1CStructureProblem.html#adfedbcbe29c0b32d934726d9eaddc4e8">   68</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classopenbeam_1_1CStructureProblem.html#adfedbcbe29c0b32d934726d9eaddc4e8">mesh</a>(<a class="code" href="classopenbeam_1_1CStructureProblem.html">CStructureProblem</a>&amp; out_fem, <a class="code" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a>&amp; mo, <span class="keyword">const</span> <a class="code" href="structopenbeam_1_1MeshParams.html">MeshParams</a>&amp; params);</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="comment">// ----------------------------------------------------------------------------</span></div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160; </div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="comment">// ----------------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keyword">const</span> std::multimap&lt;size_t, CLoadOnBeam::Ptr&gt;&amp; loadsOnBeams()<span class="keyword"> const</span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keyword">    </span>{</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        <span class="keywordflow">return</span> m_loads_on_beams;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    }</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;   <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    std::multimap&lt;size_t, CLoadOnBeam::Ptr&gt; m_loads_on_beams;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160; </div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keywordtype">void</span> internalComputeStressAndEquivalentLoads() <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;};</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;}  <span class="comment">// namespace openbeam</span></div>
-<div class="ttc" id="aclassopenbeam_1_1CFiniteElementProblem_html"><div class="ttname"><a href="classopenbeam_1_1CFiniteElementProblem.html">openbeam::CFiniteElementProblem</a></div><div class="ttdef"><b>Definition:</b> CFiniteElementProblem.h:196</div></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keyword">const</span> std::multimap&lt;size_t, CLoadOnBeam::Ptr&gt;&amp; loadsOnBeams()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> m_loads_on_beams; }</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  std::multimap&lt;size_t, CLoadOnBeam::Ptr&gt; m_loads_on_beams;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="keywordtype">void</span> internalComputeStressAndEquivalentLoads() <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;};</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;}  <span class="comment">// namespace openbeam</span></div>
+<div class="ttc" id="aclassopenbeam_1_1CFiniteElementProblem_html"><div class="ttname"><a href="classopenbeam_1_1CFiniteElementProblem.html">openbeam::CFiniteElementProblem</a></div><div class="ttdef"><b>Definition:</b> CFiniteElementProblem.h:212</div></div>
 <div class="ttc" id="aclassopenbeam_1_1CStructureProblem_html"><div class="ttname"><a href="classopenbeam_1_1CStructureProblem.html">openbeam::CStructureProblem</a></div><div class="ttdef"><b>Definition:</b> CStructureProblem.h:36</div></div>
 <div class="ttc" id="aclassopenbeam_1_1CStructureProblem_html_a497b6bcf9ec87b47f9d531c90430ad68"><div class="ttname"><a href="classopenbeam_1_1CStructureProblem.html#a497b6bcf9ec87b47f9d531c90430ad68">openbeam::CStructureProblem::clear</a></div><div class="ttdeci">void clear() override</div></div>
 <div class="ttc" id="aclassopenbeam_1_1CStructureProblem_html_a962459a56d370a660391ed99d9a90365"><div class="ttname"><a href="classopenbeam_1_1CStructureProblem.html#a962459a56d370a660391ed99d9a90365">openbeam::CStructureProblem::updateAll</a></div><div class="ttdeci">void updateAll() override</div><div class="ttdoc">Update all internal lists after changing the structure.</div></div>
 <div class="ttc" id="aclassopenbeam_1_1CStructureProblem_html_aa57e5507cbd2b251253302ca45c8a361"><div class="ttname"><a href="classopenbeam_1_1CStructureProblem.html#aa57e5507cbd2b251253302ca45c8a361">openbeam::CStructureProblem::addLoadAtBeam</a></div><div class="ttdeci">void addLoadAtBeam(const size_t element_index, CLoadOnBeam::Ptr load)</div></div>
 <div class="ttc" id="aclassopenbeam_1_1CStructureProblem_html_adfedbcbe29c0b32d934726d9eaddc4e8"><div class="ttname"><a href="classopenbeam_1_1CStructureProblem.html#adfedbcbe29c0b32d934726d9eaddc4e8">openbeam::CStructureProblem::mesh</a></div><div class="ttdeci">void mesh(CStructureProblem &amp;out_fem, MeshOutputInfo &amp;mo, const MeshParams &amp;params)</div></div>
 <div class="ttc" id="aclassopenbeam_1_1CStructureProblem_html_ae01a10a865996f89e250c2ade6fe387f"><div class="ttname"><a href="classopenbeam_1_1CStructureProblem.html#ae01a10a865996f89e250c2ade6fe387f">openbeam::CStructureProblem::createLoadAtBeam</a></div><div class="ttdeci">void createLoadAtBeam(const size_t element_index, _Args &amp;&amp;... __args)</div><div class="ttdef"><b>Definition:</b> CStructureProblem.h:54</div></div>
-<div class="ttc" id="astructopenbeam_1_1MeshOutputInfo_html"><div class="ttname"><a href="structopenbeam_1_1MeshOutputInfo.html">openbeam::MeshOutputInfo</a></div><div class="ttdef"><b>Definition:</b> CFiniteElementProblem.h:138</div></div>
-<div class="ttc" id="astructopenbeam_1_1MeshParams_html"><div class="ttname"><a href="structopenbeam_1_1MeshParams.html">openbeam::MeshParams</a></div><div class="ttdef"><b>Definition:</b> CFiniteElementProblem.h:128</div></div>
+<div class="ttc" id="astructopenbeam_1_1MeshOutputInfo_html"><div class="ttname"><a href="structopenbeam_1_1MeshOutputInfo.html">openbeam::MeshOutputInfo</a></div><div class="ttdef"><b>Definition:</b> CFiniteElementProblem.h:152</div></div>
+<div class="ttc" id="astructopenbeam_1_1MeshParams_html"><div class="ttname"><a href="structopenbeam_1_1MeshParams.html">openbeam::MeshParams</a></div><div class="ttdef"><b>Definition:</b> CFiniteElementProblem.h:142</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

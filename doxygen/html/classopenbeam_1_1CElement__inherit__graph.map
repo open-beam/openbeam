@@ -1,13 +1,13 @@
 <map id="openbeam::CElement" name="openbeam::CElement">
-<area shape="rect" id="node1" title=" " alt="" coords="5,253,168,279"/>
-<area shape="rect" id="node2" href="$classopenbeam_1_1CBaseElementBeam.html" title=" " alt="" coords="216,143,448,170"/>
-<area shape="rect" id="node8" href="$classopenbeam_1_1CElementSpring.html" title=" " alt="" coords="231,194,433,221"/>
-<area shape="rect" id="node9" href="$classopenbeam_1_1CElementSpringDXDYRZ.html" title=" " alt="" coords="231,245,433,287"/>
-<area shape="rect" id="node10" href="$classopenbeam_1_1CElementSpringXY.html" title=" " alt="" coords="222,311,442,338"/>
-<area shape="rect" id="node11" href="$classopenbeam_1_1CElementTorsionSpring.html" title=" " alt="" coords="228,363,436,404"/>
-<area shape="rect" id="node3" href="$classopenbeam_1_1CElementBeam__2D__AA.html" title=" " alt="" coords="496,5,696,47"/>
-<area shape="rect" id="node4" href="$classopenbeam_1_1CElementBeam__2D__AR.html" title=" " alt="" coords="496,71,696,112"/>
-<area shape="rect" id="node5" href="$classopenbeam_1_1CElementBeam__2D__RA.html" title=" " alt="" coords="496,136,696,177"/>
-<area shape="rect" id="node6" href="$classopenbeam_1_1CElementBeam__2D__RD.html" title=" " alt="" coords="496,201,696,243"/>
-<area shape="rect" id="node7" href="$classopenbeam_1_1CElementBeam__2D__RR.html" title=" " alt="" coords="496,267,696,308"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,253,153,279"/>
+<area shape="rect" id="node2" href="$classopenbeam_1_1CBaseElementBeam.html" title=" " alt="" coords="201,143,413,170"/>
+<area shape="rect" id="node8" href="$classopenbeam_1_1CElementSpring.html" title=" " alt="" coords="215,194,400,221"/>
+<area shape="rect" id="node9" href="$classopenbeam_1_1CElementSpringDXDYRZ.html" title=" " alt="" coords="215,245,400,287"/>
+<area shape="rect" id="node10" href="$classopenbeam_1_1CElementSpringXY.html" title=" " alt="" coords="206,311,409,338"/>
+<area shape="rect" id="node11" href="$classopenbeam_1_1CElementTorsionSpring.html" title=" " alt="" coords="212,363,403,404"/>
+<area shape="rect" id="node3" href="$classopenbeam_1_1CElementBeam__2D__AA.html" title=" " alt="" coords="461,5,644,47"/>
+<area shape="rect" id="node4" href="$classopenbeam_1_1CElementBeam__2D__AR.html" title=" " alt="" coords="461,71,644,112"/>
+<area shape="rect" id="node5" href="$classopenbeam_1_1CElementBeam__2D__RA.html" title=" " alt="" coords="461,136,644,177"/>
+<area shape="rect" id="node6" href="$classopenbeam_1_1CElementBeam__2D__RD.html" title=" " alt="" coords="461,201,644,243"/>
+<area shape="rect" id="node7" href="$classopenbeam_1_1CElementBeam__2D__RR.html" title=" " alt="" coords="461,267,644,308"/>
 </map>

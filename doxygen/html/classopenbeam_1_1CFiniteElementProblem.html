@@ -91,8 +91,8 @@ Inheritance diagram for openbeam::CFiniteElementProblem:</div>
 <div class="dyncontent">
 <div class="center"><img src="classopenbeam_1_1CFiniteElementProblem__inherit__graph.png" border="0" usemap="#aopenbeam_1_1CFiniteElementProblem_inherit__map" alt="Inheritance graph"/></div>
 <map name="aopenbeam_1_1CFiniteElementProblem_inherit__map" id="aopenbeam_1_1CFiniteElementProblem_inherit__map">
-<area shape="rect" title=" " alt="" coords="17,5,215,47"/>
-<area shape="rect" href="classopenbeam_1_1CStructureProblem.html" title=" " alt="" coords="5,95,227,121"/>
+<area shape="rect" title=" " alt="" coords="16,5,196,47"/>
+<area shape="rect" href="classopenbeam_1_1CStructureProblem.html" title=" " alt="" coords="5,95,207,121"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -134,9 +134,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>saveAsImage</b> (cons
 <tr class="memitem:ac3d37545961e9d1c416272aecb1cd998"><td class="memItemLeft" align="right" valign="top"><a id="ac3d37545961e9d1c416272aecb1cd998"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>renderToCairoContext</b> (void *_cairo_context, const <a class="el" href="structopenbeam_1_1RenderInitData.html">RenderInitData</a> &amp;ri, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html">StaticSolveProblemInfo</a> *solver_info, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info) const</td></tr>
 <tr class="separator:ac3d37545961e9d1c416272aecb1cd998"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4c72e35c76bbeb39985fe6875b5bd55b"><td class="memItemLeft" align="right" valign="top"><a id="a4c72e35c76bbeb39985fe6875b5bd55b"></a>
-mrpt::opengl::CSetOfObjects::Ptr&#160;</td><td class="memItemRight" valign="bottom"><b>getVisualization</b> (const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html">StaticSolveProblemInfo</a> &amp;solver_info, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info=nullptr, const <a class="el" href="structopenbeam_1_1StressInfo.html">StressInfo</a> *stressInfo=nullptr) const</td></tr>
-<tr class="separator:a4c72e35c76bbeb39985fe6875b5bd55b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4691ff8fd34c4879b137d006fb4a1ad6"><td class="memItemLeft" align="right" valign="top"><a id="a4691ff8fd34c4879b137d006fb4a1ad6"></a>
+mrpt::viz::CSetOfObjects::Ptr&#160;</td><td class="memItemRight" valign="bottom"><b>getVisualization</b> (const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html">StaticSolveProblemInfo</a> &amp;solver_info, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info=nullptr, const <a class="el" href="structopenbeam_1_1StressInfo.html">StressInfo</a> *stressInfo=nullptr) const</td></tr>
+<tr class="separator:a4691ff8fd34c4879b137d006fb4a1ad6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Problem elements</div></td></tr>
 <tr class="memitem:a954b8f20c727c5cfef64b9cac965df89"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#a954b8f20c727c5cfef64b9cac965df89">insertElement</a> (CElement::Ptr el)</td></tr>
 <tr class="separator:a954b8f20c727c5cfef64b9cac965df89"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -155,6 +155,12 @@ mrpt::opengl::CSetOfObjects::Ptr&#160;</td><td class="memItemRight" valign="bott
 <tr class="memitem:a87e6e390da6ad540f206239cbd8387a0"><td class="memItemLeft" align="right" valign="top"><a id="a87e6e390da6ad540f206239cbd8387a0"></a>
 const constraint_list_t &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getAllConstraints</b> () const</td></tr>
 <tr class="separator:a87e6e390da6ad540f206239cbd8387a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2b7a6acf7cacf4553519a3084355cd9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#af2b7a6acf7cacf4553519a3084355cd9">addNodeConstraint</a> (node_index_t node, DoF_index dof, num_t value=0)</td></tr>
+<tr class="separator:af2b7a6acf7cacf4553519a3084355cd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7e095ac953f953145d452bd3ed9fc1a"><td class="memItemLeft" align="right" valign="top"><a id="ad7e095ac953f953145d452bd3ed9fc1a"></a>
+const std::map&lt; std::pair&lt; node_index_t, DoF_index &gt;, num_t &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#ad7e095ac953f953145d452bd3ed9fc1a">getNodeConstraintRequests</a> () const</td></tr>
+<tr class="memdesc:ad7e095ac953f953145d452bd3ed9fc1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constraints as requested with <a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#af2b7a6acf7cacf4553519a3084355cd9">addNodeConstraint()</a> <br /></td></tr>
+<tr class="separator:ad7e095ac953f953145d452bd3ed9fc1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af1f5649a98d1ec92f057cbbb1f2712a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#af1f5649a98d1ec92f057cbbb1f2712a6">setLoadAtDOF</a> (const size_t dof_index, const num_t f)</td></tr>
 <tr class="separator:af1f5649a98d1ec92f057cbbb1f2712a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a906149e47cf67c1d5d07c70c9dd96355"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#a906149e47cf67c1d5d07c70c9dd96355">addLoadAtDOF</a> (const size_t dof_index, const num_t f)</td></tr>
@@ -239,18 +245,20 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>internal_parser7_elem
 <tr class="separator:a913a2665c18fbf02143b09ea2ec6fc2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4992da99b8984c550fd3bc7a1519921"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#ac4992da99b8984c550fd3bc7a1519921">updateNodesMainOrientation</a> ()</td></tr>
 <tr class="separator:ac4992da99b8984c550fd3bc7a1519921"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79b8a96880178b75e8a853ac5333df32"><td class="memItemLeft" align="right" valign="top"><a id="a79b8a96880178b75e8a853ac5333df32"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>internal_getVisualization_nodeLoads</b> (mrpt::opengl::CSetOfObjects &amp;gl, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html">StaticSolveProblemInfo</a> &amp;solver_info, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info, num_t DEFORMED_SCALE_FACTOR) const</td></tr>
-<tr class="separator:a79b8a96880178b75e8a853ac5333df32"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a129cb7fcb066b19eb620e94c0bf62454"><td class="memItemLeft" align="right" valign="top"><a id="a129cb7fcb066b19eb620e94c0bf62454"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>internal_getVisualization_constraints</b> (mrpt::opengl::CSetOfObjects &amp;gl, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html">StaticSolveProblemInfo</a> &amp;solver_info, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info, num_t DEFORMED_SCALE_FACTOR) const</td></tr>
-<tr class="separator:a129cb7fcb066b19eb620e94c0bf62454"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada4dbae29a8baac9ae8125b3c601a55d"><td class="memItemLeft" align="right" valign="top"><a id="ada4dbae29a8baac9ae8125b3c601a55d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>internal_getVisualization_distributedLoads</b> (const <a class="el" href="classopenbeam_1_1CStructureProblem.html">CStructureProblem</a> &amp;str, mrpt::opengl::CSetOfObjects &amp;gl, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html">StaticSolveProblemInfo</a> &amp;solver_info, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info, num_t DEFORMED_SCALE_FACTOR) const</td></tr>
-<tr class="separator:ada4dbae29a8baac9ae8125b3c601a55d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13924465746961341a2583711dcca9cd"><td class="memItemLeft" align="right" valign="top"><a id="a13924465746961341a2583711dcca9cd"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>internal_getVisualization_stressDiagrams</b> (mrpt::opengl::CSetOfObjects &amp;gl, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html">StaticSolveProblemInfo</a> &amp;solverInfo, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshingInfo, num_t DEFORMED_SCALE_FACTOR, const <a class="el" href="structopenbeam_1_1StressInfo.html">StressInfo</a> &amp;stressInfo) const</td></tr>
-<tr class="separator:a13924465746961341a2583711dcca9cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a905cd9910c28b3c77c9df2ad7aa173ef"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#a905cd9910c28b3c77c9df2ad7aa173ef">describeSingularStiffness</a> (const DynMatrix &amp;Kff, const std::vector&lt; size_t &gt; &amp;free_dof_indices) const</td></tr>
+<tr class="separator:a905cd9910c28b3c77c9df2ad7aa173ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3810e721cbaad8ab750dd081a5173cc"><td class="memItemLeft" align="right" valign="top"><a id="aa3810e721cbaad8ab750dd081a5173cc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>internal_getVisualization_nodeLoads</b> (mrpt::viz::CSetOfObjects &amp;gl, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html">StaticSolveProblemInfo</a> &amp;solver_info, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info, num_t DEFORMED_SCALE_FACTOR) const</td></tr>
+<tr class="separator:aa3810e721cbaad8ab750dd081a5173cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabcd5dced79151ada2d5fbbcc0cb1428"><td class="memItemLeft" align="right" valign="top"><a id="aabcd5dced79151ada2d5fbbcc0cb1428"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>internal_getVisualization_constraints</b> (mrpt::viz::CSetOfObjects &amp;gl, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html">StaticSolveProblemInfo</a> &amp;solver_info, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info, num_t DEFORMED_SCALE_FACTOR) const</td></tr>
+<tr class="separator:aabcd5dced79151ada2d5fbbcc0cb1428"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a144bd63cc6ebe4db34b25eb93c6d3c51"><td class="memItemLeft" align="right" valign="top"><a id="a144bd63cc6ebe4db34b25eb93c6d3c51"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>internal_getVisualization_distributedLoads</b> (const <a class="el" href="classopenbeam_1_1CStructureProblem.html">CStructureProblem</a> &amp;str, mrpt::viz::CSetOfObjects &amp;gl, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html">StaticSolveProblemInfo</a> &amp;solver_info, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshing_info, num_t DEFORMED_SCALE_FACTOR) const</td></tr>
+<tr class="separator:a144bd63cc6ebe4db34b25eb93c6d3c51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fd35e2106bb7c97e32e4d3988541f64"><td class="memItemLeft" align="right" valign="top"><a id="a2fd35e2106bb7c97e32e4d3988541f64"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>internal_getVisualization_stressDiagrams</b> (mrpt::viz::CSetOfObjects &amp;gl, const <a class="el" href="structopenbeam_1_1DrawStructureOptions.html">DrawStructureOptions</a> &amp;options, const <a class="el" href="structopenbeam_1_1StaticSolveProblemInfo.html">StaticSolveProblemInfo</a> &amp;solverInfo, const <a class="el" href="structopenbeam_1_1MeshOutputInfo.html">MeshOutputInfo</a> *meshingInfo, num_t DEFORMED_SCALE_FACTOR, const <a class="el" href="structopenbeam_1_1StressInfo.html">StressInfo</a> &amp;stressInfo) const</td></tr>
+<tr class="separator:a2fd35e2106bb7c97e32e4d3988541f64"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -278,6 +286,10 @@ std::deque&lt; CElement::Ptr &gt;&#160;</td><td class="memItemRight" valign="bot
 <tr class="separator:ac10993d8d7429263491088582ebf5d51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51d5684752d75947b164aa330d7f1d74"><td class="memItemLeft" align="right" valign="top">constraint_list_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#a51d5684752d75947b164aa330d7f1d74">m_DoF_constraints</a></td></tr>
 <tr class="separator:a51d5684752d75947b164aa330d7f1d74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e430127e175f04f6cc3781bd3412be7"><td class="memItemLeft" align="right" valign="top"><a id="a4e430127e175f04f6cc3781bd3412be7"></a>
+std::map&lt; std::pair&lt; node_index_t, DoF_index &gt;, num_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#a4e430127e175f04f6cc3781bd3412be7">m_node_constraint_requests</a></td></tr>
+<tr class="memdesc:a4e430127e175f04f6cc3781bd3412be7"><td class="mdescLeft">&#160;</td><td class="mdescRight">See <a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#af2b7a6acf7cacf4553519a3084355cd9">addNodeConstraint()</a> <br /></td></tr>
+<tr class="separator:a4e430127e175f04f6cc3781bd3412be7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adcc28695b53acd532852fbc0de1aca4a"><td class="memItemLeft" align="right" valign="top">load_list_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#adcc28695b53acd532852fbc0de1aca4a">m_loads_at_each_dof</a></td></tr>
 <tr class="separator:adcc28695b53acd532852fbc0de1aca4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a499d9908247f21ed553477d9cfb36c10"><td class="memItemLeft" align="right" valign="top">load_list_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#a499d9908247f21ed553477d9cfb36c10">m_loads_at_each_dof_equivs</a></td></tr>
@@ -355,6 +367,41 @@ std::deque&lt; CElement::Ptr &gt;&#160;</td><td class="memItemRight" valign="bot
       </table>
 </div><div class="memdoc">
 <p>Adds a load (force or moment) to a given DOF, accumulating to previously existing values if any. </p><dl class="section see"><dt>See also</dt><dd><a class="el" href="classopenbeam_1_1CFiniteElementProblem.html#af1f5649a98d1ec92f057cbbb1f2712a6">setLoadAtDOF</a> </dd></dl>
+
+</div>
+</div>
+<a id="af2b7a6acf7cacf4553519a3084355cd9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af2b7a6acf7cacf4553519a3084355cd9">&#9670;&nbsp;</a></span>addNodeConstraint()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool openbeam::CFiniteElementProblem::addNodeConstraint </td>
+          <td>(</td>
+          <td class="paramtype">node_index_t&#160;</td>
+          <td class="paramname"><em>node</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">DoF_index&#160;</td>
+          <td class="paramname"><em>dof</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">num_t&#160;</td>
+          <td class="paramname"><em>value</em> = <code>0</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Constrains a DoF of a node (in nodal coordinates) to a given displacement. The request is remembered even if no element uses that DoF (which is then left out of the problem), so it is applied again if the problem DoFs change, e.g. when meshing. </p><dl class="section return"><dt>Returns</dt><dd>false if the DoF is not part of the problem right now. </dd></dl>
 
 </div>
 </div>
@@ -469,6 +516,43 @@ template&lt;typename ElementClass , typename... _Args&gt; </div>
 </table>
 </div><div class="memdoc">
 <p>Insert a new element in the problem </p><dl class="section return"><dt>Returns</dt><dd>The element index </dd></dl>
+
+</div>
+</div>
+<a id="a905cd9910c28b3c77c9df2ad7aa173ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a905cd9910c28b3c77c9df2ad7aa173ef">&#9670;&nbsp;</a></span>describeSingularStiffness()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string openbeam::CFiniteElementProblem::describeSingularStiffness </td>
+          <td>(</td>
+          <td class="paramtype">const DynMatrix &amp;&#160;</td>
+          <td class="paramname"><em>Kff</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; size_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>free_dof_indices</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Explains why a free-free stiffness matrix could not be factorized: lists the DoFs that can move freely (a mechanism), if any. </p>
 
 </div>
 </div>
@@ -1587,7 +1671,7 @@ template&lt;typename ElementClass , typename... _Args&gt; </div>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>/home/jlblanco/code/openbeam/libopenbeam/include/openbeam/<a class="el" href="CFiniteElementProblem_8h_source.html">CFiniteElementProblem.h</a></li>
+<li>/home/jlblanco/code/openbeam-public/libopenbeam/include/openbeam/<a class="el" href="CFiniteElementProblem_8h_source.html">CFiniteElementProblem.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
