@@ -1,0 +1,5 @@
+/* Let long table cells wrap, instead of scrolling the table horizontally */
+.wy-table-responsive table td,
+.wy-table-responsive table th {
+  white-space: normal;
+}
